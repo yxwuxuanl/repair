@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+  Options +FollowSymlinks -Multiviews
+  RewriteEngine On
+
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^(.*)$ index.php/$1 [QSA,PT,L]
+</IfModule>
+
+<FilesMatch ".(flv|gif|jpg|jpeg|png|ico|swf|js|css)$">
+  Header set Cache-Control "max-age=3600"
+</FilesMatch>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType application/javascript A864000
+  ExpiresByType text/css A864000
+</IfModule>

@@ -1,0 +1,50 @@
+.container {
+  margin-top: 20px; }
+
+#login-btn {
+  width: 100%; }
+
+#system-zone-panel {
+  margin-top: 10px; }
+  #system-zone-panel .zone-name {
+    cursor: pointer; }
+  #system-zone-panel h4 {
+    height: 18px; }
+  #system-zone-panel .subs {
+    display: none; }
+  #system-zone-panel .glyphicon-cog {
+    float: right; }
+  #system-zone-panel dd:hover {
+    background-color: #d9edf7; }
+  #system-zone-panel dt {
+    background-color: #428bca;
+    color: #fff; }
+    #system-zone-panel dt .glyphicon {
+      float: right;
+      display: none; }
+  #system-zone-panel .glyphicon-plus {
+    display: inline-block;
+    margin: 5px; }
+
+.tab-pane {
+  display: none; }
+
+.active {
+  display: block; }
+
+#alert .modal-title {
+  line-height: 2.0em;
+  text-align: center; }
+#alert .error {
+  color: #d9534f; }
+#alert .success {
+  color: #5cb85c; }
+#alert .modal-header {
+  padding: 0; }
+#alert .modal-footer {
+  padding: 5px; }
+#alert .modal-body {
+  font-size: 1.1em;
+  text-align: center; }
+
+/*# sourceMappingURL=main.css.map */

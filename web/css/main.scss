@@ -1,0 +1,113 @@
+// html,
+// body {
+//   height: 100%;
+// }
+
+.container
+{
+  margin-top: 20px;
+}
+
+#login-btn
+{
+  width: 100%;
+}
+
+#system-zone-panel
+{
+  margin-top:10px;
+
+  .zone-name
+  {
+    cursor:pointer;
+  }
+
+  h4
+  {
+    height: 18px;
+  }
+
+  .subs
+  {
+    display: none;
+  }
+
+  .glyphicon-cog
+  {
+    float: right;
+  }
+
+  dd
+  {
+    &:hover
+    {
+      background-color: #d9edf7;
+    }
+  }
+
+  dt
+  {
+    background-color: #428bca;
+    color:#fff;
+
+    .glyphicon
+    {
+      float: right;
+      display: none;
+    }
+  }
+
+   .glyphicon-plus
+  {
+    display: inline-block;
+    margin:5px;
+  }
+}
+
+.tab-pane
+{
+  display: none;
+}
+
+.active
+{
+  display: block;
+} 
+
+#alert
+{
+  .modal-title
+  {
+    line-height: 2.0em;
+    text-align: center;
+  }
+
+  .error
+  {
+    color:#d9534f;
+  }
+
+  .success
+  {
+    color:#5cb85c;
+  }
+
+  .modal-header
+  {
+    padding: 0;
+  }
+
+  .modal-footer
+  {
+    padding: 5px;
+  }
+  
+  .modal-body
+  {
+    font-size:1.1em;
+    text-align: center;
+  }
+
+}
+
+
