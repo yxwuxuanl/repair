@@ -78,7 +78,7 @@ $(function(global){
             })
 
             $('button.submit').click(function () {
-                $(this).parent().submit();
+                $(this).parent().siblings('form').submit();
             })
         }
     })
