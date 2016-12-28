@@ -76,6 +76,10 @@ $(function(global){
                     $service.runModule($target);
                 }
             })
+
+            $('button.submit').click(function () {
+                $(this).parent().submit();
+            })
         }
     })
 

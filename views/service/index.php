@@ -38,8 +38,8 @@ function panel($id = null,$action = null)
             <div class="modal-footer">
                 <button type="button" class="btn btn-default btn-block" data-dismiss="modal">关闭</button>
             </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+        </div>
+    </div>
+</div>
 
 </div>

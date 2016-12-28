@@ -52,26 +52,45 @@ $(function ($service) {
         },
 
         'watchForm': function () {
-
             var
-                _this = this;
+                _this = this,
+                $body = this.modal.$body;
+            
+            $service.addFormValidate({
+                '#zone-rename-form': {
+                    messages: {
+                        'zone-rename-input': {
+                            'required': '请输入新的区域名',
+                            'minlength': '区域名长度在 2~10 个字符之间',
+                            'maxlength': '区域名长度在 2~10 个字符之间'
+                        }
+                    },
+                    debug: true
+                },
+                '#zone-add-form': {
+                    messages: {
+                        'zone-add-input': {
+                            'required': '请输入新的区域名',
+                            'minlength': '区域名长度在 2~10 个字符之间',
+                            'maxlength': '区域名长度在 2~10 个字符之间'
+                        }
+                    }
+                },
+                debug: true
+            }, $body);
 
-            this.modal.$body.find('form').submit(function (event) {
-                _this.modal.close();
+            $body.find('form').submit(function (event) {
                 event.preventDefault();
-                _this[this.name].call(this, _this._active_);
+                _this[$(this).attr('action')].call(this, _this._active_);
+                _this.modal.close();
             })
         },
 
         'rename': function ($active) {
             var
-                data;
+                value = $(this).find('#zone-rename-input').val();
 
-            if ((data = $.data(this, 'yiiActiveForm')).validated) {
-
-                var
-                    value = data.attributes[0].value;
-
+            if ($(this).valid()) {
                 $service.ajax('zone/rename', {
                     'zone_id': $active.parent().attr('data-zid'),
                     'zone_name': value
@@ -114,8 +133,8 @@ $(function ($service) {
             var
                 data, value, id, tag = $service.tag, _this = this;
             
-            if ((data = $.data(this, 'yiiActiveForm')).validated) {
-                value = data.attributes[0].value;
+            if ($(this).valid()) {
+                value = $(this).find('#zone-add-input').val();
                 id = $active.parent().attr('data-zid');
                 
                 $service.ajax('zone/add', {
@@ -296,8 +315,8 @@ $(function ($service) {
                 _this._active_ = null;
 
                 modal.$body.find('form').each(function () {
+                    $(this).validate().resetForm();
                     this.reset();
-                    $.data(this, 'yiiActiveForm').validated = false;
                 })
             }, true);
         }
@@ -305,7 +324,7 @@ $(function ($service) {
 
     $service.registerModule('system-event', {
        'init' : function () {
-           
+
         } 
     });
 
