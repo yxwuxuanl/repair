@@ -4,7 +4,7 @@ namespace app\controllers;
 use app\models\Account;
 use yii\base\Component;
 use yii\web\Controller;
-// 
+
 class AccountController extends Controller
 {
     public function actionInfo()
