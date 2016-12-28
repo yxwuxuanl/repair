@@ -8,7 +8,6 @@
 
 namespace app\assets;
 
-use yii\validators\ValidationAsset;
 use yii\web\AssetBundle;
 use yii\web\View;
 use yii\widgets\ActiveFormAsset;
@@ -27,8 +26,7 @@ class ServiceAsset extends AssetBundle
         'script/ajax.js',
 		'script/helper.js',
 		'script/alert.js',
-		'script/modal.js',
-        'script/init.js'
+		'script/modal.js'
     ];
 
     public $depends = [

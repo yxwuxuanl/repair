@@ -137,4 +137,18 @@ $(function ($service) {
         return $('[name="csrf-token"]').attr('content');
     })
 
+    $service.extend('addFormValidate', function ($form, $context, rules) {
+        if (typeof $form == 'object') {
+            for (var name in $form) {
+                $service.addFormValidate(name, $context, $form[name]);
+            }
+        } else {
+            if ($context && $context instanceof jQuery) {
+                $context.find($form).validate(rules);
+            } else {
+                $($form).validate(rules);
+            }
+        }
+    })
+
 }($service))
