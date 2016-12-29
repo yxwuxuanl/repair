@@ -14,6 +14,11 @@ class LoginFilter extends ActionFilter
     function beforeAction($action)
     {
         parent::beforeAction($action);
-        return \Yii::$app->getSession()->get('IS_LOGIN',false);
+
+        if(\Yii::$app->getSession()->get('IS_LOGIN',false)){
+        	return true;
+		}
+
+		\Yii::$app->response->headers->add('status',403);
     }
 }

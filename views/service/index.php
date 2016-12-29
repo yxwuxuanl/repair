@@ -6,7 +6,9 @@
  * Time: 上午8:55
  */
 
-function panel($id = null,$action = null)
+app\assets\BootstrapAsset::register($this);
+
+function panels($id = null,$action = null)
 {
     static $panels = [];
 
@@ -23,23 +25,8 @@ function panel($id = null,$action = null)
 <div class="container">
     <div class="col-md-10 col-md-push-1">
 
-    <?= $this->render('/template/tab',['privilege' => $pl]) ?>
-    <?= $this->render('/template/panel',['panels' => panel()]) ?>
+    <?= $this->render('nav') ?>
+    <?= $this->render('panel') ?>
 
     </div>
-
-    <div class="modal fade" id="alert">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title"></h4>
-            </div>
-            <div class="modal-body"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default btn-block" data-dismiss="modal">关闭</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 </div>

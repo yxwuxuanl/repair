@@ -30,13 +30,16 @@
 
                 <div role="tabpanel" class="tab-pane fade" id="zone-rename-panel" aria-labelledby="profile-tab">
 
-                    <form role="form" id="zone-rename-form" action="rename" class="af">
+                    <form role="form" id="zone-rename-form" action="rename">
                         <div class="form-group">
                             <label for="zone-rename-input">区域名</label>
                             <input type="text" class="form-control" name="zone-rename-input" minlength="2" required maxlength="10" id="zone-rename-input">
                         </div>
-                        <button class="btn btn-primary submit" type="button">Rename</button>
                     </form>
+
+                    <div class="form-group">
+                        <button class="btn btn-primary submit" type="button">Rename</button>
+                    </div>
 
                 </div>
 
@@ -51,8 +54,10 @@
                             <label for="zone-add-input">区域名</label>
                             <input type="text" class="form-control" id="zone-add-input" minlength="2" required maxlength="10" name="zone-add-input">
                         </div>
-                        <button class="btn btn-primary submit">添加</button>
                     </form>
+                    <div class="form-group">
+                        <button class="btn btn-primary submit" type="button">Add</button>
+                    </div>
                 </div>
             </div>
         </div>

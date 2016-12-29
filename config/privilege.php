@@ -29,12 +29,12 @@ return [
         '0' => [
             'desc' => '新帐号',
             'constant' => P_ACCOUNT_NEW_ACCOUNT,
-            'menu' => []
+            'panels' => []
         ],
         '1' => [
             'desc' => '查看及修改自身帐号的权限',
             'constant' => P_ACCOUNT_CHECK_SELF,
-            'menu' => [
+            'panels' => [
                 [
                     '账号信息','info'
                 ],
@@ -49,12 +49,12 @@ return [
         '2' => [
             'desc' => '关键帐号',
             'constant' => P_ACCOUNT_PRIMARY_ACCOUNT,
-            'menu' => []
+            'panels' => []
         ],
         '4' => [
             'desc' => '添加和删除账户权限',
             'constant' => P_ACCOUNT_SYSTEM,
-            'menu' => [
+            'panels' => [
                 [
                     '查看所有账号','checkall'
                 ],
@@ -76,7 +76,7 @@ return [
         '1' => [
             'desc' => '增加及删除故障区域权限',
             'constant' => P_SYSTEM_ZONE,
-            'menu' => [
+            'panels' => [
                 [
                     '区域管理','zone'
                 ]
@@ -85,7 +85,7 @@ return [
         '2' => [
             'desc' => '增加及删除事件权限',
             'constant' => P_SYSTEM_EVENT,
-            'menu' => [
+            'panels' => [
                 [
                     '事件管理','event'
                 ]
@@ -98,7 +98,7 @@ return [
         '1' => [
             'desc' => '查看所属组的信息',
             'constant' => P_GROUP_CHECK_SELF,
-            'menu' => [
+            'panels' => [
                 [
                     '查看所属组','self'
                 ]
@@ -107,7 +107,7 @@ return [
         '2' => [
             'desc' => '更改所属组的信息',
             'constant' => P_GROUP_EDIT_SELF,
-            'menu' => [
+            'panels' => [
                 [
                     '修改组成员','grew'
                 ],
@@ -119,12 +119,12 @@ return [
         '4' => [
             'desc' => '组管理员',
             'constant' => P_GROUP_MAMAGER,
-            'menu' => []
+            'panels' => []
         ],
         '8' => [
             'desc' => '创建组',
             'constant' => P_GROUP_CREATR,
-            'menu' => [
+            'panels' => [
                 [
                     '创建组','create'
                 ]
@@ -137,7 +137,7 @@ return [
         '1' => [
             'desc' => '查看组的任务',
             'constant' => P_MISSION_CHECK_GROUP,
-            'menu' => [
+            'panels' => [
                 [
                     '查看组任务','group'
                 ]
@@ -146,7 +146,7 @@ return [
         '2' => [
             'desc' => '查看自身任务',
             'constant' => P_MISSION_CHECK_SELF,
-            'menu' => [
+            'panels' => [
                 [
                     '进行中的任务','execute'
                 ],
@@ -158,7 +158,7 @@ return [
         '4' => [
             'desc' => '处理无效报障',
             'constant' => P_MISSION_INVALID,
-            'menu' => [
+            'panels' => [
                 [
                     '处理无效报障','invalid'
                 ]

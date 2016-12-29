@@ -81,27 +81,29 @@ $(function ($service) {
 
             $body.find('form').submit(function (event) {
                 event.preventDefault();
-                _this[$(this).attr('action')].call(this, _this._active_);
-                _this.modal.close();
+
+                if ($(this).valid()) {
+                    _this[$(this).attr('action')].call(this, _this._active_);
+                    _this.modal.close();
+                }
             })
         },
 
         'rename': function ($active) {
             var
                 value = $(this).find('#zone-rename-input').val();
+            
+            $service.ajax('zone/rename', {
+                'zone_id': $active.parent().attr('data-zid'),
+                'zone_name': value
+            }).done(function (response) {
+                $service.alert().success('重命名成功', 400, function () {
+                    $active.html(value);
+                });
+            }).fail(function (response) {
+                $service.alert().error('重命名失败');
+            })
 
-            if ($(this).valid()) {
-                $service.ajax('zone/rename', {
-                    'zone_id': $active.parent().attr('data-zid'),
-                    'zone_name': value
-                }).done(function (response) {
-                    $service.alert().success('重命名成功', 400, function () {
-                        $active.html(value);
-                    });
-                }).fail(function (response) {
-                    $service.alert().error('重命名失败');
-                })
-            }
         },
 
         'delete': function () {
@@ -132,24 +134,23 @@ $(function ($service) {
         'add': function ($active) {
             var
                 data, value, id, tag = $service.tag, _this = this;
+
+            value = $(this).find('#zone-add-input').val();
+            id = $active.parent().attr('data-zid');
             
-            if ($(this).valid()) {
-                value = $(this).find('#zone-add-input').val();
-                id = $active.parent().attr('data-zid');
-                
-                $service.ajax('zone/add', {
-                    'parent': id,
-                    'name': value
-                }).done(function (response) {
-                    $service.alert().success('已添加一个区域', 400, function () {
-                        if (id == '0000') {
-                            $service.modules['system-zone'].renderDt([{ 'zone_id': response.id, 'zone_name': value }]);
-                        } else {
-                            $active.parent().next().append(tag('dd', { 'data-zid': response.id, 'class': 'list-group-item' }, [['span', '.zone-name sub-zone', value]]));
-                        }
-                    })
+            $service.ajax('zone/add', {
+                'parent': id,
+                'name': value
+            }).done(function (response) {
+                $service.alert().success('已添加一个区域', 400, function () {
+                    if (id == '0000') {
+                        $service.modules['system-zone'].renderDt([{ 'zone_id': response.id, 'zone_name': value }]);
+                    } else {
+                        $active.parent().next().append(tag('dd', { 'data-zid': response.id, 'class': 'list-group-item' }, [['span', '.zone-name sub-zone', value]]));
+                    }
                 })
-            }
+            })
+
         },
         
         'showSubs': function ($target) {

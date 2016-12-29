@@ -19,6 +19,7 @@ class LoginAsset extends AssetBundle
 	];
 
 	public $depends = [
-		'app\assets\BootstrapAsset'
+		'app\assets\ServiceAsset',
+		'app\assets\ValidateAsset'
 	];
 }

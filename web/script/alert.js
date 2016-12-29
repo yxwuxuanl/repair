@@ -87,4 +87,4 @@ $(function ($service) {
 
         $modal.show(args.title, args.content, args.autoClose);
     });
-}($service))
+}($service));
