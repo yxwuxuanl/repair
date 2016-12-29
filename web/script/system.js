@@ -6,14 +6,14 @@ $(function ($service) {
         'renderDt': function (data) {
             var dt = [], tag = $service.tag, $dl;
 
-            for (var key in data) {
-                dt.push(tag('dt', { 'class': 'list-group-item', 'data-zid': data[key]['zone_id'] },
+            for (var i = 0; i < data.length; i++){
+                    dt.push(tag('dt', { 'class': 'list-group-item', 'data-zid': data[i]['zone_id'] },
                     [
-                        ['span', '.zone-name parent-zone', data[key]['zone_name']],
+                        ['span', '.zone-name parent-zone', data[i]['zone_name']],
                         ['span', '.glyphicon glyphicon-chevron-down']
                     ]
                 ));
-                dt.push(tag('div', '.subs'));
+                dt.push(tag('div', '.subs')); 
             }
 
             if (!($dl = this.$panel.find('dl')).length) {
@@ -194,10 +194,10 @@ $(function ($service) {
                     dd = [],
                     tag = $service.tag;
                 
-                for (var key in response) {
+                for (var i = 0, len = response.length; i < len; i++){
                     dd.push(tag('dd', ['.list-group-item',
-                        { 'data-zid': response[key]['zone_id'] }],
-                        [['span', '.zone-name sub-zone', response[key]['zone_name']]]
+                        { 'data-zid': response[i]['zone_id'] }],
+                        [['span', '.zone-name sub-zone', response[i]['zone_name']]]
                     ));
                 }
 
