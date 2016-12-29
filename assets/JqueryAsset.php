@@ -5,7 +5,10 @@ use yii\web\AssetBundle;
 
 class JqueryAsset extends AssetBundle
 {
+    public $basePath = '@webroot';
+    public $baseUrl = '@web';
+
     public $js = [
-        'http://cdn.bootcss.com/jquery/2.2.4/jquery.min.js'
+        'script/jquery.min.js'
     ];
 }

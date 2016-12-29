@@ -33,7 +33,7 @@ class ZoneController extends Controller
     {
         \Yii::$app->response->format = 'json';
         $row = Zone::getParent();
-        return array_merge(['status' => 1],$row);
+        return array_merge(['status' => 1],array_merge($row,['length' => count($row)]));
     }
 
     public function actionGetSubs($parent)
@@ -48,7 +48,7 @@ class ZoneController extends Controller
             {
                 return ['status' => 0,'message' => '该区域无子区域'];
             }else{
-                return array_merge(['status' => 1],$result);
+                return array_merge(['status' => 1],array_merge($result,['length' => count($result)]));
             }
         }
     

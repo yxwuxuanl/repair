@@ -8,11 +8,11 @@
 </IfModule>
 
 <FilesMatch ".(flv|gif|jpg|jpeg|png|ico|swf|js|css)$">
-  Header set Cache-Control "max-age=3600"
+  #Header set Cache-Control "max-age=3600"
 </FilesMatch>
 
 <IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresByType application/javascript A864000
-  ExpiresByType text/css A864000
+  #ExpiresActive On
+  #ExpiresByType application/javascript A864000
+  #ExpiresByType text/css A864000
 </IfModule>
