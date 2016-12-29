@@ -23,6 +23,20 @@ use yii\helpers\Url;
 
 <?= $content ?>
 
+<div class="modal fade" id="alert">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default btn-block" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php $this->endBody() ?>
 </body>
 </html>

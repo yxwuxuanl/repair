@@ -16,10 +16,6 @@ $config = [
             'class' => 'app\modules\AccountModule',
         ],
 
-        'privilege' => [
-            'class' => 'app\modules\PrivilegeModule',
-            'list' => require(__DIR__ . '/privilege.php'),
-        ],
 
         'cookie' => [
             'class' => 'app\controllers\CookieController',

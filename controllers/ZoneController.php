@@ -22,9 +22,9 @@ class ZoneController extends Controller
            'login' => [
                'class' => LoginFilter::className()
            ],
-           'priv' => [
+           'privilege' => [
                'class' => PrivilegeFilter::className(),
-               'prvi' => P_SYSTEM_ZONE
+               'privilege' => P_SYSTEM_ZONE
            ]
        ];
     }

@@ -8,17 +8,17 @@
     <ul class="dropdown-menu" role="menu">
 
         <?php
-            foreach($menu as $value) :
-                panel($prefix,$value[1]);
+            foreach($panels as $panel) :    
         ?>
 
             <li>
-                <a href="#<?= $prefix . '-' . $value[1] ?>-panel" id="<?= $prefix . '-' . $value[1]  ?>-tab" tabindex="-1" data-toggle="tab">
-                    <?= $value[0] ?>
+                <a href="#<?= $prefix . '-' . $panel[1] ?>-panel" id="<?= $prefix . '-' . $panel[1]  ?>-tab" tabindex="-1" data-toggle="tab">
+                    <?= $panel[0] ?>
                 </a>
             </li>
 
         <?php
+            panels($prefix,$panel[1]);
             endforeach;
         ?>
 

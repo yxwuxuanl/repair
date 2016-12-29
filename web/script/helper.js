@@ -134,7 +134,7 @@ $(function ($service) {
     });
 
     $service.extend('getCsrf', function () {
-        return $('[name="csrf-token"]').attr('content');
+        return $('meta[name="csrf-token"]').attr('content');
     })
 
     $service.extend('addFormValidate', function ($form, $context, rules) {

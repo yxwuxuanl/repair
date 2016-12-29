@@ -8,45 +8,60 @@
 
 namespace app\controllers;
 
-use app\models\Privilege;
-use yii\base\Component;
-use yii\web\ForbiddenHttpException;
+use \yii\base\Controller;
 
-class PrivilegeController extends Component
+class PrivilegeController extends Controller
 {
-    public function set($uid = null,$privilege = null)
+    public function set($privilegeList)
     {
+		$session = \Yii::$app->getSession();
+		$privileges = [];
 
+		foreach($privilegeList as $name => $value){
+			$privileges[$name] = static::compute($value);
+		}
+
+		$session->set('Privilege',$privileges);
     }
 
     public function get()
     {
-        return \Yii::$app->getSession()->get('privilege');
+        return \Yii::$app->getSession()->get('Privilege');
     }
 
-    public function register($privilege)
+    public static function compute($value)
     {
-        foreach($privilege as $index => $value)
-        {
-            $privilege[$index] = $this->compute($value);
-        }
+        $list = [];
 
-        \Yii::$app->getSession()->set('privilege',$privilege);
+		for($i = 1 ; $i <= $value ; $i = $i << 1){
+			if($value & $i){
+				$list[] = $i;
+			}
+		}
+
+        return $list;
     }
 
-    public function compute($privilege)
-    {
-        $pl = [];
+    public static function getLabel($privilege)
+	{
+		return \Yii::$app->params['privilege'][$privilege]['label'];
+	}
 
-        foreach([1,2,4,8,16] as $p)
-        {
-            if($p & $privilege)
-            {
-                $pl[] = $p;
-            }
-        }
+	public static function getPanels($privilege,$level)
+	{
+		return \Yii::$app->params['privilege'][$privilege][$level]['panels'];
+	}
 
-        return count($pl) == 1 ? $pl[0] : $pl;
-    }
+	public static function getDesc($privilege,$level)
+	{
+		return \Yii::$app->params['privilege'][$privilege][$level]['desc'];
+	}
+
+	public static function has($privilege)
+	{
+		list($name,$level) = explode('_',$privilege);
+		$privileges = \Yii::$app->getSession()->get('Privilege');
+		return in_array($level,$privileges[$name]);
+	}
 
 }

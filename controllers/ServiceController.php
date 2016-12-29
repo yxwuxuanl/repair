@@ -15,37 +15,17 @@ class ServiceController extends Controller
 {
     public function actionIndex()
     {
-        if(!\Yii::$app->get('account')->isLogin())
+        if(!\Yii::$app->getSession()->get('IS_LOGIN'))
         {
-            return $this->render('login',['model' => new Account()]);
+        	return $this->render('login');
         }else{
-
-            $data = [
-                'pl' => \Yii::$app->privilege->get()
-            ];
-
-            return $this->render('index',$data);
+            return $this->render('index');
         }
     }
 
     public function init()
     {
         \Yii::$app->set('service',$this);
-    }
-
-    public function actionLogin()
-    {
-        if(\Yii::$app->request->isAjax)
-        {
-            return \Yii::$app->account->loginByAjax();
-        }
-    }
-
-    public function behaviors()
-    {
-        return [
-            NoCsrf::className()
-        ];
     }
 
 }

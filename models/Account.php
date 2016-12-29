@@ -2,85 +2,26 @@
 
 namespace app\models;
 
+use yii\db\ActiveRecord;
 use yii\db\Query;
 
-class Account extends \yii\db\ActiveRecord
+class Account extends ActiveRecord
 {
-    public $account_name;
-    public $password;
-    public $remember;
+	public $username;
+	public $password;
 
-    public function rules()
-    {
-        return [
-            [['account_name','password'],'required','message' => '{attribute}不能为空'],
-            ['account_name','string','max' => 18,'min' => 4,'tooShort' => '{attribute}过短','tooLong' => '{attribute}过长'],
-            ['password','string','max' => 20,'min' => 6,'tooShort' => '{attribute}过短','tooLong' => '{attribute}过长'],
-            ['remember','in','range' => [0,1]]
-        ];
-    }
+	function rules()
+	{
+		return [
+			[['username','password'],'required'],
+			['username','string','min' => 2,'max' => 10],
+			['password','string','min' => 5,'max' => 20]
+		];
+	}
 
-    public function attributeLabels()
-    {
-        return [
-            'account_name' => '账户名',
-            'password' => '密码',
-            'remember' => '保持登录状态'
-        ];
-    }
-
-    public function getQuery()
-    {
-        return (new Query())->from('account');
-    }
-
-    public function findUser($account_id)
-    {
-        $query = $this->getQuery();
-
-        $query->where('account_id=:uid');
-
-        $query->params([':uid' => $account_id]);
-
-        return $query->one();
-    }
-
-
-    public function getGroup($uid)
-    {
-        $query = $this->getQuery();
-
-        $query->where('account_id=:uid');
-
-        $query->params([':uid' => $uid]);
-
-        $query->select(['group']);
-
-        return $query->one();
-    }
-
-    public function login($uid = null)
-    {
-        $query = $this->getQuery();
-
-        if($uid)
-        {
-            $query->where('account.account_id=:uid');
-            $query->addParams([
-                ':uid' => $uid
-            ]);
-        }else{
-            $query->where('account_name=:an');
-            $query->andWhere('password=password(:pwd)');
-            $query->addParams([
-                ':an' => $this->account_name,
-                ':pwd' => $this->password
-            ]);
-        }
-
-        $query->join('INNER JOIN','privilege','account.account_id=privilege.account_id');
-        $query->select(['privilege.*','account.account_group','account.account_name']);
-
-        return $query->one();
-    }
+	function findUser()
+	{
+		$result = (new Query())->select('account.account_name,account.account_group,privilege.*')->join('INNER JOIN','privilege','account.account_id = privilege.account_id')->from('account')->where('`account`.account_name=:un')->andWhere('`account`.password=PASSWORD(:pwd)')->addParams([':un' => $this->username,':pwd' => $this->password])->one();
+		return $result;
+	}
 }
