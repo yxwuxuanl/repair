@@ -78,7 +78,7 @@
         }
         
         return $.ajax(args).then(function (response) {
-            if (response.status == '1' || response.status == 'success')
+            if ([200,304,1].indexOf(response.status) > -1 || response.status == 'success')
             {
                 delete response.status;
                 return $.Deferred().resolve(response);

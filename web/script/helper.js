@@ -151,4 +151,38 @@ $(function ($service) {
         }
     })
 
+    $service.extend('ensureZeCache', function () {
+        
+        return $.get('zeCache/zeCache.js').then(function (response, status, xhr) {
+            if (xhr.status == '200' || xhr.status == '304') {
+                return $.Deferred().resolve();
+            }
+        },function(){
+                return $.get('service/make-cache').then(function (response) {
+                    if (response.status == 1) {
+                        return $.get('zeCache/zeCache.js').then(function () {
+                            return $.Deferred().resolve();
+                        }, function () {
+                            return $.Deferred().reject();
+                        })
+                    } else {
+                        return $.Deferred().reject();
+                    }
+                })
+            }
+        )
+    })
+
+    $service.extend('destroy', function (module) {
+        if ($.isArray(module)) {
+            for (var i = 0, len = module.length; i < len; i++){
+                $service.destroy(module[i]);
+            }
+        } else {
+            if (module in $service.contains) {
+                $service.contains[module].destroy();
+            }
+        }
+    })
+
 }($service))

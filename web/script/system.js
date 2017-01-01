@@ -1,19 +1,22 @@
 /**
  * Created by 2m on 2016/11/24.
  */
+
 $(function ($service) {
     $service.registerModule('system-zone', {
-        'renderDt': function (data) {
-            var dt = [], tag = $service.tag, $dl;
+        'renderDt': function (content) {
+            var dt = [], tag = $service.tag, $dl, data;
 
-            for (var i = 0; i < data.length; i++){
-                    dt.push(tag('dt', { 'class': 'list-group-item', 'data-zid': data[i]['zone_id'] },
+            data = content || zeCache().getParent();
+
+            for (var i = 0; i < data.length; i++) {
+                dt.push(tag('dt', { 'class': 'list-group-item', 'data-zid': data[i]['zone_id'] },
                     [
                         ['span', '.zone-name parent-zone', data[i]['zone_name']],
                         ['span', '.glyphicon glyphicon-chevron-down']
                     ]
                 ));
-                dt.push(tag('div', '.subs')); 
+                dt.push(tag('div', '.subs'));
             }
 
             if (!($dl = this.$panel.find('dl')).length) {
@@ -29,16 +32,12 @@ $(function ($service) {
 
             var
                 _this = this;
-
-            $service.ajax('zone/get-parent', 'get', 'json', 5000).fail(function (response) {
-
-                $service.alert().error('获取数据失败');
-
-            }).done(function (response) {
-
+            
+            $service.ensureZeCache().done(function () {
                 _this.modal = new $service.modal('#zone-modal');
                 _this.watchModal();
-                _this.renderDt(response);
+
+                _this.renderDt();
                 _this.watchDl();
                 _this.watchForm();
 
@@ -47,8 +46,9 @@ $(function ($service) {
                     _this.modal.show();
                 })
 
+            }).fail(function () {
+                $service.alert().error('获取数据失败');
             })
-
         },
 
         'watchForm': function () {
@@ -93,13 +93,16 @@ $(function ($service) {
             var
                 value = $(this).find('#zone-rename-input').val();
             
-            $service.ajax('zone/rename', {
-                'zone_id': $active.parent().attr('data-zid'),
-                'zone_name': value
+            return $service.ajax('zone/main', {
+                'action': 'rename',
+                'params' : $active.parent().attr('data-zid') + ',' + value
             }).done(function (response) {
                 $service.alert().success('重命名成功', 400, function () {
                     $active.html(value);
                 });
+
+                $service.destroy(['system-event']);
+
             }).fail(function (response) {
                 $service.alert().error('重命名失败');
             })
@@ -115,9 +118,9 @@ $(function ($service) {
 
             this.modal.close();
 
-            $service.ajax('zone/delete', 'post', {
-                'zone_id': id,
-                '_csrf': csrf
+            return $service.ajax('zone/main',  {
+                'action': 'delete',
+                'params' : id
             }).done(function () {
                 $service.alert().success('删除成功', 400, function () {
                     if ($active.hasClass('sub-zone')) {
@@ -126,6 +129,7 @@ $(function ($service) {
                         $active.parent().next().remove().end().remove();
                     }
                 })
+                $service.destroy(['system-event']);
             }).fail(function () {
                 $service.alert().error('删除失败');
             })
@@ -138,9 +142,9 @@ $(function ($service) {
             value = $(this).find('#zone-add-input').val();
             id = $active.parent().attr('data-zid');
             
-            $service.ajax('zone/add', {
-                'parent': id,
-                'name': value
+            return $service.ajax('zone/main', {
+                'action': 'add',
+                'params': value + ',' + id
             }).done(function (response) {
                 $service.alert().success('已添加一个区域', 400, function () {
                     if (id == '0000') {
@@ -149,6 +153,11 @@ $(function ($service) {
                         $active.parent().next().append(tag('dd', { 'data-zid': response.id, 'class': 'list-group-item' }, [['span', '.zone-name sub-zone', value]]));
                     }
                 })
+
+                $service.destroy(['system-event']);
+                
+            }).fail(function () {
+                $service.alert().error('添加失败');
             })
 
         },
@@ -171,12 +180,10 @@ $(function ($service) {
 
             if (!$.data($next[0], 'load')) {
 
-                _this.loadSubs($target.attr('data-zid'), $next).done(function () {
-                    _this.showSubs($target);
-                });
+                this.loadSubs($target.attr('data-zid'), $next);
+                this.showSubs($target);
 
             } else {
-
                 if ((len = $next.children().length)) {
                     $next.show(len * 5 + 200, function () {
                         $target.find('.glyphicon-chevron-down').show();
@@ -189,31 +196,29 @@ $(function ($service) {
         },
 
         'loadSubs': function (id, $container) {
-            return $service.ajax('zone/get-subs', { 'parent': id }).done(function (response) {
-                var
-                    dd = [],
-                    tag = $service.tag;
-                
-                for (var i = 0, len = response.length; i < len; i++){
-                    dd.push(tag('dd', ['.list-group-item',
-                        { 'data-zid': response[i]['zone_id'] }],
-                        [['span', '.zone-name sub-zone', response[i]['zone_name']]]
-                    ));
-                }
+            var
+                dd = [],
+                tag = $service.tag,
+                data;
+            
+            data = zeCache().getSubs(id);
 
+            for (var i = 0, len = data.length; i < len; i++){
+                dd.push(tag('dd', ['.list-group-item',
+                    { 'data-zid': data[i]['zone_id'] }],
+                    [['span', '.zone-name sub-zone', data[i]['zone_name']]]
+                ));
+            }
+
+            if (len) {
                 $container.append($(dd.join('')));
                 $.data($container[0], 'load', 1);
+                return true;
+            }
 
-            }).fail(function (response) {
+            $.data($container[0], 'load', 1);
+            return false;            
 
-                if (response.status == 0) {
-                    $.data($container[0], 'load', 1);
-                    $service.alert().error('该区域暂无子区域');
-                } else {
-                    $service.alert().error('数据获取失败');
-                }
-
-            })
         },
     
         'hideSubs': function ($dt, $subs) {
@@ -326,7 +331,11 @@ $(function ($service) {
     $service.registerModule('system-event', {
        'init' : function () {
 
-        } 
+        },
+
+       'destroy': function () {
+
+        }
     });
 
 }($service))

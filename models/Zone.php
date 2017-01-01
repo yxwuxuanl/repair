@@ -4,49 +4,19 @@ namespace app\models;
 
 use Yii;
 
-/**
- * This is the model class for table "zone".
- *
- * @property integer $zone_id
- * @property string $zone_name
- *
- * @property ZoneEventMap[] $zoneEventMaps
- * @property Event[] $events
- */
 class Zone extends \yii\db\ActiveRecord
 {
 
-//      public $zone_id;
-//      public $zone_name;
-
-    /**
-     * @inheritdoc
-     */
     public static function tableName()
     {
         return 'zone';
     }
 
-    /**
-     * @inheritdoc
-     */
     public function rules()
     {
         return [
-//             [['zone_id'], 'required'],
              [['zone_id'], 'integer'],
              [['zone_name'], 'string', 'max' => 50,'min' => 3],
-        ];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function attributeLabels()
-    {
-        return [
-            'zone_id' => 'Zone ID',
-            'zone_name' => 'Zone Name',
         ];
     }
 
@@ -54,38 +24,6 @@ class Zone extends \yii\db\ActiveRecord
 	{
 		return ['zone_name','zone_id'];
 	}
-
-	/**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getZoneEventMaps()
-    {
-        return $this->hasMany(ZoneEventMap::className(), ['zone_id' => 'zone_id']);
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getEvents()
-    {
-        return $this->hasMany(Event::className(), ['event_id' => 'event_id'])->viaTable('zone_event_map', ['zone_id' => 'zone_id']);
-    }
-
-    public static function getParent()
-    {
-        return parent::find()
-            ->where('right(`zone_id`,2)=0')
-            ->asArray()
-            ->all();
-    }
-
-    public static function getSubs($zone_id)
-    {
-        return parent::find()
-            ->where(['between','zone_id',$zone_id + 1,$zone_id + 99])
-            ->asArray()
-            ->all();
-    }
 
     public static function deleteZones($zone_id)
     {
@@ -104,4 +42,10 @@ class Zone extends \yii\db\ActiveRecord
             return $row['zone_id'] + 1;
         }
     }
+
+    public static function all()
+    {
+        return parent::find()->select('`zone`.*,`zone_event_map`.`events`')->join('LEFT JOIN','zone_event_map','`zone`.`zone_id`=`zone_event_map`.`zone_id`')->asArray()->all();
+    }
+
 }

@@ -30,4 +30,5 @@ phpunit.phar
 .vscode
 /web/index.php
 /assets/JqueryAssets.php
-/web/.htaccess
+/controllers/TestController.php
+/web/zeCache/zeCache.js
