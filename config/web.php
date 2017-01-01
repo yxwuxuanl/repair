@@ -12,11 +12,6 @@ $config = [
             'cookieValidationKey' => 'v6xjjNOyzJnbQSmI5MgAYstK4zNjREEx',
         ],
 
-        'account' => [
-            'class' => 'app\modules\AccountModule',
-        ],
-
-
         'cookie' => [
             'class' => 'app\controllers\CookieController',
             'securityKey' => '63cliM073L18071KwV72JagSr81JKv8s',
@@ -65,6 +60,11 @@ $config = [
                 'loginout' => 'user/login-out'
             ],
         ],
+
+		'zeCache' => [
+			'class' => 'app\controllers\zeCacheController',
+			'dir' => '@webroot/zeCache/'
+		],
     ],
     'params' => $params,
 

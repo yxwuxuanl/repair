@@ -12,13 +12,8 @@ class ZoneController extends Controller
 {
     public function behaviors()
     {
+    //    return [];
        return [
-           'verbs' => [
-               'class' => VerbFilter::className(),
-               'actions' => [
-                   'delete' => ['POST'],
-               ],
-           ],
            'login' => [
                'class' => LoginFilter::className()
            ],
@@ -29,36 +24,26 @@ class ZoneController extends Controller
        ];
     }
 
-    public function actionGetParent()
+    public function actionMain($action,$params)
     {
-        \Yii::$app->response->format = 'json';
-        $row = Zone::getParent();
-        return array_merge(['status' => 1],array_merge($row,['length' => count($row)]));
-    }
+        if(method_exists($this,$action)){
 
-    public function actionGetSubs($parent)
-    {
-        \Yii::$app->response->format = 'json';
+            $result = call_user_func_array([$this,$action],explode(',',$params));
 
-        if(is_numeric($parent) && $parent >= 1000 && $parent < 10000)
-        {
-            $result = Zone::getSubs($parent);
+            \Yii::$app->response->format = 'json';
 
-            if(empty($result))
-            {
-                return ['status' => 0,'message' => '该区域无子区域'];
-            }else{
-                return array_merge(['status' => 1],array_merge($result,['length' => count($result)]));
+            if($result['status'] === 1){
+                if(\Yii::$app->get('zeCache')->make() !== true){
+                    \Yii::$app->get('zeCache')->delete();
+                }
             }
+
+            return $result;
         }
-    
-        return ['status' => -1];
     }
 
-    public function actionRename($zone_id,$zone_name)
+    public function rename($zone_id,$zone_name)
     {
-		\Yii::$app->response->format = 'json';
-
         $model = Zone::findOne($zone_id);
 
         if($model !== null){
@@ -74,18 +59,16 @@ class ZoneController extends Controller
     
     }
 
-    public function actionDelete()
+    public function delete($zone_id)
     {
-        \Yii::$app->response->format = 'json';
-
-        $zone_id = \Yii::$app->request->post('zone_id');
-
         if(($ar = Zone::findOne($zone_id)))
         {
             if(static::isParent($zone_id))
             {
                 if(Zone::deleteZones($zone_id)){
-                    return ['status' => 1];
+                    if(\Yii::$app->get('zeCache')->make()){
+                        return ['status' => 1];
+                    }
                 }
 
                 return ['status' => -1];
@@ -93,7 +76,9 @@ class ZoneController extends Controller
             }else{
 
                 if($ar->delete()){
-                    return ['status' => 1];
+                    if(\Yii::$app->get('zeCache')->make()){
+                        return ['status' => 1];
+                    }
                 }
 
                 return ['status' => -1];
@@ -102,7 +87,7 @@ class ZoneController extends Controller
         return ['status' => 0];
     }
 
-    public function actionAdd($name = null,$parent = null)
+    public function add($name,$parent)
     {
         \Yii::$app->response->format = 'json';
 
@@ -114,6 +99,7 @@ class ZoneController extends Controller
 
         if($model->validate()){
             if($model->save()){
+                \Yii::$app->get('zeCache')->make();
                 return ['status' => 1,'id' => $lastId];
             }
             return ['status' => -1];

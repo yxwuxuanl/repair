@@ -8,6 +8,7 @@
 
 namespace app\controllers;
 use app\behaviors\NoCsrf;
+use app\filters\LoginFilter;
 use app\models\Account;
 use yii\web\Controller;
 
@@ -27,5 +28,25 @@ class ServiceController extends Controller
     {
         \Yii::$app->set('service',$this);
     }
+
+    public function actionMakeCache()
+    {
+        \Yii::$app->response->format = 'json';
+        
+        if(\Yii::$app->get('zeCache')->make()){
+            return ['status' => 1];
+        }
+        return ['status' => 0];
+    }
+
+    public function behaviors()
+	{
+		return [
+			[
+				'class' => LoginFilter::className(),
+				'action' => 'make-cache'
+			]
+		];
+	}
 
 }

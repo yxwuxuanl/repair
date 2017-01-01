@@ -11,14 +11,21 @@ use yii\base\ActionFilter;
 
 class LoginFilter extends ActionFilter
 {
+	public $action;
+
     function beforeAction($action)
     {
-        parent::beforeAction($action);
-
-        if(\Yii::$app->getSession()->get('IS_LOGIN',false)){
-        	return true;
+		if($this->action && $action->id == $this->action){
+			if(\Yii::$app->getSession()->get('IS_LOGIN',false)){
+				return true;
+			}
+		}else{
+			if(\Yii::$app->getSession()->get('IS_LOGIN',false)){
+				return true;
+			}
 		}
 
 		\Yii::$app->response->headers->add('status',403);
+		return false;
     }
 }
