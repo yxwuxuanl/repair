@@ -18,7 +18,18 @@ function zeCache() {
             return z[parent]['subs'];
         },
         'getEvents': function (zid) {
-            
+            if (!zid) {
+                var
+                    event = [];
+                
+                for (var key in e) {
+                    event.push({ 'event_name': e[key]['event_name'], 'event_id': key });
+                }
+
+                return event;
+            } else {
+                return z[zid]['events'];
+            }
         },
         'getZones': function (eid) {
             

@@ -66,9 +66,7 @@ class ZoneController extends Controller
             if(static::isParent($zone_id))
             {
                 if(Zone::deleteZones($zone_id)){
-                    if(\Yii::$app->get('zeCache')->make()){
-                        return ['status' => 1];
-                    }
+                    return ['status' => 1];
                 }
 
                 return ['status' => -1];
@@ -76,9 +74,7 @@ class ZoneController extends Controller
             }else{
 
                 if($ar->delete()){
-                    if(\Yii::$app->get('zeCache')->make()){
-                        return ['status' => 1];
-                    }
+                    return ['status' => 1];
                 }
 
                 return ['status' => -1];
