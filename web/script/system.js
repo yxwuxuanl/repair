@@ -333,6 +333,10 @@ $(function ($service) {
 
         },
 
+       'renderDt': function () {
+           
+        },
+
        'destroy': function () {
 
         }

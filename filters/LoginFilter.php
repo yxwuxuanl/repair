@@ -15,17 +15,28 @@ class LoginFilter extends ActionFilter
 
     function beforeAction($action)
     {
-		if($this->action && $action->id == $this->action){
-			if(\Yii::$app->getSession()->get('IS_LOGIN',false)){
-				return true;
+		if(!$this->action){
+			if(!\Yii::$app->getSession()->get('IS_LOGIN',false)){
+				\Yii::$app->response->headers->add('status',403);
+				return false;
+			}
+		}else if(is_array($this->action)){
+			if(in_array($action,$this->action)){
+				if(!\Yii::$app->getSession()->get('IS_LOGIN',false)){
+					\Yii::$app->response->headers->add('status',403);
+					return false;
+				}
 			}
 		}else{
-			if(\Yii::$app->getSession()->get('IS_LOGIN',false)){
-				return true;
+			if($this->action == $action){
+				if(!\Yii::$app->getSession()->get('IS_LOGIN',false)){
+					\Yii::$app->response->headers->add('status',403);
+					return false;
+				}
 			}
 		}
 
-		\Yii::$app->response->headers->add('status',403);
-		return false;
+		return true;
+
     }
 }
