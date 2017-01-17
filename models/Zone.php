@@ -55,7 +55,7 @@ class Zone extends \yii\db\ActiveRecord
     {
         if(ZoneController::checkZid($this->zone_id,true)){
 
-            // -- DELETE HOOK --
+			zeMap::deleteZone($this->zone_id);
 
             return parent::deleteAll(['between','zone_id',$this->zone_id,$this->zone_id + 99]);
         }else{
