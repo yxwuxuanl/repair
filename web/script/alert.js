@@ -10,7 +10,7 @@ $(function ($service) {
      *  @param Function closeCallBack
      */
 
-    $service.extend('alert', function () {
+    $service.addUtility('alert', function () {
         var
             args, $modal, _alert, titleClass, buttonClass;
         
@@ -20,33 +20,33 @@ $(function ($service) {
                 'success': function () {
                     Array.prototype.unshift.call(arguments, '操作成功');
                     Array.prototype.unshift.call(arguments, 1);
-                    $service.alert.apply(null, arguments);
+                    $service.$helpers.alert.apply(null, arguments);
                 },
                 'error': function () {
                     Array.prototype.unshift.call(arguments, '操作失败');
                     Array.prototype.unshift.call(arguments, 2);
-                    $service.alert.apply(null, arguments);
+                    $service.$helpers.alert.apply(null, arguments);
                 }
             }
         }
 
         if (!('_alert_' in $service)) {    
 
-            _alert = new $service.modal('#alert');
+            _alert = new $service.$helpers.modal('#alert');
             
             _alert['$button'] = _alert.$modal.find('button');
 
-            _alert.onHidenn(function () {
+            _alert.onClosen(function () {
                 this.$title.removeClass('error success');
                 this.$button.removeClass('btn-success btn-danger');
             }, true);
 
-            $service.extend('_alert_', _alert);
+            $service['_alert_'] = _alert;
         }
             
         $modal = _alert || $service._alert_;
 
-        args = $service.args(arguments, {
+        args = $service.$helpers.args(arguments, {
             'level': [
                 function (value) {
                     return !isNaN(value) && value >= 0 && value <= 2;
@@ -82,7 +82,7 @@ $(function ($service) {
         }
 
         if (args.callback) {
-            $modal.onHidenn(args.callback);
+            $modal.onClosen(args.callback);
         }
 
         $modal.show(args.title, args.content, args.autoClose);

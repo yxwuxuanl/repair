@@ -23,10 +23,6 @@ class ServiceAsset extends AssetBundle
 
     public $js = [
         'script/servicepage.js',
-        'script/ajax.js',
-		'script/helper.js',
-		'script/alert.js',
-		'script/modal.js'
     ];
 
     public $depends = [

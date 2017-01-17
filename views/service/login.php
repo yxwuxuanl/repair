@@ -23,11 +23,11 @@ $this->title = '登录';
                 <label for="login-pwd-input">密码</label>
                 <input type="password" name="login-pwd-input" class="form-control" id="login-pwd-input" required maxlength="20" minlength="6">
             </div>
+        
+            <div class="form-group">
+                <button class="btn btn-block btn-primary submit">登录</button>
+            </div>
         </form>
-
-        <div class="form-group">
-            <button class="btn btn-primary submit">登录</button>
-        </div>
     </div>
 </div>
 

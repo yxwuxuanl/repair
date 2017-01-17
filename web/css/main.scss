@@ -1,7 +1,12 @@
-// html,
-// body {
-//   height: 100%;
-// }
+html,
+body {
+  height: 100%;
+}
+
+@import './public.scss';
+@import './alert.scss';
+@import './zone-event.scss';
+@import './spinner.scss';
 
 .container
 {
@@ -13,56 +18,6 @@
   width: 100%;
 }
 
-#system-zone-panel
-{
-  margin-top:10px;
-
-  .zone-name
-  {
-    cursor:pointer;
-  }
-
-  h4
-  {
-    height: 18px;
-  }
-
-  .subs
-  {
-    display: none;
-  }
-
-  .glyphicon-cog
-  {
-    float: right;
-  }
-
-  dd
-  {
-    &:hover
-    {
-      background-color: #d9edf7;
-    }
-  }
-
-  dt
-  {
-    background-color: #428bca;
-    color:#fff;
-
-    .glyphicon
-    {
-      float: right;
-      display: none;
-    }
-  }
-
-   .glyphicon-plus
-  {
-    display: inline-block;
-    margin:5px;
-  }
-}
 
 .tab-pane
 {
@@ -121,4 +76,6 @@
 {
   margin-bottom: 10px;
 }
+
+
 

@@ -29,7 +29,7 @@ $(function($service){
             var 
                 args;
 
-            args = $service.args(arguments,
+            args = $service.$helpers.args(arguments,
                 {
                     'title': [
                         function (value) {
@@ -78,13 +78,13 @@ $(function($service){
             return this;  
         },
 
-        'onHidenn' : function(callback,bind)
+        'onClosen' : function(callback,bind)
         {
             this.bindEvent('hidden.bs.modal',callback,bind);
             return this;
         },
 
-        'onHide' : function(callback,bind)
+        'onClose' : function(callback,bind)
         {
             this.bindEvent('hide.bs.modal',callback,bind);
             return this;
@@ -128,17 +128,17 @@ $(function($service){
         
         'setTitle' : function(content)
         {
-            $service.setContent(this.$title,content);
+            $service.$helpers.setContent(this.$title,content);
             return this;
         },
 
         'setContent' : function(content)
         {
-            $service.setContent(this.$body,content);
+            $service.$helpers.setContent(this.$body,content);
             return this;
         }
     };
     
-    $service.extend('modal', modal);
+    $service.addHelper('modal', modal);
 
 }($service))

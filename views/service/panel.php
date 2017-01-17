@@ -4,10 +4,6 @@ $panels = panels();
 
 foreach($panels as $name => $panel)
 {
-	$asset = ucfirst($name) . 'Asset';
-
-	call_user_func(['app\assets\\' . $asset,'register'],$this);
-
     foreach($panel as $item)
     {
         $panelName = $name . '-' . $item;

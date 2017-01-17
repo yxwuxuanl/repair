@@ -1,0 +1,123 @@
+@mixin ze-add-row()
+{
+    background-color: $gray1;
+    text-align: center;
+    font-size:1.2em;
+    color:#fff;
+    cursor: pointer;
+}
+
+@mixin ze-list-item($bgk,$fsize)
+{
+    background-color: $bgk;
+    font-size:$fsize;
+
+    &:hover .action-icons
+    {
+      display: inline-block;
+    }
+}
+
+#system-zone-panel
+{ 
+  padding-left: 0;
+
+  .subs-zone
+  {
+    display: none;
+
+    ul
+    {
+      margin-bottom:0;
+    }
+  }
+
+  .subs-active
+  {
+    display: block;
+  }
+
+  .show-subs
+  {
+    display: block;
+  }
+
+  .action-icons
+  {
+    @include action-icons(15%);
+    display: none;
+    float: right;
+  }
+
+  .parent-zone
+  {
+    @include ze-list-item($blue,1.1em);
+  }
+
+  .add-row
+  {
+    @include ze-add-row();
+  }
+
+  .subs-zone .list-group-item
+  {
+    @include ze-list-item(#fff, 1em);
+  }
+
+  .event
+  {
+    ul
+    {
+      padding-left: 0;
+      height: 200px;
+      overflow: scroll;
+    } 
+
+    .in
+    {
+      margin-bottom: 20px;
+    }
+
+    h5
+    {
+      text-align: center;
+    }
+
+    .list-group-item
+    {
+      padding: 7px 15px;
+      display: inline-block;
+      width: 50%;
+
+      &:hover
+      {
+        .action-icons
+        {
+          display: inline-block;
+        }
+      }
+    }
+  }
+}
+
+#system-event-panel
+{
+  padding-left: 0;
+
+  .list-group-item
+  {
+    @include ze-list-item($blue,1.1em);
+  }
+
+  .action-icons
+  {
+    @include action-icons(15%);
+    display: none;
+    float: right;
+  }
+
+  .add-row
+  {
+    @include ze-add-row();
+  }
+}

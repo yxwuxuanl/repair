@@ -9,9 +9,9 @@
      */
 
     
-    $service.extend('ajax', function () {
+    $service.addHelper('ajax', function () {
         var
-            args = $service.args(arguments, {
+            args = $service.$helpers.args(arguments, {
                 'url': function (value)
                 {
                     return typeof value == 'string' || typeof value == 'object';

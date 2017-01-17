@@ -15,7 +15,11 @@ function zeCache() {
             return parent;
         },
         'getSubs': function (parent) {
-            return z[parent]['subs'];
+            if (parent in z) {
+                return z[parent]['subs'];
+            } else {
+                return [];
+            }
         },
         'getEvents': function (zid) {
             if (!zid) {
