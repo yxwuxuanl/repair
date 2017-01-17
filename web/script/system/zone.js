@@ -244,7 +244,7 @@ $service.addModule('systemZone', {
         $service.ajax('zone/get-events', {
             'zid': zid
         }).done(function (response) {
-            _this.callEventModal(response.content, $active);
+            _this.callEventModal(response.content, $active, true);
         }).fail(function (response) {
             $service.alert().error('数据获取失败<br/>' + response.describe);
         });
@@ -288,14 +288,18 @@ $service.addModule('systemZone', {
                 }
             })
 
-            modal.extend('render', function (content, mount) {
+            modal.extend('render', function (content, mount, init) {
                 var
                     lis = [],
                     $mount = modal.$body.find('.' + mount + ' ul'),
                     tag = $service.tag,
                     template = $service.template,
                     li_template;
-                
+
+                if (init) {
+                    $mount.html('');
+                }
+
                 li_template = tag('li', ['.list-group-item', { 'data-eid': '{eid}' }], [
                     tag('span', '.event-name', '{ename}'),
 
@@ -330,7 +334,7 @@ $service.addModule('systemZone', {
             'zid': modal.data.$active.attr('data-zid')
         }).done(function () {
             $service.alert().success('删除事件成功', 400, function () {
-                modal.$body.find('.not-in ul').append($target.clone(true,true));
+                modal.render([{ 'event_id': $target.attr('data-eid'), 'event_name': $target.find('.event-name').text()}],'not-in');
                 $target.remove();
             })
         }).fail(function (response) {
@@ -345,7 +349,7 @@ $service.addModule('systemZone', {
             'zid': modal.data.$active.attr('data-zid')
         }).done(function () {
             $service.alert().success('添加事件成功', 400, function () {
-                modal.$body.find('.in ul').append($target.clone(true, true));
+                modal.render([{ 'event_id': $target.attr('data-eid'), 'event_name': $target.find('.event-name').text()}],'in');
                 $target.remove();
             })
         }).fail(function (response) {

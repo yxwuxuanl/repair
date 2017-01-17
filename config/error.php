@@ -11,7 +11,7 @@ $errors = [
 	'2' => 'EMPTY_RESULT',
 	'3' => 'MODEL_VALIDATE_FAIL',
 	'4' => 'INVALID_ARGS',
-	'5' => 'MODEL_SAVE_FAIL'
+	'5' => 'MODEL_SAVE_FAIL',
 ];
 
 foreach($errors as $value => $name){

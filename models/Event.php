@@ -44,6 +44,7 @@ class Event extends ActiveRecord
 		if(!empty($ar = parent::findOne($eid))){
 
 //			-- DELETE HOOK --
+			zeMap::deleteEvent($eid);
 
 			return $ar->delete();
 

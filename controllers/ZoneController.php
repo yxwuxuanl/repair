@@ -82,6 +82,10 @@ class ZoneController extends Controller
         if(!$model->validate()) return $this->fail(REP_MODEL_VALIDATE_FAIL,['message' => $model->errors]);
         if(!$model->save()) return $this->fail(REP_MODEL_SAVE_FAIL);
 
+		if($parent === null){
+			zeMap::addZone($usableId);
+		}
+
         return $this->success(['id' => $usableId]);
     }
 

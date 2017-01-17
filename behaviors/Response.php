@@ -27,10 +27,24 @@ class Response extends Behavior
 		}
 	}
 
-	public function fail($error,$message = '')
+	public function fail($error,$message = null)
 	{
 		\Yii::$app->response->format = 'json';
 
-		return array_merge(['status' => $error,'describe' => \Yii::$app->params['errorCode'][$error]],(array) $message);
+		$data = [];
+
+		if(!is_numeric($error)){
+			$data['status'] = -1;
+			$data['describe'] = $error;
+		}else{
+			$data['status'] = $error;
+			$data['describe'] = \Yii::$app->params['errorCode'][$error];
+		}
+
+		if($message){
+			$data = array_merge($data,(array) $message);
+		}
+
+		return $data;
 	}
 }

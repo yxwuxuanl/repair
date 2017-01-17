@@ -12,7 +12,7 @@ use \yii\base\Controller;
 
 class PrivilegeController extends Controller
 {
-    public function set($privilegeList)
+    public static function set($privilegeList)
     {
 		$session = \Yii::$app->getSession();
 		$privileges = [];
