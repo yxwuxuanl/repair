@@ -1,64 +1,86 @@
-<?php
-    app\assets\ValidateAsset::register($this);
-?>
-
-<div class="content"></div>
-
-<div class="row">
-    <div class="col-md-6 col-md-push-6">  
-        <span data-zid="0000">
-            <span class="glyphicon glyphicon-plus add-zone" id="zone-add-span"></span>
-        </span>
-    </div>
+<div class="content">
+    <ul class="grid list-group">
+        <li class="list-group-item add-row">添加区域</li>
+    </ul>
 </div>
 
-<div class="modal fade " id="zone-modal">
+<script>
+
+    defines['systemZone'] = 'script/system/zone.js';
+
+</script>
+
+<div class="modal fade" id="zone-input-modal">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
                 <h4 class="modal-title"></h4>
             </div>
 
             <div class="modal-body">
-
-                <ul class="nav nav-tabs" role="tablist">
-                    <li role="presentation"><a href="#zone-rename-panel" >重命名</a></li>
-                    <li role="presentation"><a href="#zone-delete-panel" id="zone-delete-a">删除区域</a></li>
-                    <li role="presentation"><a href="#zone-add-panel">添加子区域</a></li>
-                </ul>
-
-                <div role="tabpanel" class="tab-pane fade" id="zone-rename-panel" aria-labelledby="profile-tab">
-
-                    <form role="form" id="zone-rename-form" action="rename">
-                        <div class="form-group">
-                            <label for="zone-rename-input">区域名</label>
-                            <input type="text" class="form-control" name="zone-rename-input" minlength="2" required maxlength="10" id="zone-rename-input">
-                        </div>
-                    </form>
-
+                <form role="form">
                     <div class="form-group">
-                        <button class="btn btn-primary submit" type="button">Rename</button>
+                        <label for="">区域名</label>
+                        <input type="text" class="form-control" required minlength="3">
                     </div>
 
-                </div>
-
-                <div role="tabpanel" class="tab-pane fade" id="zone-delete-panel" aria-labelledby="profile-tab">
-                    <div class="alert alert-warning" role="alert">删除区域将一并删除相对应的报修记录!!!</div>
-                    <button class="btn btn-primary" id="zone-delete-button"></button>
-                </div>
-
-                <div role="tabpanel" class="tab-pane fade" id="zone-add-panel" aria-labelledby="profile-tab">
-                    <form role="form" id="zone-add-form" action="add">
-                        <div class="form-group">
-                            <label for="zone-add-input">区域名</label>
-                            <input type="text" class="form-control" id="zone-add-input" minlength="2" required maxlength="10" name="zone-add-input">
-                        </div>
-                    </form>
                     <div class="form-group">
-                        <button class="btn btn-primary submit" type="button">Add</button>
+                        <button type="button" class="btn btn-primary submit"></button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="zone-delete-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <h4 id="zone-delete-tips">!!删除区域后相关的报修记录将一并删除!!</h4>
+                <button type="button" class="btn btn-primary">删除</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="zone-event-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="event">
+                    <div class="in">
+                        <h5>该区域响应以下事件</h5>
+                        <ul></ul>
+                    </div>
+
+                    <div class="not-in">
+                        <h5>以下事件可以添加到该区域</h5>
+                        <ul>
+                            
+                        </ul>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

@@ -6,6 +6,7 @@ use app\models\Event;
 use app\models\zeMap;
 use app\models\Zone;
 use app\controllers\ZoneController;
+use app\controllers\PrivilegeController;
 
 class zeCacheController
 {
@@ -13,6 +14,12 @@ class zeCacheController
 
 	public function make()
 	{
+		$dir = \Yii::getAlias($this->dir);
+
+		if(!PrivilegeController::has(P_SYSTEM_EVENT) && file_exists($dir . 'zeCache/zeCache.js')){
+			return false;
+		}
+
 		$zones = [];
 		$events = [];
 
@@ -54,8 +61,7 @@ class zeCacheController
 			}
 
 		}
-
-		$dir = \Yii::getAlias($this->dir);
+		
 		$cache = str_replace(['{z}','{e}','{time}'],[json_encode($zones),json_encode($events),date('Y-m-d H:i:s')],file_get_contents($dir . 'zeTemplate.js'));
 
 		file_put_contents($dir . 'zeCache.js',$cache);

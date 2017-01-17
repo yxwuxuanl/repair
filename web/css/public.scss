@@ -1,0 +1,17 @@
+$blue : #428bca;
+$gray1 : #696969;
+
+$error : #a94442;
+$success : #3c763d;
+
+@mixin action-icons($width)
+{
+    text-align: center;
+    cursor: pointer;
+
+    span
+    {
+      display: inline-block;
+      padding:0 5px;
+    }
+}

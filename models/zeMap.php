@@ -17,8 +17,50 @@ class zeMap extends ActiveRecord
 		return 'zone_event_map';
 	}
 
-	public static function all()
+	public function attributes()
 	{
-		return parent::find()->asArray()->all();
+		return ['zone_id','events'];
+	}
+
+	public static function deleteZone($zid){
+		parent::findOne($zid)->delete();
+	}
+
+	public static function deleteEvent($eid,$zid = null){
+
+		$sql = 'UPDATE `zone_event_map` SET `events` = REPLACE(`events`,' . "'{$eid},','')";
+
+		if($zid){
+			$sql .= ' WHERE `zone_id` = ' . $zid;
+		}
+
+		return \Yii::$app->db->createCommand($sql)->execute();
+	}
+
+	public static function addEvent($zid,$eid){
+		return \Yii::$app->db->createCommand('UPDATE `zone_event_map` SET `events` = CONCAT(`events`,' . "'{$eid},')" . ' WHERE `zone_id` = ' . "'{$zid}'")->execute();
+	}
+
+	public static function addZone($zid){
+		$model = new self();
+		$model->zone_id = $zid;
+		$model->insert();
+	}
+
+	public static function getEvents($zid){
+		$event = parent::find()->where(['zone_id' => $zid])->select('events')->asArray()->one();
+
+		if(empty($event)) return null;
+
+		$event = explode(',',$event['events']);
+		array_pop($event);
+
+		$in = parent::find()->where(['in','event_id',$event])->from('event')->asArray()->all();
+		$in['length'] = count($in);
+
+		$notIn = parent::find()->where(['not in','event_id',$event])->from('event')->asArray()->all();
+		$notIn['length'] = count($notIn);
+
+		return ['in' => $in,'notIn' => $notIn];
 	}
 }

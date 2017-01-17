@@ -1,5 +1,5 @@
 $(function () {    
-    $service.registerModule('login', {
+    $service.addModule('login', {
         'init': function () {
             $('#login-form').validate({
                 'messages': {
@@ -23,34 +23,40 @@ $(function () {
                 event.preventDefault();
 
                 if ($(this).valid()) {
-                    _this.login.call(this);
+                    _this.login.call(_this, $(this));
                 }
+
             })
         },
 
-        'login': function () {
+        'login': function ($form) {
 
             var
-                un = $(this).find('#login-un-input').val(),
-                pwd = $(this).find('#login-pwd-input').val();
+                un = $form.find('#login-un-input').val(),
+                pwd = $form.find('#login-pwd-input').val(),
+                _this = this;
 
-            $service.ajax('login/ajax', 'post', {
+            this._ajax('login/ajax', 'post', {
+
                 'un': un,
                 'pwd': pwd,
-                '_csrf': $service.getCsrf()
+                '_csrf': this._getCsrf()
+                
             }).done(function () {
+
                 location.reload();
+
             }).fail(function (response) {
 
                 if(response.status == -1){
-                    $service.alert(2,'登录失败','用户名或密码错误');
+                    _this._alert(2,'登录失败','用户名或密码错误');
                 }else{
-                    $service.alert(2,'登录失败','Login Fail (' + response.status + ')');
+                    _this._alert(2,'登录失败','Login Fail (' + response.status + ')');
                 }
 
             });
         }
     })
 
-    $service.initModule('login');
+    $service.runModule('login',false);
 });

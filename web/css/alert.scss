@@ -1,0 +1,33 @@
+@mixin alert-style($color)
+{
+    .modal-title
+    {
+        color:$color;
+    }
+
+    button
+    {
+        background-color: $color;
+    }
+}
+
+#alert
+{
+    button
+    {
+        font-size: 1.1em;
+        color:#fff;
+    }
+
+    &.error-alert
+    {
+        @include alert-style($error);
+    }
+
+    &.success-alert
+    {
+        @include alert-style($success);
+    }
+
+}
+

@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use app\controllers\EventController;
 use yii\db\ActiveRecord;
 
 class Event extends ActiveRecord
@@ -12,8 +13,46 @@ class Event extends ActiveRecord
 		return 'event';
 	}
 
-	public static function all()
+	public function attributes()
 	{
+		return ['event_id','event_name'];
+	}
+
+	public function scenarios()
+	{
+		return [
+			'add' => ['event_id','event_name'],
+			'delete' => ['event_id'],
+			'rename' => ['event_id','event_name']
+		];
+	}
+
+	public function rules()
+	{
+		return [
+			[['event_id','event_name'],'required'],
+			['event_id',function(){
+				if(!EventController::checkEid($this->event_id)){
+					$this->addError('event_id','INVALID_EVENT_ID');
+				}
+			}],
+			['event_name','string','max' => 30,'min' => 5]
+		];
+	}
+
+	public static function deleteEvent($eid){
+		if(!empty($ar = parent::findOne($eid))){
+
+//			-- DELETE HOOK --
+
+			return $ar->delete();
+
+		}else{
+			return 0;
+		}
+	}
+
+	public static function all(){
 		return parent::find()->asArray()->all();
 	}
 }

@@ -25,6 +25,13 @@ function panels($id = null,$action = null)
 <div class="container">
     <div class="col-md-10 col-md-push-1">
 
+    <div class="spinner">
+        <div class="rect1"></div>
+        <div class="rect2"></div>
+        <div class="rect3"></div>
+        <div class="rect4"></div>
+    </div>
+
     <?= $this->render('nav') ?>
     <?= $this->render('panel') ?>
 

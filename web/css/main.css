@@ -1,30 +1,143 @@
+html,
+body {
+  height: 100%; }
+
+#alert button {
+  font-size: 1.1em;
+  color: #fff; }
+#alert.error-alert .modal-title {
+  color: #a94442; }
+#alert.error-alert button {
+  background-color: #a94442; }
+#alert.success-alert .modal-title {
+  color: #3c763d; }
+#alert.success-alert button {
+  background-color: #3c763d; }
+
+#system-zone-panel {
+  padding-left: 0; }
+  #system-zone-panel .subs-zone {
+    display: none; }
+    #system-zone-panel .subs-zone ul {
+      margin-bottom: 0; }
+  #system-zone-panel .subs-active {
+    display: block; }
+  #system-zone-panel .show-subs {
+    display: block; }
+  #system-zone-panel .action-icons {
+    text-align: center;
+    cursor: pointer;
+    display: none;
+    float: right; }
+    #system-zone-panel .action-icons span {
+      display: inline-block;
+      padding: 0 5px; }
+  #system-zone-panel .parent-zone {
+    background-color: #428bca;
+    font-size: 1.1em; }
+    #system-zone-panel .parent-zone:hover .action-icons {
+      display: inline-block; }
+  #system-zone-panel .add-row {
+    background-color: #696969;
+    text-align: center;
+    font-size: 1.2em;
+    color: #fff;
+    cursor: pointer; }
+  #system-zone-panel .subs-zone .list-group-item {
+    background-color: #fff;
+    font-size: 1em; }
+    #system-zone-panel .subs-zone .list-group-item:hover .action-icons {
+      display: inline-block; }
+  #system-zone-panel .event ul {
+    padding-left: 0;
+    height: 200px;
+    overflow: scroll; }
+  #system-zone-panel .event .in {
+    margin-bottom: 20px; }
+  #system-zone-panel .event h5 {
+    text-align: center; }
+  #system-zone-panel .event .list-group-item {
+    padding: 7px 15px;
+    display: inline-block;
+    width: 50%; }
+    #system-zone-panel .event .list-group-item:hover .action-icons {
+      display: inline-block; }
+
+#system-event-panel {
+  padding-left: 0; }
+  #system-event-panel .list-group-item {
+    background-color: #428bca;
+    font-size: 1.1em; }
+    #system-event-panel .list-group-item:hover .action-icons {
+      display: inline-block; }
+  #system-event-panel .action-icons {
+    text-align: center;
+    cursor: pointer;
+    display: none;
+    float: right; }
+    #system-event-panel .action-icons span {
+      display: inline-block;
+      padding: 0 5px; }
+  #system-event-panel .add-row {
+    background-color: #696969;
+    text-align: center;
+    font-size: 1.2em;
+    color: #fff;
+    cursor: pointer; }
+
+.spinner {
+  margin: 100px auto;
+  width: 70px;
+  height: 60px;
+  text-align: center;
+  font-size: 10px;
+  position: fixed;
+  z-index: 9999;
+  top: 30%;
+  left: 50%;
+  background-color: #FFCC00;
+  border-radius: 6px;
+  display: none; }
+  .spinner div {
+    background-color: #67CF22;
+    height: 100%;
+    width: 6px;
+    display: inline-block;
+    -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
+    animation: stretchdelay 1.2s infinite ease-in-out; }
+  .spinner .rect2 {
+    -webkit-animation-delay: -1.1s;
+    animation-delay: -1.1s; }
+  .spinner .rect3 {
+    -webkit-animation-delay: -1s;
+    animation-delay: -1s; }
+  .spinner .rect4 {
+    -webkit-animation-delay: -0.9s;
+    animation-delay: -0.9s; }
+  .spinner .rect5 {
+    -webkit-animation-delay: -0.8s;
+    animation-delay: -0.8s; }
+  .spinner p {
+    font-size: 1.2em;
+    color: red; }
+
+@-webkit-keyframes stretchdelay {
+  0%, 40%, 100% {
+    -webkit-transform: scaleY(0.4); }
+  20% {
+    -webkit-transform: scaleY(1); } }
+@keyframes stretchdelay {
+  0%, 40%, 100% {
+    transform: scaleY(0.4);
+    -webkit-transform: scaleY(0.4); }
+  20% {
+    transform: scaleY(1);
+    -webkit-transform: scaleY(1); } }
 .container {
   margin-top: 20px; }
 
 #login-btn {
   width: 100%; }
-
-#system-zone-panel {
-  margin-top: 10px; }
-  #system-zone-panel .zone-name {
-    cursor: pointer; }
-  #system-zone-panel h4 {
-    height: 18px; }
-  #system-zone-panel .subs {
-    display: none; }
-  #system-zone-panel .glyphicon-cog {
-    float: right; }
-  #system-zone-panel dd:hover {
-    background-color: #d9edf7; }
-  #system-zone-panel dt {
-    background-color: #428bca;
-    color: #fff; }
-    #system-zone-panel dt .glyphicon {
-      float: right;
-      display: none; }
-  #system-zone-panel .glyphicon-plus {
-    display: inline-block;
-    margin: 5px; }
 
 .tab-pane {
   display: none; }

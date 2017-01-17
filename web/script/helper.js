@@ -7,11 +7,20 @@ $(function ($service) {
      * @param Object appendTo
      */
 
-    $service.extend('tag', function () {
+    $service.addHelper('template', function (text, params) {
+
+        for (var key in params) {
+            text = text.replace(new RegExp('{' + key + '}', 'g'), params[key]);
+        }
+
+        return text;
+    })
+
+    $service.addHelper('tag', function () {
         var
             args, options = {}, tag = [], attr_func;
         
-        args = $service.args(arguments, {
+        args = $service.$helpers.args(arguments, {
             'tagName': function (value) {
                 return typeof value == 'string';
             },
@@ -47,7 +56,7 @@ $(function ($service) {
             } else if (typeof attr == 'string') {
                 if (attr.slice(0, 1) == '.') {
                     tag.push(' class="' + attr.slice(1) + '"');
-                } else {
+                } else if(attr.slice(0,1) == '#'){
                     tag.push(' id="' + attr.slice(1) + '"');
                 }
             }
@@ -69,7 +78,7 @@ $(function ($service) {
                     if (typeof args.content[i] == 'string') {
                         tag.push(args.content[i]);
                     } else if ($.isArray(args.content[i])) {
-                        tag.push($service.tag.apply(null, args.content[i]));
+                        tag.push($service.$helpers.tag.apply(null, args.content[i]));
                     }
                 }
             }
@@ -90,7 +99,7 @@ $(function ($service) {
      *  @param String|Object content
      * */
 
-    $service.extend('setContent', function ($ele, content) {
+    $service.addHelper('setContent', function ($ele, content) {
         if (content === undefined) {
             return $ele.html('');
         } else if ($.isArray(content)) {
@@ -107,7 +116,7 @@ $(function ($service) {
      *  @param Object Params(Name => Contidion,defaultValue)
      */
 
-    $service.extend('args', function (arguments_, params) {
+    $service.addHelper('args', function (arguments_, params) {
         var
             args = {}, defaultValue, func;
 
@@ -133,11 +142,11 @@ $(function ($service) {
         return args;
     });
 
-    $service.extend('getCsrf', function () {
+    $service.addHelper('getCsrf', function () {
         return $('meta[name="csrf-token"]').attr('content');
     })
 
-    $service.extend('addFormValidate', function ($form, $context, rules) {
+    $service.addHelper('addFormValidate', function ($form, $context, rules) {
         if (typeof $form == 'object') {
             for (var name in $form) {
                 $service.addFormValidate(name, $context, $form[name]);
@@ -151,7 +160,7 @@ $(function ($service) {
         }
     })
 
-    $service.extend('ensureZeCache', function () {
+    $service.addHelper('loadCache', function () {
         
         return $.get('zeCache/zeCache.js').then(function (response, status, xhr) {
             if (xhr.status == '200' || xhr.status == '304') {
@@ -171,18 +180,6 @@ $(function ($service) {
                 })
             }
         )
-    })
-
-    $service.extend('destroy', function (module) {
-        if ($.isArray(module)) {
-            for (var i = 0, len = module.length; i < len; i++){
-                $service.destroy(module[i]);
-            }
-        } else {
-            if (module in $service.contains) {
-                $service.contains[module].destroy();
-            }
-        }
     })
 
 }($service))

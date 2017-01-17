@@ -6,20 +6,26 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
+app\assets\ServiceAsset::register($this);
+
 ?>
-<?php $this->beginPage() ?>
 <!DOCTYPE html>
 <html lang="<?= Yii::$app->language ?>">
+
 <head>
     <meta charset="<?= Yii::$app->charset ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?= Html::csrfMetaTags() ?>
-    <title><?= Html::encode($this->title) ?></title>
+    <title>Repair System</title>
     <?php $this->head() ?>
 </head>
+
+<script>
+    var defines = {};
+</script>
+
 <body>
 
-<?php $this->beginBody() ?>
 
 <?= $content ?>
 
