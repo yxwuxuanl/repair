@@ -1,4 +1,4 @@
-$service.addModule('systemEvent', {
+$service.addModule('system-event', {
 
     'modals': {},
 
@@ -119,7 +119,11 @@ $service.addModule('systemEvent', {
                         $form = this.$body.find('form'),
                         modal = this;
                     
-                    $service.validate($form);
+
+                    $service.loader('validate', function () {
+                        $form.validate(); 
+                    });
+                    
                     this['$form'] = $form;
                     this['$button'] = this.$body.find('button');
 

@@ -1,4 +1,4 @@
-$service.addModule('systemZone', {
+$service.addModule('system-zone', {
     'modals': {},
     
     'renderParent': function (content) {
@@ -20,7 +20,6 @@ $service.addModule('systemZone', {
                 tag('span', ['.glyphicon glyphicon-trash', { 'action': 'delete' }]),
                 tag('span', ['.glyphicon glyphicon-list', { 'action': 'event' }])
             ])
-            
         ]);
             
         for (var i = 0, len = content.length; i < len; i++) {
@@ -33,15 +32,11 @@ $service.addModule('systemZone', {
         }
         
         if (i > 1) {
-
             $contain = $contain.detach();
             $contain.append(lis.join(''));
             this.$panel.find('.content').append($contain);
-
         } else {
-
             $contain.append(lis.join(''));
-            
         }
 
         lis = null;
@@ -86,7 +81,7 @@ $service.addModule('systemZone', {
                 if ($target.hasClass('parent-zone')) {
                     _this.showSubs($target);
                 } else if ($target.hasClass('add-row')) {
-                    _this.add.call(_this,null);
+                    _this.add.call(_this, null);
                 }
             }
 
@@ -95,7 +90,7 @@ $service.addModule('systemZone', {
 
     'formHandlers': {
         'add': function ($form, modal) {
-            if ($form.valid()) {    
+            if ($form.valid()) {
                 var
                     $active = modal.data.$active,
                     instance = this,
@@ -121,20 +116,12 @@ $service.addModule('systemZone', {
                     });
 
                 }).fail(function (response) {
-                    var
-                        code = response.status;
-                    
-                    $service.alert().error('添加失败(Error Code : ' + code + ' )', function () {
-                        if (code == -5) {
-                            _this.reRun();
-                        }
-                    })
-
+                    $service.alert().error('添加失败<br/>' + response.describe);
                 });
             }
         },
         
-        'rename': function ($form,modal) {
+        'rename': function ($form, modal) {
             if ($form.valid()) {
 
                 var
@@ -147,7 +134,7 @@ $service.addModule('systemZone', {
 
                 $service.ajax('zone/rename', {
                     'zid': zid,
-                    'zone_name' : zname
+                    'zone_name': zname
                 }).done(function () {
                     $service.alert().success('重命名成功', 400, function () {
                         $active.find('.zone-name').text(zname);
@@ -172,60 +159,63 @@ $service.addModule('systemZone', {
                     if ($active.hasClass('parent-zone')) {
                         $active.next().remove();
                     }
-                    $active.remove();  
+                    $active.remove();
                 })
             }).fail(function (response) {
                 $service.alert().error('删除失败<br/>' + response.describe);
             });
         }
-    },    
+    },
 
     'callModal': function ($active, action) {
         if (!('input' in this.modals)) {
-            var    
-                modal = this.modals['input'] = new $service.modal(this.$panel.find('#zone-input-modal'),{
-                'close': function () { 
-                    this.data = null;
-                    this.$form.validate().resetForm();
-                    this.$form[0].reset();
-                },
-                'show': function () {
-                    if (this.data.action == 'add') {
-                        if (this.data.$active) {
-                            this.setTitle('添加一个新区域至 [' + this.data.$active.find('.zone-name').text() + ']');
-                        } else {
-                            this.setTitle('添加一个主要区域');
+            var
+                modal = this.modals['input'] = new $service.modal(this.$panel.find('#zone-input-modal'), {
+                    'close': function () {
+                        this.data = null;
+                        this.$form.validate().resetForm();
+                        this.$form[0].reset();
+                    },
+                    'show': function () {
+                        if (this.data.action == 'add') {
+                            if (this.data.$active) {
+                                this.setTitle('添加一个新区域至 [' + this.data.$active.find('.zone-name').text() + ']');
+                            } else {
+                                this.setTitle('添加一个主要区域');
+                            }
+
+                            this.$button.text('添加');
+                        } else if (this.data.action == 'rename') {
+                            this.setTitle('重命名 [' + this.data.$active.find('.zone-name').text() + ']');
+                            this.$button.text('重命名');
                         }
+                    },
+                    'init': function () {
+                        var
+                            $form = this.$body.find('form'),
+                            modal = this;
 
-                        this.$button.text('添加');
-                    } else if (this.data.action == 'rename') {
-                        this.setTitle('重命名 [' + this.data.$active.find('.zone-name').text() + ']');
-                        this.$button.text('重命名');
+                        $form.submit(function (event) {
+                            event.preventDefault();
+                            modal.data.handler.call(modal.data.instance, $(this), modal);
+                        })
+
+                        $service.loader('validate', function () {
+                            $form.validate();
+                        })
+
+                        this['$form'] = $form;
+                        this['$button'] = this.$body.find('button');
                     }
-                },
-                'init': function () {
-                    var
-                        $form = this.$body.find('form'),
-                        modal = this;
-
-                    $form.submit(function (event) {
-                        event.preventDefault();
-                        modal.data.handler.call(modal.data.instance, $(this), modal);
-                    })
-
-                    $service.validate($form);
-                    this['$form'] = $form; 
-                    this['$button'] = this.$body.find('button');
-                }
-            });
+                });
         }
 
-        (modal || this.modals['input']).extend('data',{
+        (modal || this.modals['input']).extend('data', {
             '$active': $active,
             'action': action,
             'handler': this.formHandlers[action],
-            'instance' : this
-        }).show();  
+            'instance': this
+        }).show();
     },
 
     'add': function ($active) {
@@ -233,7 +223,7 @@ $service.addModule('systemZone', {
     },
 
     'rename': function ($active) {
-        this.callModal($active, 'rename'); 
+        this.callModal($active, 'rename');
     },
 
     'event': function ($active) {
@@ -244,7 +234,7 @@ $service.addModule('systemZone', {
         $service.ajax('zone/get-events', {
             'zid': zid
         }).done(function (response) {
-            _this.callEventModal(response.content, $active, true);
+            _this.callEventModal(response.content, $active);
         }).fail(function (response) {
             $service.alert().error('数据获取失败<br/>' + response.describe);
         });
@@ -268,17 +258,14 @@ $service.addModule('systemZone', {
                         
                         if ($target.tagName == 'SPAN') {
                             $target = $($target);
-                            _this[$target.attr('action')](modal,$target.parent().parent());
+                            _this[$target.attr('action')](modal, $target.parent().parent());
                         }
                     })
                 },
                 'show': function () {
                     
-                    if (this.data.content.in.length > 0) {
-                        this.render(this.data.content.in, 'in');
-                    }
-
-                    this.render(this.data.content.notIn, 'not-in');
+                    this.render(this.data.content.in, 'in', true);
+                    this.render(this.data.content.notIn, 'not-in', true);
                     this.data.content = null;
 
                     this.setTitle('区域 [' + this.data.$active.find('.zone-name').text() + ']');
@@ -299,7 +286,11 @@ $service.addModule('systemZone', {
                 if (init) {
                     $mount.html('');
                 }
-
+                    
+                if (content.length == 0) {
+                    return;
+                }
+                
                 li_template = tag('li', ['.list-group-item', { 'data-eid': '{eid}' }], [
                     tag('span', '.event-name', '{ename}'),
 
@@ -308,39 +299,34 @@ $service.addModule('systemZone', {
                     ])
                 ]);
 
-                for (var i = 0, len = content.length; i < len; i++){
+                for (var i = 0, len = content.length; i < len; i++) {
                     lis.push(template(li_template, {
                         'eid': content[i]['event_id'],
-                        'ename' : content[i]['event_name']
+                        'ename': content[i]['event_name']
                     }))
                 }
 
                 $mount.append(lis.join(''));
             })
-
         }
-
         (modal || this.modals['event']).extend('data', {
             '$active': $active,
             'content': data
         }).show();
-
     },
 
-    'removeEvent': function (modal, $target) { 
-        
+    'removeEvent': function (modal, $target) {
         $service.ajax('zone/remove-event', {
             'eid': $target.attr('data-eid'),
             'zid': modal.data.$active.attr('data-zid')
         }).done(function () {
             $service.alert().success('删除事件成功', 400, function () {
-                modal.render([{ 'event_id': $target.attr('data-eid'), 'event_name': $target.find('.event-name').text()}],'not-in');
+                modal.render([{ 'event_id': $target.attr('data-eid'), 'event_name': $target.find('.event-name').text() }], 'not-in');
                 $target.remove();
             })
         }).fail(function (response) {
             $service.alert().error('删除失败<br/>' + response.describe);
         });
-        
     },
 
     'addEvent': function (modal, $target) {
@@ -349,7 +335,7 @@ $service.addModule('systemZone', {
             'zid': modal.data.$active.attr('data-zid')
         }).done(function () {
             $service.alert().success('添加事件成功', 400, function () {
-                modal.render([{ 'event_id': $target.attr('data-eid'), 'event_name': $target.find('.event-name').text()}],'in');
+                modal.render([{ 'event_id': $target.attr('data-eid'), 'event_name': $target.find('.event-name').text() }], 'in');
                 $target.remove();
             })
         }).fail(function (response) {
@@ -357,14 +343,14 @@ $service.addModule('systemZone', {
         });
     },
 
-    'delete': function ($active) { 
+    'delete': function ($active) {
         if (!('delete' in this.modals)) {
             var
                 modal;
             
             modal = this.modals['delete'] = new $service.modal(this.$panel.find('#zone-delete-modal'), {
                 'close': function () {
-                    this.data = null;  
+                    this.data = null;
                 },
                 'init': function () {
                     
@@ -394,7 +380,7 @@ $service.addModule('systemZone', {
             len;
         
         if (!$mount.data('IS_LOAD')) {
-            this.renderSubs($target.attr('data-zid'), $contain, $mount,$target);
+            this.renderSubs($target.attr('data-zid'), $contain, $mount, $target);
         } else {
             len = $contain.children().length;
 
@@ -405,14 +391,13 @@ $service.addModule('systemZone', {
                 $service.alert().error('该区域无子区域');
             }
         }
-
     },
 
-    'renderSubs': function (id, $contain, $mount,$target) {
+    'renderSubs': function (id, $contain, $mount, $target) {
 
         if (typeof id != 'object') {
             var
-                _this = this;    
+                _this = this;
 
             $service.ajax('zone/get-subs', {
                 'zid': id
@@ -426,7 +411,7 @@ $service.addModule('systemZone', {
             });
         } else {
             var
-                data = id,    
+                data = id,
                 lis = [],
                 tag = $service.tag,
                 template = $service.template,
@@ -436,12 +421,12 @@ $service.addModule('systemZone', {
                 tag('span', '.zone-name', '{zname}'),
 
                 tag('span', '.action-icons', [
-                    tag('span', ['.glyphicon glyphicon-pencil',{'action' : 'rename'}]),
-                    tag('span', ['.glyphicon glyphicon-trash',{'action' : 'delete'}])
+                    tag('span', ['.glyphicon glyphicon-pencil', { 'action': 'rename' }]),
+                    tag('span', ['.glyphicon glyphicon-trash', { 'action': 'delete' }])
                 ])
             ]);
 
-            for (var i = 0, len = data.length; i < len; i++){
+            for (var i = 0, len = data.length; i < len; i++) {
                 li = template(li_template, { 'zid': data[i]['zone_id'], 'zname': data[i]['zone_name'] });
                 lis.push(li);
             }
@@ -454,7 +439,5 @@ $service.addModule('systemZone', {
                 $mount.data('IS_LOAD', true);
             }
         }
-    },
-
-
+    }
 });

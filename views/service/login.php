@@ -5,10 +5,6 @@
  * Date: 2016/11/10
  * Time: 上 午9:54
  */
-
-app\assets\LoginAsset::register($this);
-
-$this->title = '登录';
 ?>
 
 <div class="container">
@@ -31,4 +27,12 @@ $this->title = '登录';
     </div>
 </div>
 
+<script>
+    defines['login'] = 'script/login.js';
+
+    window.onload = function()
+    {
+        $service.runModule('login');
+    }
+</script>
 

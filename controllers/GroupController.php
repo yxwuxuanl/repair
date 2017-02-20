@@ -7,40 +7,173 @@
  */
 
 namespace app\controllers;
-use yii\base\Component;
 
-class GroupController extends Component
+use app\filters\CustomResponseFilter;
+use app\filters\LoginFilter;
+use app\filters\RoleFilters;
+use app\formatter\Status;
+use app\models\Account;
+use app\models\Event;
+use app\models\Group;
+use yii\base\Exception;
+use yii\web\Controller;
+use app\controllers\RoleController as Role;
+
+class GroupController extends Controller
 {
-    public function set($group)
-    {
-        \Yii::$app->getSession()->set('group',explode(',',$group));
-    }
+	const EVENT_DELETE = 'delete';
 
-    public function get($uid = null)
-    {
-        if(!$uid)
-        {
-            if(!\Yii::$app->getSession()->get('group',false))
-            {
-                $this->set($this->getUserGroup(\Yii::$app->account->uid));
-            }
-        }
 
-        return \Yii::$app->getSession()->get('group');
-    }
+	public function behaviors()
+	{
+		return [
+			'response' => [
+				'class' => CustomResponseFilter::className(),
+			],
+			'role' => [
+				'class' => RoleFilters::className(),
+				'rules' => [
+					'get-all' => Role::SYSTEM_ADMIN,
+					'add' => Role::SYSTEM_ADMIN,
+				]
+			],
+//			'login' => [
+//				'class' => LoginFilter::className()
+//			]
+		];
+	}
 
-    public function getUserGroup($uid)
-    {
-        
-    }
+	public function actionGetAll($includeAdmin = true,$noAssign = true)
+	{
+		$row = Group::getAll($includeAdmin);
 
-    public function inGroup()
-    {
+		if($noAssign)
+		{
+			unset($row['g_noassign']);
+		}
 
-    }
+		return $row;
+	}
 
-    public function changeAccountGroup($uid,$group)
-    {
+	public function actionAdd($groupName,$groupAdmin,$events)
+	{
+		$model = new Group(['scenario' => Group::CREATE]);
 
-    }
+		$model->group_name = $groupName;
+		$model->group_admin = $groupAdmin;
+		$model->events = $events;
+		$model->group_id = 'g_' . substr(uniqid(),-8);
+
+		if(!$model->validate()) return Status::INVALID_ARGS;
+
+		try
+		{
+			$model->insert();
+		}catch (Exception $e)
+		{
+			return Status:: GROUP_EXIST;
+		}
+
+		return ['group_id' => $model->group_id];
+	}
+
+	public function actionRename($group,$name)
+	{
+		$query = Group::find();
+
+		$query->where('`group_id`=:gid');
+		$query->params([':gid' => $group]);
+
+		$ar = $query->one();
+
+		if($ar === NULL) return Status::INVALID_ARGS;
+
+		$ar->scenario = Group::RENAME;
+		$ar->group_name = $name;
+
+		if(!$ar->validate()) return Status::INVALID_ARGS;
+
+		try
+		{
+			$ar->update();
+		}catch (Exception $e)
+		{
+			return Status::GROUP_EXIST;
+		}
+
+		return Status::SUCCESS;
+	}
+
+	public function actionDelete($group)
+	{
+		$query = Group::find();
+
+		$query->where('`group_id`=:gid',[':gid' => $group]);
+		$ar = $query->one();
+
+		if($ar === NULL) return Status::INVALID_ARGS;
+		$ar->delete();
+		Account::clearGroup($group);
+
+		return Status::SUCCESS;
+	}
+
+	public function actionChangeAdmin($group,$admin)
+	{
+		$ar = Group::find()->where('`group_id`=:gid',[':gid' => $group])->one();
+		if($ar === NULL) return Status::INVALID_ARGS;
+		$ar->group_admin = $admin;
+		if(!$ar->validate()) return Status::INVALID_ARGS;
+
+		try
+		{
+			$ar->update();
+		}catch(\Exception $e)
+		{
+			return Status::DATABASE_SAVE_FAIL;
+		}
+
+		return Status::SUCCESS;
+	}
+
+
+	public function actionDeleteEvent($group,$event)
+	{
+		if(!Event::checkEid($event)) return Status::INVALID_ARGS;
+		$ar = Group::find()->where('`group_id`=:gid',[':gid' => $group])->one();
+		if($ar === NULL) return Status::INVALID_ARGS;
+		$oldEvents = $ar->events;
+		$ar->events = preg_replace('/' . $event.'(,)?/','',$oldEvents);
+		$ar->update();
+		return Status::SUCCESS;
+	}
+
+	public function actionAddEvent($group,$event)
+	{
+		if(!Event::checkEid($event) || !Event::isExist($event)) return Status::INVALID_ARGS;
+		$ar = Group::find()->where('`group_id`=:gid',[':gid' => $group])->one();
+		if($ar === NULL) return Status::INVALID_ARGS;
+		$oldEvents = $ar->events;
+		$ar->events = $oldEvents . ',' . $event;
+		$ar->update();
+		return Status::SUCCESS;
+	}
+
+	public function actionAddMember($aid,$group = NULL)
+	{
+		if(!Account::checkAid($aid) || !Account::isNoAssign($aid)) return Status::INVALID_ARGS;
+		if(Role::is(Role::GROUP_ADMIN))
+		{
+			$group = \Yii::$app->getSession()->get('group');
+		}else{
+			if(!Group::checkGid($group) || !Group::isExist($group)) return Status::INVALID_ARGS;
+		}
+		Account::changeGroup($aid,$group);
+		return Status::SUCCESS;
+	}
+
+	public function actionDeleteMember($aid)
+	{
+		$group = \Yii::$app->getSession()->get('group');
+	}
 }

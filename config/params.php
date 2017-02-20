@@ -1,7 +1,5 @@
 <?php
 
-
 return [
-	'privilege' => require(__DIR__ . '/privilege.php'),
-	'errorCode' => require(__DIR__ . '/error.php')
+	'defaultPassword' => '*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9' // 123456
 ];

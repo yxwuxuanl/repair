@@ -6,16 +6,6 @@
  * Time: 下午6:46
  */
 
-$errors = [
-	'1' => 'MODEL_NOT_FOUND',
-	'2' => 'EMPTY_RESULT',
-	'3' => 'MODEL_VALIDATE_FAIL',
-	'4' => 'INVALID_ARGS',
-	'5' => 'MODEL_SAVE_FAIL',
-];
-
-foreach($errors as $value => $name){
-	define('REP_' . $name,$value);
-}
-
-return $errors;
+define('INVALID_ARGS','INVALID_ARGS');
+define('DATABASE_SAVE_FAIL','DATABASE_SAVE_FAIL');
+define('OTHER_ERROR','OTHER_ERROR');

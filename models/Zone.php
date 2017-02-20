@@ -30,7 +30,7 @@ class Zone extends \yii\db\ActiveRecord
              [['zone_name','zone_id'],'required'],
 
              ['zone_id',function(){
-				if(!ZoneController::checkZid($this->zone_id)){
+				if(!static::checkZid($this->zone_id)){
 					$this->addError('zone_id','INVALID_ZONE_ID');
 				}
 			 }],
@@ -38,7 +38,7 @@ class Zone extends \yii\db\ActiveRecord
              [['zone_name'], 'string', 'max' => 50,'min' => 3],
 
              ['zone_id',function(){
-                 if(!ZoneController::checkZid($this->zone_id,true)){
+                 if(!static::checkZid($this->zone_id,true)){
 					$this->addError('zone_id','INVALID_ZONE_ID');
 				 }
              },'on' => 'necessaryParent']
@@ -53,7 +53,7 @@ class Zone extends \yii\db\ActiveRecord
 
     public function deleteZone()
     {
-        if(ZoneController::checkZid($this->zone_id,true)){
+        if(static::checkZid($this->zone_id,true)){
 
 			zeMap::deleteZone($this->zone_id);
 
@@ -74,6 +74,7 @@ class Zone extends \yii\db\ActiveRecord
         if(!$parent)
         {
             $row = $ar->where('right(`zone_id`,2) = 0')->one();
+            if(empty($row)) return 1000;
             return $row['zone_id'] + 100;
         }else{
             $row = $ar->where(['between','zone_id',$parent,$parent + 99])->one();
@@ -101,8 +102,17 @@ class Zone extends \yii\db\ActiveRecord
 		return parent::find()->where(['between','zone_id',$this->zone_id + 1,$this->zone_id + 99])->asArray()->all();
 	}
 
-	public static function getEvents($zid)
-	{
 
+	public static function checkZid($zone_id,$isParent = false)
+	{
+		if(!is_numeric($zone_id) || $zone_id > 9999 || $zone_id < 1000){
+			return false;
+		}
+
+		if($isParent){
+			return is_numeric($zone_id) && substr($zone_id,-2,2) == '00';
+		}
+
+		return true;
 	}
 }

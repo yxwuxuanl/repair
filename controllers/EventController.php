@@ -46,7 +46,7 @@ class EventController extends Controller
 	}
 
 	public function actionDelete($eid){
-		if(!static::checkEid($eid)){
+		if(!Event::checkEid($eid)){
 			return $this->fail(REP_INVALID_ARGS);
 		}
 
@@ -54,13 +54,10 @@ class EventController extends Controller
 		return $this->success();
 	}
 
-	public static function checkEid($eid){
-		return is_string($eid) && strlen($eid) == 10 && substr($eid,0,2) == 'e_';
-	}
 
 	public function actionRename($eid,$ename){
 
-		if(!static::checkEid($eid)) return $this->fail(REP_INVALID_ARGS);
+		if(!Event::checkEid($eid)) return $this->fail(REP_INVALID_ARGS);
 
 		$model = Event::findOne($eid);
 		$model->scenario = 'rename';

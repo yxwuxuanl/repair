@@ -27,7 +27,7 @@ class Response extends Behavior
 		}
 	}
 
-	public function fail($error,$message = null)
+	public function fail($error = '',$message = null)
 	{
 		\Yii::$app->response->format = 'json';
 
@@ -37,8 +37,13 @@ class Response extends Behavior
 			$data['status'] = -1;
 			$data['describe'] = $error;
 		}else{
-			$data['status'] = $error;
-			$data['describe'] = \Yii::$app->params['errorCode'][$error];
+			$errors = \Yii::$app->params['errorCode'];
+			if(in_array($error,$errors)){
+				$data['status'] = $error;
+				$data['describe'] = $errors[$error];
+			}else{
+				\Yii::$app->response->statusCode = $error;
+			}
 		}
 
 		if($message){

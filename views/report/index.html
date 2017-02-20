@@ -1,0 +1,67 @@
+<div class="container" id="report-contain">
+    <form action="">
+        <div class="form-group">
+            <div class="row">
+                <div class="col-xs-6">
+                    <label for="">学号</label>
+                    <input type="text" id="reporter-number" name="reporter-number" class="form-control">
+                </div>
+
+                <div class="col-xs-6">
+                    <label for="">姓名</label>
+                    <input type="text" id="reporter-name" name="reporter-number" class="form-control">
+                </div>
+            </div>
+        </div>    
+
+        <div class="form-group">
+            <label for="">联系号码</label>
+            <input type="text" id="tel" class="form-control" name="tel">
+        </div> 
+
+        <div class="form-group">
+            <label for="">故障区域</label>
+            <div class="row">
+                <div class="col-xs-6">
+                    <select class="form-control" id="parent-zone" name="parent-zone"></select>
+                </div>
+
+                <div class="col-xs-6">
+                    <select class="form-control" id="sub-zone" name="sub-zone">
+                        <option value="">请选择主要区域</option>
+                    </select>
+                </div>
+            </div>
+        </div> 
+
+        <div class="form-group" id="custom-label">
+            <label for=""></label>
+            <input type="text" class="form-control" id="custom-input" name="custom-input">
+        </div>
+
+        <div class="form-group">
+            <label for="">故障</label>
+            <select name="event" id="event" class="form-control" name="event">
+                <option value="">请选择区域</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="">其他描述</label>
+            <textarea rows="5" cols="" class="form-control" id="other-describe" name="other-describe"></textarea>
+        </div>
+
+        <div class="form-group">
+            <button class="btn btn-block btn-primary">提交</button>
+        </div>
+    </form>  
+</div>
+
+<script>
+    defines['report'] = 'script/report.js';
+
+    window.onload = function()
+    {
+        $service.runModule('report');
+    }
+</script>

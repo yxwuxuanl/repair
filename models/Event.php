@@ -32,7 +32,7 @@ class Event extends ActiveRecord
 		return [
 			[['event_id','event_name'],'required'],
 			['event_id',function(){
-				if(!EventController::checkEid($this->event_id)){
+				if(!static::checkEid($this->event_id)){
 					$this->addError('event_id','INVALID_EVENT_ID');
 				}
 			}],
@@ -56,4 +56,29 @@ class Event extends ActiveRecord
 	public static function all(){
 		return parent::find()->asArray()->all();
 	}
+
+	public static function checkEid($eid){
+		return is_string($eid) && strlen($eid) == 10 && substr($eid,0,2) == 'e_';
+	}
+
+	public static function multiHas($list)
+	{
+		$query = parent::find();
+		$explode = explode(',',$list);
+
+		$query->where(['in','event_id',$explode]);
+
+		return $query->count() == count($explode);
+	}
+
+	public static function isExist($eid)
+	{
+		$query = parent::find()->asArray();
+
+		$query->where('`event_id`=:eid');
+		$query->params([':eid' => $eid]);
+
+		return $query->one() !== NULL;
+	}
+
 }

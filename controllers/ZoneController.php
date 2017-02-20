@@ -3,9 +3,12 @@
 namespace app\controllers;
 
 use app\behaviors\Response;
+use app\filters\CustomResponseFilter;
 use app\filters\LoginFilter;
 use app\filters\PrivilegeFilter;
+use app\formatter\Status;
 use app\models\Event;
+use app\models\ReportLabel;
 use app\models\zeMap;
 use app\models\Zone;
 use yii\web\Controller;
@@ -15,41 +18,45 @@ class ZoneController extends Controller
 {
     public function behaviors()
     {
-   	    return [Response::className()];
         return [
            'login' => [
-               'class' => LoginFilter::className()
+               'class' => LoginFilter::className(),
+			   'only' => ['add','rename','delete','remove-event']
            ],
-           'privilege' => [
-               'class' => PrivilegeFilter::className(),
-               'privilege' => P_SYSTEM_ZONE
-           ],
-			Response::className()
+			'response' => [
+				'class' => CustomResponseFilter::className()
+			],
         ];
     }
 
     public function actionGetParent()
 	{
-		return $this->success((new Zone)->getParent());
+		$model = new Zone();
+		$data = $model->getParent();
+
+		if(!empty($data))
+		{
+			return $data;
+		}else{
+			return Status::OTHER_ERROR;
+		}
 	}
 
     public function actionRename($zid,$zone_name)
     {
-        if(!static::checkZid($zid)) return $this->fail(REP_INVALID_ARGS);
+        if(!Zone::checkZid($zid)) return Status::INVALID_ARGS;
 
         $model = Zone::findOne($zid);
 
         $model->zone_name = $zone_name;
         $model->scenario = 'rename';
 
-        if(!$model->validate()){
-            return $this->fail(REP_MODEL_VALIDATE_FAIL);
-        }
+        if(!$model->validate()) return Status::INVALID_ARGS;
 
         if(!$model->update()){
-            return $this->fail(REP_MODEL_SAVE_FAIL);
+        	return Status::DATABASE_SAVE_FAIL;
         }else{
-            return $this->success();
+        	return Status::SUCCESS;
         }
     }
 
@@ -59,12 +66,12 @@ class ZoneController extends Controller
         $model->scenario = 'delete';
         $model->zone_id = $zid;
 
-        if(!$model->validate()) return $this->fail(REP_INVALID_ARGS);
+        if(!$model->validate()) return Status::INVALID_ARGS;
 
         if($model->deleteZone()){
-            return $this->success();
+        	return Status::SUCCESS;
         }else{
-            return $this->fail(REP_MODEL_SAVE_FAIL);
+        	return Status::DATABASE_SAVE_FAIL;
         }
     }
 
@@ -74,32 +81,20 @@ class ZoneController extends Controller
         $model->scenario = 'add';
 
         $usableId = $model->getUsableId($parent);
-        if(!$usableId) return $this->fail(REP_MODEL_NOT_FOUND);
+
+        if(!$usableId) return Status::INVALID_ARGS;
             
         $model->zone_id = $usableId;
         $model->zone_name = $name;
 
-        if(!$model->validate()) return $this->fail(REP_MODEL_VALIDATE_FAIL,['message' => $model->errors]);
-        if(!$model->save()) return $this->fail(REP_MODEL_SAVE_FAIL);
+        if(!$model->validate()) return Status::INVALID_ARGS;
+        if(!$model->save()) return Status::DATABASE_SAVE_FAIL;
 
 		if($parent === null){
 			zeMap::addZone($usableId);
 		}
 
-        return $this->success(['id' => $usableId]);
-    }
-
-    public static function checkZid($zone_id,$isParent = false)
-    {
-		if(!is_numeric($zone_id) || $zone_id > 9999 || $zone_id < 1000){
-			return false;
-		}
-
-		if($isParent){
-        	return is_numeric($zone_id) && substr($zone_id,-2,2) == '00';
-		}
-
-		return true;
+        return ['id' => $usableId];
     }
 
     public function actionGetSubs($zid)
@@ -108,30 +103,48 @@ class ZoneController extends Controller
         $model->scenario = 'necessaryParent';
         $model->zone_id = $zid;
 
-        if(!$model->validate()) return $this->fail(REP_INVALID_ARGS);
+        if(!$model->validate()) return Status::INVALID_ARGS;
 
         $result = $model->getSubs();
 
-        return $this->success($result);
+        if(!empty($result))
+		{
+			return $result;
+		}else{
+        	return Status::OTHER_ERROR;
+		}
     }
 
-    public function actionGetEvents($zid)
+    public function actionGetEvents($zid,$onlyIn = false)
     {
-        if(!static::checkZid($zid) || !($row = zeMap::getEvents($zid))) return $this->fail(REP_INVALID_ARGS);
-        return $this->success($row);
+        if(!Zone::checkZid($zid) || !($row = zeMap::getEvents($zid,$onlyIn))) return Status::INVALID_ARGS;
+        return $row;
     }
 
     public function actionRemoveEvent($zid,$eid)
 	{
-		if(!ZoneController::checkZid($zid) || !EventController::checkEid($eid)) return $this->fail(REP_INVALID_ARGS);
-		if(!zeMap::deleteEvent($eid,$zid)) return $this->fail(REP_MODEL_SAVE_FAIL);
-		return $this->success();
+		if(!Zone::checkZid($zid) || !Event::checkEid($eid)) return Status::INVALID_ARGS;
+		if(!zeMap::deleteEvent($eid,$zid)) return Status::DATABASE_SAVE_FAIL;
+		return Status::SUCCESS;
+    }
+
+    public function actionGetLabel($zid)
+    {
+		if(!Zone::checkZid($zid,true)) return Status::INVALID_ARGS;
+		$result = ReportLabel::find()->where(['zone_id' => $zid])->asArray()->one();
+
+		if(empty($result))
+		{
+			return Status::SUCCESS;
+		}else{
+			return $result;
+		}
     }
 
     public function actionAddEvent($zid,$eid){
 
-		if(!ZoneController::checkZid($zid) || !EventController::checkEid($eid) || empty(Event::findOne($eid))) return $this->fail(REP_INVALID_ARGS);
-		if(!zeMap::addEvent($zid,$eid)) return $this->fail(REP_MODAL_SAVE_FAIL);
-		return $this->success();
+		if(!Zone::checkZid($zid) || !Event::checkEid($eid) || empty(Event::findOne($eid))) return Status::INVALID_ARGS;
+		if(!zeMap::addEvent($zid,$eid)) return Status::DATABASE_SAVE_FAIL;
+		return Status::SUCCESS;
     }
 }

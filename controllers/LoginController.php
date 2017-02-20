@@ -2,32 +2,29 @@
 
 namespace app\controllers;
 use app\behaviors\NoCsrf;
-use app\behaviors\Privilege;
-use app\behaviors\Response;
+use app\filters\CustomResponseFilter;
+use app\formatter\Status;
 use app\models\Account;
 use yii\web\Controller;
-use yii\web\ForbiddenHttpException;
 
 class LoginController extends Controller
 {
 	public function actionAjax()
 	{
-		if(!\Yii::$app->request->isAjax){
+		if(\Yii::$app->request->isAjax){
+			$model = new Account();
+			$model->scenario = Account::LOGIN;
+
+			$model->account_name = \Yii::$app->request->post('un','');
+			$model->password = \Yii::$app->request->post('pwd','');
+
+			if(!$model->validate() || empty(($userData = $model->findUser()))) return Status::INVALID_LOGIN_INFO;
+			$this->login($userData);
+
+			return Status::SUCCESS;
+		}else{
 			\Yii::$app->response->statusCode = 403;
-			return $this->fail('');
 		}
-
-		$post = \Yii::$app->request->post();
-		$model = new Account();
-
-		$model->username = $post['un'];
-		$model->password = $post['pwd'];
-
-		if(!$model->validate()) return $this->fail(REP_MODEL_VALIDATE_FAIL);
-		if(empty(($userData = $model->findUser()))) return $this->fail('无效的登录信息');
-
-		$this->login($userData);
-		return $this->success();
 	}
 
 	public function actionCookie()
@@ -38,24 +35,27 @@ class LoginController extends Controller
 	public function login($userData)
 	{
 		$session = \Yii::$app->getSession();
-//
-		$session->set('account_name', array_shift($userData));
-//
-//		\Yii::$app->cookie->set('group', array_shift($userData));
-//
-		$session->set('account_id', array_shift($userData));
-//
-//		\Yii::$app->get('privilege')->set($userData);
-		PrivilegeController::set($userData);
-//
-		$session->set('IS_LOGIN', true);
+		$session->set('uid',$userData['account_id']);
+		$session->set('role',$userData['role']);
+		$session->set('account_group',$userData['account_group']);
+		$session->set('account_name',$userData['account_name']);
+		$session->set('IS_LOGIN',true);
 	}
 
 	public function behaviors()
 	{
 		return [
-			Response::className(),
+			'response' => [
+				'class' => CustomResponseFilter::className(),
+				'only' => ['ajax','out']
+			],
 			NoCsrf::className()
 		];
+	}
+
+	public function actionOut()
+	{
+		\Yii::$app->getSession()->destroy();
+		return Status::SUCCESS;
 	}
 }

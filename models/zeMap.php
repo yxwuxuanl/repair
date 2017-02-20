@@ -47,7 +47,7 @@ class zeMap extends ActiveRecord
 		$model->insert();
 	}
 
-	public static function getEvents($zid){
+	public static function getEvents($zid,$onlyIn){
 		$event = parent::find()->where(['zone_id' => $zid])->select('events')->asArray()->one();
 
 		if(empty($event)) return null;
@@ -56,10 +56,13 @@ class zeMap extends ActiveRecord
 		array_pop($event);
 
 		$in = parent::find()->where(['in','event_id',$event])->from('event')->asArray()->all();
-		$in['length'] = count($in);
+		
+		if($onlyIn) return $in;
 
 		$notIn = parent::find()->where(['not in','event_id',$event])->from('event')->asArray()->all();
+
 		$notIn['length'] = count($notIn);
+		$in['length'] = count($in);
 
 		return ['in' => $in,'notIn' => $notIn];
 	}

@@ -3,6 +3,7 @@
  */
 
 $(function (global) {
+    defines['validate'] = 'script/jquery.validate.min.js';
     var
         $service = {
             '$bootstraps': [],
@@ -86,45 +87,32 @@ $(function (global) {
 
             'loader': function (url, success, fail) {
                 
+                if (url in defines)
+                {
+                    url = defines[url];
+                }    
+
                 return $.get(url).then(success, fail || function () {
                     alert('未知错误,请尝试刷新页面');
                 });
-
             },
 
-            'runModule': function (name, injectPanel) {
-                
-                var
-                    moduleName = this.parseModuleName(name);
-                
-                if (!(moduleName in this.$modules)) {
-                    this.loader(defines[moduleName], function () {
-                        $service.runModule(name);
+            'runModule': function (name, init) {
+                if (!(name in this.$modules)) {
+                    this.loader(name, function () {
+                        $service.runModule(name, init);
                     });
-                    return;
+                } else {
+                    if (!this.contain.has(name))
+                    {
+                        var
+                            module_ = this.$modules[name];
+                        
+                        this.contain.set(name, module_);
+                        init && init.call(module_);
+                        this.contain.init(name);
+                    }    
                 }
-                
-                if (!this.contain.has(moduleName)) {
-                    var
-                        module_ = this.$modules[moduleName],
-                        contain = this.contain;
-
-                    module_['_moduleName'] = moduleName;
-
-                    module_.reRun = function () {
-                        $service.contain.reRun(moduleName);
-                    }
-                    
-                    if (injectPanel !== false) {
-                        module_['$panel'] = $(name);
-                    }
-
-                    this['_' + moduleName + '_'] = module_;
-                    
-                    contain.set(moduleName, module_);
-                    contain.init(moduleName);
-                }
-
             }
         }
     
@@ -225,12 +213,8 @@ $(function (global) {
                 } else {
                     this.bind(eventName, init[eventName]);
                 }
-
             }
-
         }
-
-
     };
 
     $service.modal.prototype = {
@@ -357,7 +341,7 @@ $(function (global) {
         var
             args = $service.args(arguments, {
                 'url': function (value) {
-                    return typeof value == 'string' || typeof value == 'object';
+                    return typeof value == 'string';
                 },
                 'type': [
                     function (value) {
@@ -577,18 +561,18 @@ $(function (global) {
         }
     };
 
-    $service.validate = function ($form, config) {
+    $service.validate = function ($form, config, callback) {
 
         if (!('validator' in $)) {
             this.loader('script/jquery.validate.min.js', function () {
-                $service.validate($form, config);
+                $service.validate($form, config, callback);
             });
         } else {
             config = config || {};
             $form.validate(config);
+            callback && callback();
             return $form;
         }
-
     };
 
     $service.$bootstraps.push(function () {
@@ -596,7 +580,7 @@ $(function (global) {
         var
             self = this;
 
-        $('#nav').click(function (event) {
+        $('#tab').click(function (event) {
             event.preventDefault();
 
             var
@@ -604,11 +588,16 @@ $(function (global) {
                 href;
             
             if ($target[0].tagName == 'A' && (href = $target.attr('href')) != '#') {
-                self.runModule(href);
+                var
+                    moduleName = href.slice(1, -6);
+                
+                self.runModule(moduleName, function () {
+                    this.$panel = $(href);
+                });
             }
 
         })
-    })
+    });
     
     $service.$bootstraps.push(function () {
 
@@ -616,7 +605,7 @@ $(function (global) {
             $(this).parent().parent().submit();
         })
 
-    })
+    });
 
     $service.$bootstraps.push(function () {
         $(document).ajaxSend(function () {
@@ -626,7 +615,8 @@ $(function (global) {
         $(document).ajaxComplete(function () {
             $('.spinner').hide();
         })
-    })
+    });
+
 
     $service.bootstrap();
     
@@ -638,5 +628,3 @@ function C()
 {
     console.log.apply(null,arguments);
 }
-
-
