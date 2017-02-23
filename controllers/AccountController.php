@@ -24,6 +24,15 @@ class AccountController extends Controller
 		return Account::getUserList();
 	}
 
+	public function actionGetAdminList($group)
+	{
+		return Account::getAdminList($group);
+	}
+
+	public function actionGetNoAssign()
+	{
+		return Account::getNoAssign();
+	}
 
 	public function actionAdd()
 	{
@@ -72,7 +81,7 @@ class AccountController extends Controller
 			'role' => [
 				'class' => RoleFilters::className(),
 				'rules' => [
-					'get-all' => Role::SYSTEM_ADMIN,
+//					'get-all' => Role::SYSTEM_ADMIN,
 					'delete' => Role::SYSTEM_ADMIN
 				]
 			],

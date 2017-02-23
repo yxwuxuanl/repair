@@ -2,9 +2,11 @@
 
 namespace app\controllers;
 
+use app\filters\CustomResponseFilter;
 use app\filters\LoginFilter;
-use app\filters\PrivilegeFilter;
+use app\formatter\Status;
 use app\models\Event;
+use yii\base\Exception;
 use yii\web\Controller;
 use app\behaviors\Response;
 
@@ -13,23 +15,23 @@ class EventController extends Controller
 
 	public function behaviors()
 	{
-		return [Response::className()];
-
 		return [
-			'Login' => [
-				'class' => LoginFilter::className()
-			],
-			'Privilege' => [
-				'class' => PrivilegeFilter::className(),
-				'privilege' => P_SYSTEM_EVENT
-			],
-			Response::className()
+			'response' => [
+				'class' => CustomResponseFilter::className()
+			]
 		];
 	}
 
 	public function actionGetEvents()
 	{
-		return $this->success(Event::all());
+		$row = Event::all();
+
+		if(empty($row))
+		{
+			return Status::SUCCESS;
+		}else{
+			return $row;
+		}
 	}
 
 	public function actionAdd($ename){
@@ -39,33 +41,58 @@ class EventController extends Controller
 		$model->event_id = $eid;
 		$model->event_name = $ename;
 
-		if(!$model->validate()) return $this->fail(REP_INVALD_ARGS);
-		if(!$model->insert()) return $this->fail(REP_MODEL_SAVE_FAIL);
+		if(!$model->validate()) return Status::INVALID_ARGS;
 
-		return $this->success(['eid' => $eid]);
-	}
-
-	public function actionDelete($eid){
-		if(!Event::checkEid($eid)){
-			return $this->fail(REP_INVALID_ARGS);
+		try
+		{
+			$model->insert();
+		}catch(Exception $e)
+		{
+			return Status::EVENT_EXIST;
 		}
 
-		if(!Event::deleteEvent($eid)) return $this->fail(REP_MODEL_SAVE_FAIL);
-		return $this->success();
+		return ['eid' => $eid];
+	}
+
+	public function actionDelete($eid)
+	{
+		if(!Event::checkEid($eid)) return Status::INVALID_ARGS;
+		$ar = Event::findOne(['event_id' => $eid]);
+
+		if($ar === NULL) return Status::INVALID_ARGS;
+
+		if($ar->delete())
+		{
+			return Status::SUCCESS;
+		}
+
+		return Status::DATABASE_SAVE_FAIL;
 	}
 
 
 	public function actionRename($eid,$ename){
 
-		if(!Event::checkEid($eid)) return $this->fail(REP_INVALID_ARGS);
+		if(!Event::checkEid($eid)) return Status::INVALID_ARGS;
 
-		$model = Event::findOne($eid);
+		$model = Event::findOne(['event_id' => $eid]);
 		$model->scenario = 'rename';
 		$model->event_name = $ename;
 
-		if(!$model->validate()) return $this->fail(REP_MODEL_VALIDATE_FAIL);
-		if(!$model->update()) return $this->fail(REP_MODEL_SAVE_FAIL);
+		if(!$model->validate()) return Status::INVALID_ARGS;
 
-		return $this->success();
+		try
+		{
+			$model->update();
+		}catch (Exception $e)
+		{
+			return Status::EVENT_EXIST;
+		}
+
+		return Status::SUCCESS;
+	}
+
+	public function actionGetNoAssign()
+	{
+		return Event::getNoAssign();
 	}
 }

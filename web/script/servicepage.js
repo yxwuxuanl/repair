@@ -6,6 +6,64 @@ $(function (global) {
     defines['validate'] = 'script/jquery.validate.min.js';
     var
         $service = {
+            'eventHanlders': {},
+
+            'on': function (m, name, actions, func) {
+                if (!(m in this.eventHanlders)) {
+                    this.eventHanlders[m] = {};
+                }
+
+                if (!(name in this.eventHanlders[m])) {
+                    this.eventHanlders[m][name] = [];
+                }
+
+                if (func)
+                {
+                    this.eventHanlders[m][name].push([actions, func]);
+                } else {
+                     this.eventHanlders[m][name].push(actions);
+                }
+            },
+
+            'trigger': function (m, name, params) {
+                if (!(m in this.eventHanlders) || !(name in this.eventHanlders[m])) return;
+                var
+                    defines = $service.eventHanlders[m][name];
+
+                for (var i = 0, len = defines.length; i < len; i++) {
+
+                    var
+                        define = defines[i],
+                        m_, split, handle;
+                    
+                    if (typeof define[0] == 'object')
+                    {
+                        m_ = define[0];
+                        handle = define[1];
+                    } else {
+                        if (define[0].indexOf(':') > 0)
+                        {
+                            split = define[0].split(':');
+                            m_ = split[0];
+                            handle = split[1];
+                        } else {
+                            m_ = define[0];
+                            handle = define[1];
+                        }
+
+                        m_ = $service.$modules[m_];
+                    }
+                    
+                    if (!(m_['_module_name_'] in $service.contain.$contains)) continue;
+
+                    if (typeof handle == 'string')
+                    {
+                        m_[handle].apply(m_, params);
+                    } else {
+                        handle.apply(m_, params);
+                    }
+                }
+            },
             '$bootstraps': [],
             '$modules': {},
 
@@ -87,10 +145,9 @@ $(function (global) {
 
             'loader': function (url, success, fail) {
                 
-                if (url in defines)
-                {
+                if (url in defines) {
                     url = defines[url];
-                }    
+                }
 
                 return $.get(url).then(success, fail || function () {
                     alert('未知错误,请尝试刷新页面');
@@ -103,15 +160,26 @@ $(function (global) {
                         $service.runModule(name, init);
                     });
                 } else {
-                    if (!this.contain.has(name))
-                    {
+                    if (!this.contain.has(name)) {
                         var
                             module_ = this.$modules[name];
-                        
+                            
+                        module_._module_name_ = name;
+
+                        module_.trigger = function (event, params)
+                        {
+                            $service.trigger(name, event, params);
+                        }
+
+                        module_.on = function (m, event, func)
+                        {
+                            $service.on(m, event, module_, func);
+                        }    
+
                         this.contain.set(name, module_);
                         init && init.call(module_);
                         this.contain.init(name);
-                    }    
+                    }
                 }
             }
         }
@@ -120,11 +188,11 @@ $(function (global) {
         
         var
             classs = ['error-alert', 'success-alert'],
-            args,modal,$modal;
+            args, modal, $modal;
         
         if (arguments.length == 0) {
             return {
-                'success': function () {                    
+                'success': function () {
                     $service.alert.apply(null, [1, '操作成功'].concat($service.toArray(arguments)));
                 },
                 'error': function () {
@@ -183,7 +251,7 @@ $(function (global) {
 
     };
 
-    $service.modal = function (modal, init) {
+    $service.modal = function (modal, init, extend) {
 
         if (typeof modal == 'string') {
             modal = $(modal);
@@ -196,9 +264,14 @@ $(function (global) {
         this.$modal = modal;
         this.$title = modal.find('.modal-title');
         this.$body = modal.find('.modal-body');
-
         var
             _this = this;
+
+        if (typeof extend == 'object') {
+            for (var key in extend) {
+                this[key] = extend[key];
+            }
+        }
 
         if (typeof init == 'function') {
 
@@ -408,7 +481,7 @@ $(function (global) {
     };
 
     $service.toArray = function (args) {
-        return Array.prototype.slice.call(args,0);
+        return Array.prototype.slice.call(args, 0);
     };
 
     $service.template = function (text, params) {
@@ -576,7 +649,6 @@ $(function (global) {
     };
 
     $service.$bootstraps.push(function () {
-
         var
             self = this;
 
@@ -617,12 +689,11 @@ $(function (global) {
         })
     });
 
-
     $service.bootstrap();
     
     global.$service = $service;
 
-} (window))
+}(window));
 
 function C()
 {

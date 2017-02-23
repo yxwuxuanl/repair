@@ -53,9 +53,8 @@ $service.addModule('system-event', {
                 $service.ajax('event/add', {
                     'ename': ename
                 }).done(function (response) {
-
                     $service.alert().success('添加成功', 400, function () {
-                        instance.render([{ 'event_name': ename, 'event_id': response.content.id }]);
+                        instance.render([{ 'event_name': ename, 'event_id': response.content.eid }]);
                    })
 
                 }).fail(function (response) {

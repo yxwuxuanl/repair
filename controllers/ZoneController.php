@@ -11,6 +11,8 @@ use app\models\Event;
 use app\models\ReportLabel;
 use app\models\zeMap;
 use app\models\Zone;
+use yii\base\DynamicModel;
+use yii\base\Exception;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 
@@ -19,10 +21,10 @@ class ZoneController extends Controller
     public function behaviors()
     {
         return [
-           'login' => [
-               'class' => LoginFilter::className(),
-			   'only' => ['add','rename','delete','remove-event']
-           ],
+//           'login' => [
+//               'class' => LoginFilter::className(),
+//			   'only' => ['add','rename','delete','remove-event']
+//           ],
 			'response' => [
 				'class' => CustomResponseFilter::className()
 			],
@@ -38,7 +40,7 @@ class ZoneController extends Controller
 		{
 			return $data;
 		}else{
-			return Status::OTHER_ERROR;
+			return Status::SUCCESS;
 		}
 	}
 
@@ -90,8 +92,9 @@ class ZoneController extends Controller
         if(!$model->validate()) return Status::INVALID_ARGS;
         if(!$model->save()) return Status::DATABASE_SAVE_FAIL;
 
-		if($parent === null){
-			zeMap::addZone($usableId);
+		if($parent === null)
+		{
+			zeMap::addRecord($usableId);
 		}
 
         return ['id' => $usableId];
@@ -117,15 +120,30 @@ class ZoneController extends Controller
 
     public function actionGetEvents($zid,$onlyIn = false)
     {
-        if(!Zone::checkZid($zid) || !($row = zeMap::getEvents($zid,$onlyIn))) return Status::INVALID_ARGS;
-        return $row;
+		if(!Zone::checkZid($zid,true) || !Zone::isExist($zid)) return Status::INVALID_ARGS;
+		$row = zeMap::getEvents($zid,$onlyIn);
+
+		if(empty($row))
+		{
+			return Status::SUCCESS;
+		}else{
+			return $row;
+		}
     }
 
     public function actionRemoveEvent($zid,$eid)
 	{
-		if(!Zone::checkZid($zid) || !Event::checkEid($eid)) return Status::INVALID_ARGS;
-		if(!zeMap::deleteEvent($eid,$zid)) return Status::DATABASE_SAVE_FAIL;
-		return Status::SUCCESS;
+		if(!Zone::checkZid($zid,true) || !Event::checkEid($eid) || !Zone::isExist($zid))
+		{
+			return Status::INVALID_ARGS;
+		}
+
+		if(zeMap::deleteEvent($zid,$eid))
+		{
+			return Status::SUCCESS;
+		}else{
+			return Status::DATABASE_SAVE_FAIL;
+		}
     }
 
     public function actionGetLabel($zid)
@@ -141,10 +159,18 @@ class ZoneController extends Controller
 		}
     }
 
-    public function actionAddEvent($zid,$eid){
+    public function actionAddEvent($zid,$eid)
+	{
+		if(!Zone::checkZid($zid,true) || !Event::checkEid($eid) || !Zone::isExist($zid)|| !Event::isExist($eid))
+		{
+			return Status::INVALID_ARGS;
+		}
 
-		if(!Zone::checkZid($zid) || !Event::checkEid($eid) || empty(Event::findOne($eid))) return Status::INVALID_ARGS;
-		if(!zeMap::addEvent($zid,$eid)) return Status::DATABASE_SAVE_FAIL;
-		return Status::SUCCESS;
+		if(zeMap::addEvent($zid,$eid))
+		{
+			return Status::SUCCESS;
+		}else{
+			return Status::DATABASE_SAVE_FAIL;
+		}
     }
 }

@@ -2,7 +2,6 @@ $service.addModule('system-zone', {
     'modals': {},
     
     'renderParent': function (content) {
-    
         var
             $contain = this.$panel.find('.grid'),
             tag = $service.tag,
@@ -23,11 +22,9 @@ $service.addModule('system-zone', {
         ]);
             
         for (var i = 0, len = content.length; i < len; i++) {
-
             lis.push(
                 template(li_template, { 'zid': content[i]['zone_id'], 'zname': content[i]['zone_name'] })
             );
-
             lis.push(sub);
         }
         
@@ -394,18 +391,14 @@ $service.addModule('system-zone', {
     },
 
     'renderSubs': function (id, $contain, $mount, $target) {
-
         if (typeof id != 'object') {
             var
                 _this = this;
-
             $service.ajax('zone/get-subs', {
                 'zid': id
             }).done(function (response) {
-
                 _this.renderSubs(response.content, $contain, $mount);
                 _this.showSubs($target);
-
             }).fail(function (response) {
                 $service.alert().error('数据获取失败<br/>' + response.describe);
             });

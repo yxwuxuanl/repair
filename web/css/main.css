@@ -139,6 +139,21 @@ body {
 #account-manage-panel .ga-tips {
   display: none; }
 
+#group-manage-panel .actions .glyphicon {
+  margin-right: 15px; }
+#group-manage-panel .events .select span {
+  display: inline; }
+#group-manage-panel .events ul {
+  padding-left: 0;
+  height: 200px;
+  overflow: scroll; }
+#group-manage-panel .events li {
+  display: inline-block;
+  width: 50%; }
+#group-manage-panel .events span {
+  float: right;
+  display: none; }
+
 .container {
   margin-top: 20px; }
 

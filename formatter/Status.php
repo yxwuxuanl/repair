@@ -17,6 +17,7 @@ class Status
 	const INVALID_LOGIN_INFO = '-3';
 	const ACCOUNT_EXIST = '-4';
 	const GROUP_EXIST = '-5';
+	const EVENT_EXIST = '-6';
 
 	static $describe = [
 		'1' => 'SUCCESS',
@@ -25,6 +26,7 @@ class Status
 		'-2' => 'DATABASE_SAVE_FAIL',
 		'-3' => 'INVALID_LOGIN_INFO',
 		'-4' => '账户已经存在',
-		'-5' => '组已经存在'
+		'-5' => '组已经存在',
+		'-6' => '事件已经存在'
 	];
 }

@@ -8,6 +8,7 @@
 
 namespace app\models;
 
+use yii\base\Exception;
 use yii\db\ActiveRecord;
 use app\controllers\RoleController as Role;
 use app\formatter\Status;
@@ -34,16 +35,8 @@ class Group extends ActiveRecord
 	public function rules()
 	{
 		return [
-			[['group_id','group_name','events'],'required'],
+			[['group_id','group_name','events','group_admin'],'required'],
 			['events','string','min' => 10],
-			['group_admin',function($attr){
-				$row = Account::findOne(['account_id' => $this->$attr]);
-
-				if($row === NULL || $row['role'] === Role::GROUP_ADMIN)
-				{
-					$this->addError($attr,'INVALID' . $attr);
-				}
-			}],
 			['group_id',function($attr){
 				if(!static::checkGid($this->$attr))
 				{
@@ -52,7 +45,7 @@ class Group extends ActiveRecord
 			}],
 			['group_name','string','min' => 2],
 			['events',function($attr){
-				if(!Event::checkEid($this->$attr) || !Event::has($this->$attr) || static::hasEvent($this->group_id,$this->$attr))
+				if(!Event::checkEid($this->$attr) || !Event::isExist($this->$attr) || static::hasEvent($this->group_id,$this->$attr))
 				{
 					$this->addError($attr,'INVALID' . $attr);
 				}
@@ -63,18 +56,26 @@ class Group extends ActiveRecord
 					$this->addError($attr);
 				}
 			},'on' => static::REMOVE_EVENT],
+
 			['events',function($attr){
-				if(!Event::multiHas($this->$attr))
+			//	逐个验证事件有效性
+				if(!Event::multiHas(substr($this->$attr,1)))
 				{
 					$this->addError($attr);
 				}
 			},'on' => static::CREATE],
+
 			['group_admin',function($attr){
-				if(!Account::isExist($this->$attr))
+				// 组管理员必须是 no_assign 状态
+				$aid = $this->$attr;
+				$ar = Account::find();
+				$ar->where('`account_id`=:aid and `account_group`=:gid',[':aid' => $aid,':gid' => 'g_noassign']);
+
+				if($ar->count() < 1)
 				{
 					$this->addError($attr);
 				}
-			}]
+			},'on' => static::CREATE]
 		];
 	}
 
@@ -84,7 +85,7 @@ class Group extends ActiveRecord
 			'default' => [],
 			'create' => ['group_id','group_name','group_admin','events'],
 			'rename' => ['group_name'],
-			'change_admin' => ['group_id','group_admin']
+			'change_admin' => ['group_admin']
 		];
 	}
 
@@ -101,9 +102,48 @@ class Group extends ActiveRecord
 
 	public static function changeAdmin($group,$admin)
 	{
-		$ar = parent::findOne(['group_id' => $group]);
-		$ar['group_admin'] = $admin;
-		return $ar->update();
+		if(!static::checkGid($group) || !Account::checkAid($admin)) return Status::INVALID_ARGS;
+
+		$account = Account::find();
+
+		// 组管理员必须满足 未分配组/该组成员 其一
+		$account->where('`account_id`=:aid and (`account_group`=:gid or `account_group`=:noAssign)',[':aid' => $admin,':gid' => $group,':noAssign' => 'g_noassign']);
+		$accountAr = $account->one();
+
+		if($accountAr === NULL) return Status::INVALID_ARGS;
+
+		$groupQuery = Group::find();
+		$groupQuery->where('`group_id`=:gid',[':gid' => $group]);
+		$groupAr = $groupQuery->one();
+
+		if($groupAr === NULL) return Status::INVALID_ARGS;
+
+		$oldAdmin = $groupAr->group_admin;
+
+		$transaction = \Yii::$app->db->beginTransaction();
+
+		try
+		{
+			// 清除原管理员的组管理员角色
+			Account::updateAll(['role' => Role::NORMAL],['account_id' => $oldAdmin]);
+
+			// 设置新组管理员角色
+			$accountAr->account_group = $group;
+			$accountAr->role = Role::GROUP_ADMIN;
+			$accountAr->update();
+
+			// 更新组管理员
+			$groupAr->group_admin = $admin;
+			$groupAr->update();
+
+			$transaction->commit();
+		}catch (Exception $e)
+		{
+			$transaction->rollBack();
+			return Status::DATABASE_SAVE_FAIL;
+		}
+
+		return Status::SUCCESS;
 	}
 
 	public static function getAll($includeAdmin = true)
@@ -126,7 +166,6 @@ class Group extends ActiveRecord
 		{
 			$group_id = $item['group_id'];
 			unset($item['group_id']);
-
 			$result[$group_id] = $item;
 		}
 
@@ -148,13 +187,66 @@ class Group extends ActiveRecord
 		}
 	}
 
-	public function deleteEvent($old)
-	{
-
-	}
-
 	public static function isExist($gid)
 	{
 		return !!parent::find()->where('`group_id`=:gid',[':gid' => $gid])->count();
+	}
+
+	public static function remove($group)
+	{
+		if(!static::checkGid($group)) return Status::INVALID_ARGS;
+		$ar = parent::find()->where('`group_id`=:gid',[':gid' => $group])->one();
+		if($ar === NULL) return Status::INVALID_ARGS;
+
+		$transaction = \Yii::$app->db->beginTransaction();
+
+		// 删除组事务
+		try
+		{
+			// 清理 `account` 表
+			Account::updateAll(['account_group' => 'g_noassign','role' => 'normal'],['account_group' => $group]);
+
+			// 删除 `group` 表记录
+			$ar->delete();
+
+			$transaction->commit();
+		}catch(\Exception $e)
+		{
+			$transaction->rollBack();
+			return Status::DATABASE_SAVE_FAIL;
+		}
+
+		return Status::SUCCESS;
+	}
+
+	public static function create($groupName,$groupAdmin,$events)
+	{
+		$model = new self();
+
+		$model->scenario = static::CREATE;
+		$model->group_name = $groupName;
+		$model->group_admin = $groupAdmin;
+		$model->events = ',' . $events;
+		$model->group_id = 'g_' . substr(uniqid(),-8);
+
+		if(!$model->validate()) return [Status::INVALID_ARGS,$model->errors];
+		$transaction = \Yii::$app->db->beginTransaction();
+
+		try
+		{
+			// 插入记录
+			$model->insert();
+
+			// 更新组管理员记录
+			Account::updateAll(['account_group' => $model->group_id,'role' => Role::GROUP_ADMIN],'`account_id`=:aid',[':aid' => $groupAdmin]);
+
+			$transaction->commit();
+		}catch (Exception $e)
+		{
+			$transaction->rollBack();
+			return Status::DATABASE_SAVE_FAIL;
+		}
+
+		return $model->group_id;
 	}
 }

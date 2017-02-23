@@ -9,13 +9,15 @@ use yii\db\Query;
 
 class Zone extends \yii\db\ActiveRecord
 {
+	const ADD_EVENT = 'add_event';
+
 	public function scenarios()
 	{
 		return [
             'add' => ['zone_name'],
             'rename' => ['zone_id','zone_name'],
             'delete' => ['zone_id'],
-            'necessaryParent' => ['zone_id']
+			self::ADD_EVENT => ['events'],
         ];
 	}
 
@@ -27,7 +29,15 @@ class Zone extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-             [['zone_name','zone_id'],'required'],
+             [['zone_name','zone_id','events'],'required'],
+
+			['events',function($attr){
+        		if(!Event::checkEid($this->$attr) || !Event::isExist($this->$attr)
+					|| parent::find()->where('`events` like \'%:eid%\'',[':eid' => $this->$attr])->count() > 0)
+				{
+					$this->addError($attr);
+				}
+			}],
 
              ['zone_id',function(){
 				if(!static::checkZid($this->zone_id)){
@@ -48,7 +58,7 @@ class Zone extends \yii\db\ActiveRecord
 
     public function attributes()
 	{
-		return ['zone_name','zone_id'];
+		return ['zone_name','zone_id','events'];
 	}
 
     public function deleteZone()
@@ -115,4 +125,10 @@ class Zone extends \yii\db\ActiveRecord
 
 		return true;
 	}
+
+	public static function isExist($zid)
+	{
+		return !!parent::find()->where('`zone_id`=:zid',[':zid' => $zid])->count();
+	}
+
 }

@@ -81,4 +81,23 @@ class Event extends ActiveRecord
 		return $query->one() !== NULL;
 	}
 
+
+	public static function getNoAssign()
+	{
+		$query = Group::find();
+		$query->select('events');
+		$row = $query->asArray()->all();
+		$list = [];
+
+		foreach ($row as $item) {
+			$list = array_merge($list,explode(',',$item['events']));
+		}
+
+		return parent::find()->where(['not in','event_id',$list])->asArray()->all();
+	}
+
+	public static function isNoAssign($eid)
+	{
+		return Zone::find()->where('`events` like \'%:eid%\'',[':eid' => $eid])->count() < 1;
+	}
 }

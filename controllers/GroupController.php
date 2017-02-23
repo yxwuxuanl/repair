@@ -30,55 +30,53 @@ class GroupController extends Controller
 			'response' => [
 				'class' => CustomResponseFilter::className(),
 			],
-			'role' => [
-				'class' => RoleFilters::className(),
-				'rules' => [
-					'get-all' => Role::SYSTEM_ADMIN,
-					'add' => Role::SYSTEM_ADMIN,
-				]
-			],
+//			'role' => [
+//				'class' => RoleFilters::className(),
+//				'rules' => [
+//					'get-all' => Role::SYSTEM_ADMIN,
+//					'add' => Role::SYSTEM_ADMIN,
+//				]
+//			],
 //			'login' => [
 //				'class' => LoginFilter::className()
 //			]
 		];
 	}
 
-	public function actionGetAll($includeAdmin = true,$noAssign = true)
+	public function actionGetAll($includeAdmin = true,$noAssign = false)
 	{
 		$row = Group::getAll($includeAdmin);
 
-		if($noAssign)
+		unset($row['system']);
+
+		if(!$noAssign)
 		{
 			unset($row['g_noassign']);
 		}
 
-		return $row;
+		if(empty($row))
+		{
+			return Status::SUCCESS;
+		}else{
+			return $row;
+		}
 	}
 
 	public function actionAdd($groupName,$groupAdmin,$events)
 	{
-		$model = new Group(['scenario' => Group::CREATE]);
-
-		$model->group_name = $groupName;
-		$model->group_admin = $groupAdmin;
-		$model->events = $events;
-		$model->group_id = 'g_' . substr(uniqid(),-8);
-
-		if(!$model->validate()) return Status::INVALID_ARGS;
-
-		try
+		$id = Group::create($groupName,$groupAdmin,$events);
+		return $id;
+		if(key_exists($id,Status::$describe))
 		{
-			$model->insert();
-		}catch (Exception $e)
-		{
-			return Status:: GROUP_EXIST;
+			return $id;
+		}else{
+			return ['gid' => $id];
 		}
-
-		return ['group_id' => $model->group_id];
 	}
 
 	public function actionRename($group,$name)
 	{
+		if(!Group::checkGid($group)) return Status::INVALID_ARGS;
 		$query = Group::find();
 
 		$query->where('`group_id`=:gid');
@@ -106,36 +104,13 @@ class GroupController extends Controller
 
 	public function actionDelete($group)
 	{
-		$query = Group::find();
-
-		$query->where('`group_id`=:gid',[':gid' => $group]);
-		$ar = $query->one();
-
-		if($ar === NULL) return Status::INVALID_ARGS;
-		$ar->delete();
-		Account::clearGroup($group);
-
-		return Status::SUCCESS;
+		return Group::remove($group);
 	}
 
 	public function actionChangeAdmin($group,$admin)
 	{
-		$ar = Group::find()->where('`group_id`=:gid',[':gid' => $group])->one();
-		if($ar === NULL) return Status::INVALID_ARGS;
-		$ar->group_admin = $admin;
-		if(!$ar->validate()) return Status::INVALID_ARGS;
-
-		try
-		{
-			$ar->update();
-		}catch(\Exception $e)
-		{
-			return Status::DATABASE_SAVE_FAIL;
-		}
-
-		return Status::SUCCESS;
+		return Group::changeAdmin($group,$admin);
 	}
-
 
 	public function actionDeleteEvent($group,$event)
 	{
@@ -174,6 +149,8 @@ class GroupController extends Controller
 
 	public function actionDeleteMember($aid)
 	{
-		$group = \Yii::$app->getSession()->get('group');
+		if(!Account::checkAid($aid) || !Account::isExist($aid)) return Status::INVALID_ARGS;
+		Account::changeGroup($aid,'g_noassign');
+		return Status::SUCCESS;
 	}
 }

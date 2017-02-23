@@ -36,8 +36,7 @@ class PanelController
 				['管理组','manage']
 			],
 			'2' => [
-				['更改组设置','setting'],
-				['更改组成员','member']
+				['组成员','member'],
 			],
 		],
 		'task' => [

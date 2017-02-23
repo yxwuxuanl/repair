@@ -2,6 +2,7 @@
 
 namespace app\models;
 
+use app\formatter\Status;
 use yii\db\ActiveRecord;
 use app\controllers\RoleController as Role;
 
@@ -64,8 +65,9 @@ class Account extends ActiveRecord
 	{
 		$query = parent::find();
 
-		$query->select(['account_id','account_name','role','account_group']);
+		$query->select(['account_id','account_name','role','group_name']);
 		$query->where('`account_group` != \'system\'');
+		$query->leftJoin('group','`account_group`=`group_id`');
 		$query->orderBy(['role' => 'desc']);
 		
 		return $query->asArray()->all();
@@ -116,20 +118,27 @@ class Account extends ActiveRecord
 		\Yii::$app->db->createCommand($sql)->execute();
 	}
 
-	public static function changeGroup($aid,$gid)
+	public static function changeGroup($aid,$gid,$admin = false)
 	{
 		$ar = parent::find()->where('`account_id`=:aid',[':aid' => $aid])->one();
+
 		$ar->account_group = $gid;
+
 		if($ar->role == Role::GROUP_ADMIN)
 		{
 			$ar->role = Role::NORMAL;
 		}
+
+		if($admin)
+		{
+			$ar->role = Role::GROUP_ADMIN;
+		}
+
 		$ar->update();
 	}
 
-	public static function getNoMembers($gid)
+	public static function getNoMembers($gid,$includeAdmin = true)
 	{
-
 	}
 
 	public static function getMembers($gid)
@@ -137,9 +146,37 @@ class Account extends ActiveRecord
 
 	}
 
+	public static function getAdminList($gid)
+	{
+		if(!Group::checkGid($gid)) return Status::INVALID_ARGS;
+
+		$ar = parent::find();
+		$ar->select(['account_id','account_name']);
+		$ar->where('(`account_group`=:gid and `role` != :role)',[':gid' => $gid,':role' => Role::GROUP_ADMIN]);
+		$ar->orWhere('`account_group`=\'g_noassign\'');
+
+		return $ar->asArray()->all();
+	}
+
+	public static function getNoAssign()
+	{
+		$query = parent::find();
+		$query->where('`account_group`=\'g_noassign\'');
+		$query->select('`account_id`,`account_name`');
+		return $query->asArray()->all();
+	}
+
+
 	public static function isNoAssign($aid)
 	{
 		$ar = parent::find()->where('`account_id`=:aid and `account_group`=\'g_noassign\'',[':aid' => $aid])->count();
 		return !!$ar;
+	}
+
+	public static function changeRole($aid,$role)
+	{
+		$ar = parent::find()->where('`account_id`=:aid',[':aid' => $aid])->one();
+		$ar->role = $role;
+		$ar->update();
 	}
 }

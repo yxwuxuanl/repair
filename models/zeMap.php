@@ -22,47 +22,48 @@ class zeMap extends ActiveRecord
 		return ['zone_id','events'];
 	}
 
-	public static function deleteZone($zid){
-		parent::findOne($zid)->delete();
+	public static function deleteEvent($zid,$eid)
+	{
+		$ar = parent::find()->where('`zone_id`=:zid',[':zid' => $zid])->one();
+		$ar->events = str_replace(',' . $eid,'',$ar->events);
+		return $ar->update();
 	}
 
-	public static function deleteEvent($eid,$zid = null){
+	public static function clearEvent($eid)
+	{
+	}
 
-		$sql = 'UPDATE `zone_event_map` SET `events` = REPLACE(`events`,' . "'{$eid},','')";
+	public static function addEvent($zid,$eid)
+	{
+		$ar = parent::find()->where('`zone_id`=:zid',[':zid' => $zid])->one();
 
-		if($zid){
-			$sql .= ' WHERE `zone_id` = ' . $zid;
+		if($ar->events == '')
+		{
+			$ar->events = ',' . $eid;
+		}else{
+			if(strpos($ar->events,$eid) !== FALSE)
+			{
+				return false;
+			}
+			$ar->events .= ',' . $eid;
 		}
-
-		return \Yii::$app->db->createCommand($sql)->execute();
+		return $ar->update();
 	}
 
-	public static function addEvent($zid,$eid){
-		return \Yii::$app->db->createCommand('UPDATE `zone_event_map` SET `events` = CONCAT(`events`,' . "'{$eid},')" . ' WHERE `zone_id` = ' . "'{$zid}'")->execute();
-	}
-
-	public static function addZone($zid){
+	public static function addRecord($zid){
 		$model = new self();
 		$model->zone_id = $zid;
 		$model->insert();
 	}
 
-	public static function getEvents($zid,$onlyIn){
-		$event = parent::find()->where(['zone_id' => $zid])->select('events')->asArray()->one();
-
-		if(empty($event)) return null;
-
-		$event = explode(',',$event['events']);
-		array_pop($event);
-
-		$in = parent::find()->where(['in','event_id',$event])->from('event')->asArray()->all();
+	public static function getEvents($zid,$onlyIn)
+	{
+		$event = parent::find()->where(['zone_id' => $zid])->select('events')->asArray()->scalar();
+		$in = Event::find()->where(['in','event_id',explode(',',$event)])->from('event')->asArray()->all();
 		
 		if($onlyIn) return $in;
 
-		$notIn = parent::find()->where(['not in','event_id',$event])->from('event')->asArray()->all();
-
-		$notIn['length'] = count($notIn);
-		$in['length'] = count($in);
+		$notIn = parent::find()->where(['not in','event_id',explode(',',$event)])->from('event')->asArray()->all();
 
 		return ['in' => $in,'notIn' => $notIn];
 	}

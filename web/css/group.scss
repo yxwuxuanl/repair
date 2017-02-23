@@ -1,0 +1,39 @@
+#group-manage-panel
+{
+    .actions
+    {
+        .glyphicon
+        {
+            margin-right: 15px;
+        }
+    }
+    .events
+    {
+        .select
+        {
+            span
+            {
+                display: inline;
+            }
+        }
+        ul
+        {
+            padding-left:0;
+            height: 200px;
+            overflow:scroll;
+        }
+
+        li
+        {
+            display: inline-block;
+            width: 50%;
+        }
+
+        span
+        {
+            float: right;
+            display: none;
+        }
+        
+    }
+}
