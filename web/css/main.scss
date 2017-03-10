@@ -5,8 +5,13 @@ body {
 
 @import './public.scss';
 @import './alert.scss';
-@import './zone-event.scss';
+@import './system.scss';
 @import './spinner.scss';
+@import './report.scss';
+@import './account.scss';
+@import './group.scss';
+@import './task.scss';
+@import './index.scss';
 
 .container
 {
@@ -77,5 +82,20 @@ body {
   margin-bottom: 10px;
 }
 
+.glyphicon
+{
+  cursor: pointer;
+}
 
+ul
+{
+  padding-left: 0;
+}
+
+.empty
+{
+    text-align: center;
+    font-size:1.5em;
+    line-height: 4em;
+}
 

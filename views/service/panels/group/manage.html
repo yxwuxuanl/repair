@@ -1,0 +1,153 @@
+<script>
+    defines['group-manage'] = 'script/group/manage.js';
+</script>
+
+<div class="content">
+    <h4><span class="add-row">创建组</span></h4>
+
+    <table class="table text-center table-hover mount">
+        <thead>
+            <tr>
+                <td>组名</td>
+                <td>组管理员</td>
+                <td colspan="2">删除/更改组管理员</td>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="group-add-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"> 添加组</h4>
+            </div>
+
+            <div class="modal-body">
+                <form role="form">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label for="">组名:</label>
+                                <input type="text" class="form-control" required minlength="2" maxlength="20">
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="form-group admin-mount">
+                                <label for="">组管理员:</label>
+                                <select class="form-control">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="event-mount">
+                        <ul></ul>
+                    </div>
+                
+                    <div class="form-group">
+                        <button class="submit btn btn-primary">添加</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="group-rename-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <form action="">
+                    <div class="form-group">
+                        <label for="">新组名</label>
+                        <input type="text" class="form-control" required minlength="2">
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-primary">重命名</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="group-delete-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    确定要删除这个组吗?
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-primary">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="group-change-admin-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group account-mount">
+                    <select name="" id="" class="form-control"></select>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-primary">更换</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="group-event-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="event-mount">
+                    <h5>该组响应以下事件</h5>
+                    <div class="has"><ul></ul></div>
+                    <h5>以下事件可以指派给该组</h5>
+                    <div class="not-has"><ul></ul></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

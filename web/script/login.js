@@ -1,7 +1,7 @@
 $(function () {    
     var login = {
         'init': function () {
-            $('#login-form').validate({
+            $service.validate($('#login-form'), {
                 'messages': {
                     'login-un-input': {
                         'required': '用户名不能为空',
@@ -25,8 +25,7 @@ $(function () {
                 if ($(this).valid()) {
                     _this.login.call(_this, $(this));
                 }
-
-            })
+            });
         },
 
         'login': function ($form) {
@@ -48,5 +47,5 @@ $(function () {
         }
     };
 
-    login.init();
+    $service.addModule('login', login);
 });

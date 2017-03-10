@@ -3,11 +3,17 @@
 namespace app\controllers;
 
 use app\behaviors\Response;
+use app\filters\CustomResponseFilter;
 use app\filters\LoginFilter;
 use app\filters\PrivilegeFilter;
+use app\formatter\Status;
+use app\models\CustomLabel;
 use app\models\Event;
+use app\models\ReportLabel;
 use app\models\zeMap;
 use app\models\Zone;
+use yii\base\DynamicModel;
+use yii\base\Exception;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 
@@ -15,123 +21,138 @@ class ZoneController extends Controller
 {
     public function behaviors()
     {
-   	    return [Response::className()];
         return [
-           'login' => [
-               'class' => LoginFilter::className()
-           ],
-           'privilege' => [
-               'class' => PrivilegeFilter::className(),
-               'privilege' => P_SYSTEM_ZONE
-           ],
-			Response::className()
+//           'login' => [
+//               'class' => LoginFilter::className(),
+//			   'only' => ['add','rename','delete','remove-event']
+//           ],
+			'response' => [
+				'class' => CustomResponseFilter::className()
+			],
         ];
     }
 
     public function actionGetParent()
 	{
-		return $this->success((new Zone)->getParent());
+		$row = Zone::getParent();
+
+		if($row === NULL)
+		{
+			return Status::SUCCESS;
+		}else{
+			return $row;
+		}
 	}
 
-    public function actionRename($zid,$zone_name)
+//	isRewrite
+    public function actionRename($zoneId,$zoneName)
     {
-        if(!static::checkZid($zid)) return $this->fail(REP_INVALID_ARGS);
-
-        $model = Zone::findOne($zid);
-
-        $model->zone_name = $zone_name;
-        $model->scenario = 'rename';
-
-        if(!$model->validate()){
-            return $this->fail(REP_MODEL_VALIDATE_FAIL);
-        }
-
-        if(!$model->update()){
-            return $this->fail(REP_MODEL_SAVE_FAIL);
-        }else{
-            return $this->success();
-        }
+		return Zone::rename($zoneId,$zoneName);
     }
 
-    public function actionDelete($zid)
+    public function actionDelete($zoneId)
     {
-        $model = new Zone();
-        $model->scenario = 'delete';
-        $model->zone_id = $zid;
-
-        if(!$model->validate()) return $this->fail(REP_INVALID_ARGS);
-
-        if($model->deleteZone()){
-            return $this->success();
-        }else{
-            return $this->fail(REP_MODEL_SAVE_FAIL);
-        }
+		return Zone::remove($zoneId);
     }
 
-    public function actionAdd($name,$parent = null)
+	// is rewrite
+    public function actionAdd($name,$parent)
     {
-        $model = new Zone();
-        $model->scenario = 'add';
+		return Zone::create($name,$parent);
+    }
 
-        $usableId = $model->getUsableId($parent);
-        if(!$usableId) return $this->fail(REP_MODEL_NOT_FOUND);
-            
-        $model->zone_id = $usableId;
-        $model->zone_name = $name;
-
-        if(!$model->validate()) return $this->fail(REP_MODEL_VALIDATE_FAIL,['message' => $model->errors]);
-        if(!$model->save()) return $this->fail(REP_MODEL_SAVE_FAIL);
-
-		if($parent === null){
-			zeMap::addZone($usableId);
+    // is rewrite
+    public function actionGetChildren($parent)
+    {
+		$row = Zone::getSubs($parent);
+		if(!is_array($row))
+		{
+			return $row;
+		}else{
+			if(empty($row))
+			{
+				return Status::SUCCESS;
+			}
+			return $row;
 		}
-
-        return $this->success(['id' => $usableId]);
     }
 
-    public static function checkZid($zone_id,$isParent = false)
+    public function actionGetEvents($zoneId,$onlyIn = false)
     {
-		if(!is_numeric($zone_id) || $zone_id > 9999 || $zone_id < 1000){
-			return false;
-		}
-
-		if($isParent){
-        	return is_numeric($zone_id) && substr($zone_id,-2,2) == '00';
-		}
-
-		return true;
+		return Zone::getEvent($zoneId,$onlyIn);
     }
 
-    public function actionGetSubs($zid)
-    {
-        $model = new Zone();
-        $model->scenario = 'necessaryParent';
-        $model->zone_id = $zid;
-
-        if(!$model->validate()) return $this->fail(REP_INVALID_ARGS);
-
-        $result = $model->getSubs();
-
-        return $this->success($result);
-    }
-
-    public function actionGetEvents($zid)
-    {
-        if(!static::checkZid($zid) || !($row = zeMap::getEvents($zid))) return $this->fail(REP_INVALID_ARGS);
-        return $this->success($row);
-    }
-
-    public function actionRemoveEvent($zid,$eid)
+//    is rewrite
+    public function actionRemoveEvent($zoneId,$eventId)
 	{
-		if(!ZoneController::checkZid($zid) || !EventController::checkEid($eid)) return $this->fail(REP_INVALID_ARGS);
-		if(!zeMap::deleteEvent($eid,$zid)) return $this->fail(REP_MODEL_SAVE_FAIL);
-		return $this->success();
+		return Zone::removeEvent($zoneId,$eventId);
     }
 
-    public function actionAddEvent($zid,$eid){
+    public function actionGetLabel($zid)
+    {
+		if(!Zone::checkZid($zid,true)) return Status::INVALID_ARGS;
+		$result = ReportLabel::find()->where(['zone_id' => $zid])->asArray()->one();
 
-		if(!ZoneController::checkZid($zid) || !EventController::checkEid($eid) || empty(Event::findOne($eid))) return $this->fail(REP_INVALID_ARGS);
-		if(!zeMap::addEvent($zid,$eid)) return $this->fail(REP_MODAL_SAVE_FAIL);
-		return $this->success();
+		if(empty($result))
+		{
+			return Status::SUCCESS;
+		}else{
+			return $result;
+		}
     }
+
+//    is rewrite
+    public function actionAddEvent($zoneId,$eventId)
+	{
+		return Zone::addEvent($zoneId,$eventId);
+    }
+
+    public function actionGetCustom($zoneId)
+	{
+		$row = CustomLabel::get($zoneId);
+
+		if($row === NULL)
+		{
+			return [Status::SUCCESS,null];
+		}else{
+			return $row;
+		}
+	}
+
+	public function actionGetEvent($zoneId)
+	{
+		return zeMap::getEvent($zoneId);
+	}
+
+	public function actionChangeCustom($zoneId,$tips,$test)
+	{
+		if(!Zone::checkZid($zoneId,true) || ($tips == '' && $test != '')) return Status::INVALID_ARGS;
+
+		if($tips == '' && $test == '')
+		{
+			if(CustomLabel::remove($zoneId) === Status::SUCCESS)
+			{
+				return '删除成功';
+			}else{
+				return Status::DATABASE_SAVE_FAIL;
+			}
+		}
+
+		if(CustomLabel::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->count())
+		{
+			if(CustomLabel::edit($zoneId,$tips,$test) === Status::SUCCESS)
+			{
+				return '修改成功';
+			}else{
+				return Status::DATABASE_SAVE_FAIL;
+			}
+		}else{
+			if(CustomLabel::add($zoneId,$tips,$test) === Status::SUCCESS)
+			{
+				return '添加成功';
+			}else{
+				return Status::DATABASE_SAVE_FAIL;
+			}
+		}
+	}
 }

@@ -5,10 +5,6 @@
  * Date: 2016/11/10
  * Time: 上 午9:54
  */
-
-app\assets\LoginAsset::register($this);
-
-$this->title = '登录';
 ?>
 
 <div class="container">
@@ -16,7 +12,7 @@ $this->title = '登录';
         <form action="" id="login-form" role="form">
             <div class="form-group">
                 <label for="login-un-input">用户名</label>
-                <input type="text" name="login-un-input" class="form-control" id="login-un-input" required maxlength="6" minlength="2">
+                <input type="text" name="login-un-input" class="form-control" id="login-un-input" required minlength="2">
             </div>
 
             <div class="form-group">
@@ -31,4 +27,12 @@ $this->title = '登录';
     </div>
 </div>
 
+<script>
+    defines['login'] = 'script/login.js';
+
+    window.onload = function()
+    {
+        $service.runModule('login');
+    }
+</script>
 

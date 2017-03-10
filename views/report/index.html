@@ -1,0 +1,108 @@
+<div class="container" id="report-contain">
+
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#report" role="tab" data-toggle="tab">报障</a></li>
+        <li role="presentation"><a href="#my-report" role="tab" data-toggle="tab">报障记录</a></li>
+    </ul>
+
+
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="report">
+             <form action="" role="form" id="report-form">
+        <div class="form-group">
+            <div class="row">
+                <div class="col-xs-6">
+                    <label for="">学号</label>
+                    <input type="text" id="reporter-id" name="reporter-id" class="form-control">
+                </div>
+
+                <div class="col-xs-6">
+                    <label for="">姓名</label>
+                    <input type="text" id="reporter-name" name="reporter-name" class="form-control">
+                </div>
+            </div>
+        </div>    
+
+        <div class="form-group">
+            <label for="">联系号码</label>
+            <input type="text" id="tel" class="form-control" name="tel">
+        </div> 
+
+        <div class="form-group">
+            <label for="">故障区域</label>
+            <div class="row">
+                <div class="col-xs-6 parent-zone-mount">
+                    <select class="form-control" id="parent-zone" name="parent-zone">
+                        <option value="">请选择主要区域</option>
+                    </select>
+                </div>
+
+                <div class="col-xs-6 children-zone-mount">
+                    <select class="form-control" id="children-zone" name="sub-zone">
+                        <option value="">请选择主要区域</option>
+                    </select>
+                </div>
+            </div>
+        </div> 
+
+        <div class="form-group" id="custom-label">
+            <label for=""></label>
+            <input type="text" class="form-control" id="custom-input" name="custom-input">
+        </div>
+
+        <div class="form-group event-mount">
+            <label for="">故障</label>
+            <select name="event" id="event" class="form-control" name="event">
+                <option value="">请选择事件</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="">其他描述</label>
+            <textarea rows="5" cols="" class="form-control" id="other-describe" name="other-describe"></textarea>
+        </div>
+
+        <div class="form-group">
+            <button class="btn btn-block btn-primary">提交</button>
+        </div>
+             </form>
+        </div>
+
+        <div role="tabpanel" class="tab-pane" id="my-report">
+            <div class="login">
+                <form action="" role="form" id="login-form">
+                    <div class="form-group">
+                        <label for="">输入学号查询:</label>
+                        <input type="text" class="form-control" name="login-stu-id" id="login-stu-id">
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-primary btn-block">查询</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="report-row">
+                <ul>
+                    <li class="list-group-item">
+                        <p><span class="task-attr">提交日期 : </span>{time}</p>
+                        <p><span class="task-attr">故障区域 : </span>{zone}</p>
+                        <p><span class="task-attr">故障 : </span>{event}</p>
+                        <p><span class="task-attr">状态 : </span>{status}</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    
+</div>
+
+<script>
+    defines['report'] = 'script/report.js';
+
+    window.onload = function()
+    {
+        $service.runModule('report');
+    }
+</script>

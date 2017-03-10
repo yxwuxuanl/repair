@@ -1,0 +1,72 @@
+<script>
+    defines['system-event'] = 'script/system/event.js';
+</script>
+
+<div class="content">
+    <div class="mount">
+        <h4 class="add-row">添加事件</h4>
+
+        <ul>
+            <template name="content">
+                <li class="list-group-item">
+                    <span class="event-name">{eventName}</span>
+                    <span class="action-icons">
+                        <span class="glyphicon glyphicon-pencil" action="rename"></span>
+                        <span class="glyphicon glyphicon-trash" action="delete"></span>
+                    </span>
+                </li>
+            </template>
+
+            <template name="empty">
+                <li class="list-group-item empty">暂无事件</li>
+            </template>
+        </ul>
+        
+    </div>
+</div>
+
+<div class="modal fade" id="event-input-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="">事件名</label>
+                        <input type="text" class="form-control" id="event-name" required minlength="5">
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-primary submit">提交</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="event-delete-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <h4 id="zone-delete-tips">!!删除事件后相关的报修记录将一并删除!!</h4>
+                <button type="button" class="btn btn-primary  delete">删除</button>
+            </div>
+
+        </div>
+    </div>
+</div>

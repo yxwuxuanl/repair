@@ -1,0 +1,28 @@
+#task-assign-panel .time {
+  text-align: center;
+  font-size: 1.1em;
+  border-bottom: 2px solid #696969; }
+#task-assign-panel .empty {
+  text-align: center;
+  font-size: 1.5em;
+  line-height: 4em; }
+
+.task-attr {
+  font-size: 1.1em; }
+
+#task-assign-modal .modal-body > div {
+  border-bottom: 2px solid #696969;
+  margin-bottom: 10px; }
+#task-assign-modal .describe {
+  display: none; }
+  #task-assign-modal .describe .content {
+    height: 10%;
+    overflow: scroll;
+    word-wrap: break-word; }
+
+#task-all-panel .mount {
+  margin-top: 10px; }
+  #task-all-panel .mount > div {
+    display: none; }
+
+/*# sourceMappingURL=task.css.map */

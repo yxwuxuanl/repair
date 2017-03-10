@@ -1,0 +1,114 @@
+<script>
+    defines['group-setting'] = 'script/group/setting.js';
+</script>
+
+<div class="member">
+    <h4>组成员设置</h4>
+    <div class="row">
+        <div class="in col-md-6">
+            <h5>组成员</h5>
+            <ul></ul>
+        </div>
+
+        <div class="no-assign col-md-6">
+            <h5>无组织状态</h5>
+            <ul></ul>
+        </div>
+    </div>
+</div>
+
+<div class="mode">
+    <div class="col-md-6 col-md-push-3">
+        <h4>组任务模式设置</h4>
+        <select class="form-control">
+            <option value="1">不分配</option>
+            <option value="2">定向分配,余下任务不分配</option>
+            <option value="3">所有平均分配</option>
+            <option value="4">定向分配,余下任务平均分配</option>
+        </select>
+    </div>
+</div>
+
+<div class="rule">
+    <h4>组任务分配规则</h4>
+    <h5 class="add">新建规则</h5>
+    <table class="table text-center table-hover mount">
+        <thead>
+            <tr>
+                <td>事件名</td>
+                <td>分配</td>
+                <td>分配类型</td>
+                <td></td>
+            </tr>
+        </thead>
+
+        <tbody>            
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="group-confirm-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="tips"></div>
+                </div>
+
+                <div class="form-group">
+                    <button class="submit btn btn-primary">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="group-add-rule-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">新建任务分配规则</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="">将:</label>
+                    <div class="event-mount">
+                        <select class="form-control event"></select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="">分配给:</label>
+                    <div class="member-mount">
+                        <ul></ul>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="">并以上成员:</label>
+                    <div>
+                        <select name="" id="" class="form-control level">
+                            <option value="1">继续接受任务分配</option>
+                            <option value="2">不再接受任务分配</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-primary">提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

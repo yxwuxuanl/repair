@@ -22,10 +22,11 @@ class ServiceAsset extends AssetBundle
     ];
 
     public $js = [
-        'script/servicepage.js',
+        'script/servicepage.js'
     ];
 
     public $depends = [
-        'app\assets\BootstrapAsset'
+    	'app\assets\JqueryAsset',
+		'app\assets\BootstrapAsset'
     ];
 }

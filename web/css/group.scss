@@ -1,0 +1,107 @@
+#group-manage-panel
+{
+    .actions
+    {
+        .glyphicon
+        {
+            margin-right: 15px;
+        }
+    }
+    .event-mount
+    {
+        .select
+        {
+            span
+            {
+                display: inline;
+            }
+        }
+        ul
+        {
+            padding-left:0;
+            height: 200px;
+            overflow:scroll;
+        }
+
+        li
+        {
+            display: inline-block;
+            width: 50%;
+        }
+
+        span
+        {
+            float: right;
+            display: none;
+        }
+        
+    }
+
+    #group-event-modal
+    {
+        li:hover > .glyphicon
+        {
+            display: inline;
+        }
+
+        h5
+        {
+            text-align: center;
+        }
+    }
+}
+
+#group-setting-panel
+{
+    .mode
+    {
+        select
+        {
+            width: 80%;
+            display: inline-block;
+        }
+
+        height: 100px;
+    }
+
+    .rule
+    {
+        display: none;
+
+        tr:hover .glyphicon
+        {
+            visibility:visible;
+        }
+    }
+
+    .glyphicon
+    {
+        visibility:hidden;
+        float: right;
+    }
+
+    h4,h5
+    {
+        text-align: center;
+    }
+
+    ul
+    {
+        padding-left: 0;
+        height: 200px;
+        overflow: scroll;
+    }
+
+    .select > .glyphicon
+    {
+        visibility:visible;
+    }
+
+    .member
+    {
+        li:hover > .glyphicon
+        {
+            visibility:visible;
+        }
+    }
+}

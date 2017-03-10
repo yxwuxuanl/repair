@@ -11,10 +11,6 @@
   Header set Cache-Control "max-age=300"
 </FilesMatch>
 
-<FilesMatch "zeCache.js">
-  Header set Cache-Control "max-age=0"
-</FilesMatch>
-
 <IfModule mod_expires.c>
   #ExpiresActive On
   #ExpiresByType application/javascript A864000

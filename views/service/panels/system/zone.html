@@ -1,0 +1,150 @@
+<div class="content">
+    <h4 class="add-row">添加事件</h4>
+    <div class="mount">
+        <ul>
+            <template id="t-parent">
+                <li class="list-group-item parent">
+                    <span class="zone-name">{zone_name}</span>
+                    <span class="action-icons">
+                        <span class="glyphicon glyphicon-plus" action="add"></span>
+                        <span class="glyphicon glyphicon-pencil" action="rename"></span>
+                        <span class="glyphicon glyphicon-trash" action="delete"></span>
+                        <span class="glyphicon glyphicon-list" action="event"></span>
+                        <span class="glyphicon glyphicon-cog" action="custom"></span>
+                    </span>
+                </li>
+
+                <li class="list-group-item children">
+                    <ul></ul>
+                </li>
+            </template>
+
+            <template id="t-empty">
+                <li class="list-group-item empty">暂无区域</li>
+            </template>
+
+            <template id="t-children-empty">
+                <li class="list-group-item empty">无子区域</li>
+            </template>
+
+            <template id="t-children">
+                <li class="list-group-item">
+                    <span class="zone-name">{zone_name}</span>
+                    <span class="action-icons">
+                        <span class="glyphicon glyphicon-pencil" action="rename"></span>
+                        <span class="glyphicon glyphicon-trash" action="delete"></span>
+                    </span>
+                </li>
+            </template>
+        </ul>
+    </div>
+</div>
+
+<script>
+    defines['system-zone'] = 'script/system/zone.js';
+</script>
+
+<div class="modal fade" id="zone-input-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <form role="form">
+                    <div class="form-group">
+                        <label for="">区域名</label>
+                        <input type="text" class="form-control" required minlength="3">
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-primary submit">提交</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="zone-delete-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <h4 id="zone-delete-tips">!!删除区域后相关的报修记录将一并删除!!</h4>
+                <button type="button" class="btn btn-primary">删除</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="zone-event-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="event">
+                    <div class="in">
+                        <h5>该区域响应以下事件</h5>
+                        <ul></ul>
+                    </div>
+
+                    <div class="not-in">
+                        <h5>以下事件可以添加到该区域</h5>
+                        <ul></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="zone-custom-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <form action="" role="form">
+                    <div class="form-group">
+                        <label for="">提示</label>
+                        <input type="text" class="tips form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="">正则表达式式</label>
+                        <input type="text" class="test form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-primary">提交</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

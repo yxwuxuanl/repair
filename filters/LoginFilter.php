@@ -11,32 +11,14 @@ use yii\base\ActionFilter;
 
 class LoginFilter extends ActionFilter
 {
-	public $action;
-
     function beforeAction($action)
     {
-		if(!$this->action){
-			if(!\Yii::$app->getSession()->get('IS_LOGIN',false)){
-				\Yii::$app->response->headers->add('status',403);
-				return false;
-			}
-		}else if(is_array($this->action)){
-			if(in_array($action,$this->action)){
-				if(!\Yii::$app->getSession()->get('IS_LOGIN',false)){
-					\Yii::$app->response->headers->add('status',403);
-					return false;
-				}
-			}
+		if(!\Yii::$app->getSession()->get('IS_LOGIN',false))
+		{
+			\Yii::$app->getResponse()->statusCode = 403;
+			return false;
 		}else{
-			if($this->action == $action){
-				if(!\Yii::$app->getSession()->get('IS_LOGIN',false)){
-					\Yii::$app->response->headers->add('status',403);
-					return false;
-				}
-			}
+			return true;
 		}
-
-		return true;
-
     }
 }

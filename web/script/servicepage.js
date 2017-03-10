@@ -3,8 +3,63 @@
  */
 
 $(function (global) {
+    defines['validate'] = 'script/jquery.validate.min.js';
     var
         $service = {
+            'eventHanlders': {},
+
+            'on': function (m, name, actions, func) {
+                if (!(m in this.eventHanlders)) {
+                    this.eventHanlders[m] = {};
+                }
+
+                if (!(name in this.eventHanlders[m])) {
+                    this.eventHanlders[m][name] = [];
+                }
+
+                if (func) {
+                    this.eventHanlders[m][name].push([actions, func]);
+                } else {
+                    this.eventHanlders[m][name].push(actions);
+                }
+            },
+
+            'trigger': function (m, name, params) {
+                if (!(m in this.eventHanlders) || !(name in this.eventHanlders[m])) return;
+                var
+                    defines = $service.eventHanlders[m][name];
+
+                for (var i = 0, len = defines.length; i < len; i++) {
+
+                    var
+                        define = defines[i],
+                        m_, split, handle;
+                    
+                    if (typeof define[0] == 'object') {
+                        m_ = define[0];
+                        handle = define[1];
+                    } else {
+                        if (define[0].indexOf(':') > 0) {
+                            split = define[0].split(':');
+                            m_ = split[0];
+                            handle = split[1];
+                        } else {
+                            m_ = define[0];
+                            handle = define[1];
+                        }
+
+                        m_ = $service.$modules[m_];
+                    }
+                    
+                    if (!(m_['_module_name_'] in $service.contain.$contains)) continue;
+
+                    if (typeof handle == 'string') {
+                        m_[handle].apply(m_, params);
+                    } else {
+                        handle.apply(m_, params);
+                    }
+                }
+            },
             '$bootstraps': [],
             '$modules': {},
 
@@ -86,45 +141,37 @@ $(function (global) {
 
             'loader': function (url, success, fail) {
                 
+                if (url in defines) {
+                    url = defines[url];
+                }
+
                 return $.get(url).then(success, fail || function () {
                     alert('未知错误,请尝试刷新页面');
                 });
-
             },
 
-            'runModule': function (name, injectPanel) {
-                
-                var
-                    moduleName = this.parseModuleName(name);
-                
-                if (!(moduleName in this.$modules)) {
-                    this.loader(defines[moduleName], function () {
-                        $service.runModule(name);
+            'runModule': function (name, init) {
+                if (!(name in this.$modules)) {
+                    this.loader(name, function () {
+                        $service.runModule(name, init);
                     });
-                    return;
-                }
-                
-                if (!this.contain.has(moduleName)) {
-                    var
-                        module_ = this.$modules[moduleName],
-                        contain = this.contain;
+                } else {
+                    if (!this.contain.has(name)) {
+                        var
+                            module_ = this.$modules[name];
+                            
+                        module_._module_name_ = name;   
 
-                    module_['_moduleName'] = moduleName;
+                        for (var key in $service.plugin)
+                        {
+                            module_[key] = $service.plugin[key];
+                        }    
 
-                    module_.reRun = function () {
-                        $service.contain.reRun(moduleName);
+                        this.contain.set(name, module_);
+                        init && init.call(module_);
+                        this.contain.init(name);
                     }
-                    
-                    if (injectPanel !== false) {
-                        module_['$panel'] = $(name);
-                    }
-
-                    this['_' + moduleName + '_'] = module_;
-                    
-                    contain.set(moduleName, module_);
-                    contain.init(moduleName);
                 }
-
             }
         }
     
@@ -132,11 +179,11 @@ $(function (global) {
         
         var
             classs = ['error-alert', 'success-alert'],
-            args,modal,$modal;
+            args, modal, $modal;
         
         if (arguments.length == 0) {
             return {
-                'success': function () {                    
+                'success': function () {
                     $service.alert.apply(null, [1, '操作成功'].concat($service.toArray(arguments)));
                 },
                 'error': function () {
@@ -195,7 +242,7 @@ $(function (global) {
 
     };
 
-    $service.modal = function (modal, init) {
+    $service.modal = function (modal, init, extend) {
 
         if (typeof modal == 'string') {
             modal = $(modal);
@@ -208,9 +255,14 @@ $(function (global) {
         this.$modal = modal;
         this.$title = modal.find('.modal-title');
         this.$body = modal.find('.modal-body');
-
         var
             _this = this;
+
+        if (typeof extend == 'object') {
+            for (var key in extend) {
+                this[key] = extend[key];
+            }
+        }
 
         if (typeof init == 'function') {
 
@@ -225,12 +277,8 @@ $(function (global) {
                 } else {
                     this.bind(eventName, init[eventName]);
                 }
-
             }
-
         }
-
-
     };
 
     $service.modal.prototype = {
@@ -357,7 +405,7 @@ $(function (global) {
         var
             args = $service.args(arguments, {
                 'url': function (value) {
-                    return typeof value == 'string' || typeof value == 'object';
+                    return typeof value == 'string';
                 },
                 'type': [
                     function (value) {
@@ -414,7 +462,7 @@ $(function (global) {
         }
         
         return $.ajax(args).then(function (response) {
-            if ([200, 304, 1].indexOf(response.status) > -1 || response.status == 'success') {
+            if ([200, 304, 1, '1'].indexOf(response.status) > -1 || response.status == 'success') {
                 delete response.status;
                 return $.Deferred().resolve(response);
             } else {
@@ -424,7 +472,7 @@ $(function (global) {
     };
 
     $service.toArray = function (args) {
-        return Array.prototype.slice.call(args,0);
+        return Array.prototype.slice.call(args, 0);
     };
 
     $service.template = function (text, params) {
@@ -577,26 +625,21 @@ $(function (global) {
         }
     };
 
-    $service.validate = function ($form, config) {
-
+    $service.validate = function ($form, config, callback) {
         if (!('validator' in $)) {
             this.loader('script/jquery.validate.min.js', function () {
-                $service.validate($form, config);
+                $service.validate($form, config, callback);
             });
         } else {
             config = config || {};
+            callback && callback();
             $form.validate(config);
             return $form;
         }
-
     };
 
     $service.$bootstraps.push(function () {
-
-        var
-            self = this;
-
-        $('#nav').click(function (event) {
+        $('#tab').click(function (event) {
             event.preventDefault();
 
             var
@@ -604,39 +647,168 @@ $(function (global) {
                 href;
             
             if ($target[0].tagName == 'A' && (href = $target.attr('href')) != '#') {
-                self.runModule(href);
+                var
+                    moduleName = href.slice(1, -6);
+                
+                $service.runModule(moduleName, function () {
+                    this.$panel = $(href);
+                });
             }
-
         })
-    })
+    });
     
     $service.$bootstraps.push(function () {
 
         $('button.submit').click(function () {
             $(this).parent().parent().submit();
-        })
+        });
 
-    })
+    });
 
     $service.$bootstraps.push(function () {
         $(document).ajaxSend(function () {
-            $('.spinner').show();
+            $('#spinner').show();
         })
 
         $(document).ajaxComplete(function () {
-            $('.spinner').hide();
+            $('#spinner').hide();
         })
-    })
+    });
 
-    $service.bootstrap();
+    $service.render = function (_config_) {
+        var
+            frag = document.createDocumentFragment(),
+            config = {
+                '$temp': _config_['$temp'],
+                'clear': ('clear' in _config_) ? _config_.clear : false,
+                'after': ('after' in _config_) ? _config_.after : null,
+                'before': ('before' in _config_) ? _config_.before : null,
+                'filter': ('filter' in _config_) ? _config_.filter : null,
+                'data': ('data' in _config_) ? _config_.data : null
+            };
+        
+        config.temp = config.$temp[0].innerHTML;
+        config.$mount = _config_['$mount'] || config.$temp.parent();
+
+        config.before && config.before.call(config);
+
+        // 是否清空节点
+        config.clear && config.$mount.html('');
+
+        // 如果没有数据则直接渲染模板
+        if (!config.data) {
+            return config.$mount.append($(config.temp));
+        }
+
+        for (var i = 0, len = config.data.length; i < len; i++) {
+
+            var
+                chunk = config.data[i],
+                el = config.temp;
+
+            config.filter && config.filter.call(chunk);
+
+            for (var key in chunk) {
+                el = el.replace(new RegExp('{' + key + '}', 'g'), chunk[key]);
+            }
+
+            el = $.parseHTML(el);
+
+            if (config.after) {
+                el = config.after.call(chunk, el);
+            }
+
+            for (var j = 0, ellen = el.length; j < ellen; j++) {
+                frag.appendChild(el[j]);
+            }
+        }
+
+        config.$mount.append(frag);
+    }
     
+    // 初始化模块的时候以下内容会被注入到模块
+    $service.plugin = {
+        'watcher': {
+            'data': {},
+            'define': function (key, value, changeHandle) {
+
+                if (typeof key == 'object')
+                {
+                    for (var attr in key)
+                    {
+                        this.define(attr, key[attr]['default'], key[attr]['handle']);
+                    }    
+                } else {
+                    this.data[key] = [value, changeHandle];
+                }
+            },
+            'set': function (key, value)
+            {
+                if (key.indexOf('.') > -1)
+                {
+                    var
+                        split = key.split('.');
+                
+
+                    this.data[split[0]][0][split[1]] = value;
+                } else {
+                    this.data[key][0] = value;
+                }
+            }   , 
+            'change': function (key,value,args)
+            {
+                var
+                    oldValue = this.get(key),    
+                    handle = this.data[key.split('.')[0]][1];
+                
+                this.set(key, value);
+
+                handle.apply(this,[oldValue,value].concat(args));
+            },
+            'get': function (key)
+            {
+                if (key.indexOf('.') > -1)
+                {
+                    var
+                        split = key.split('.');
+                    
+                    return this.data[split[0]][0][split[1]];
+                } else {
+                    return this.data[key][0];
+                }
+            }   , 
+            'plus': function (key)
+            {
+                var
+                    oldValue = this.get(key);
+                
+                this.change(key, oldValue + 1, Array.prototype.slice.call(arguments, 1));
+            },
+            'sub': function (key)
+            {
+                var
+                    oldValue = this.get(key);
+                
+                this.change(key, oldValue - 1, Array.prototype.slice.call(arguments, 1));
+            }    
+        },
+        'on': function (m, event, func)
+        {
+            $service.on(m, event, this, func);
+        },
+        'trigger': function (event)
+        {
+            $service.trigger(this._module_name_, event, Array.prototype.slice.call(arguments, 1));
+        }   , 
+
+    };    
+    
+    $service.bootstrap();
     global.$service = $service;
 
-} (window))
+}(window));
 
 function C()
 {
     console.log.apply(null,arguments);
 }
-
-

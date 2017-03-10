@@ -11,7 +11,6 @@ $config = [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'v6xjjNOyzJnbQSmI5MgAYstK4zNjREEx',
         ],
-
         'cookie' => [
             'class' => 'app\controllers\CookieController',
             'securityKey' => '63cliM073L18071KwV72JagSr81JKv8s',
@@ -60,14 +59,8 @@ $config = [
                 'loginout' => 'user/login-out'
             ],
         ],
-
-		'zeCache' => [
-			'class' => 'app\controllers\zeCacheController',
-			'dir' => '@webroot/zeCache/'
-		],
     ],
     'params' => $params,
-
 ];
 
 if (YII_ENV_DEV) {
