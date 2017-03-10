@@ -12,7 +12,6 @@ use app\behaviors\Response;
 
 class EventController extends Controller
 {
-
 	public function behaviors()
 	{
 		return [
@@ -24,71 +23,22 @@ class EventController extends Controller
 
 	public function actionGetEvents()
 	{
-		$row = Event::all();
-
-		if(empty($row))
-		{
-			return Status::SUCCESS;
-		}else{
-			return $row;
-		}
+		return Event::all();
 	}
 
-	public function actionAdd($ename){
-		$model = new Event();
-		$model->scenario = 'add';
-		$eid = 'e_' . substr(uniqid(),-8);
-		$model->event_id = $eid;
-		$model->event_name = $ename;
-
-		if(!$model->validate()) return Status::INVALID_ARGS;
-
-		try
-		{
-			$model->insert();
-		}catch(Exception $e)
-		{
-			return Status::EVENT_EXIST;
-		}
-
-		return ['eid' => $eid];
-	}
-
-	public function actionDelete($eid)
+	public function actionAdd($eventName)
 	{
-		if(!Event::checkEid($eid)) return Status::INVALID_ARGS;
-		$ar = Event::findOne(['event_id' => $eid]);
-
-		if($ar === NULL) return Status::INVALID_ARGS;
-
-		if($ar->delete())
-		{
-			return Status::SUCCESS;
-		}
-
-		return Status::DATABASE_SAVE_FAIL;
+		return Event::create($eventName);
 	}
 
+	public function actionRemove($eventId)
+	{
+		return (string) Event::remove($eventId);
+	}
 
-	public function actionRename($eid,$ename){
-
-		if(!Event::checkEid($eid)) return Status::INVALID_ARGS;
-
-		$model = Event::findOne(['event_id' => $eid]);
-		$model->scenario = 'rename';
-		$model->event_name = $ename;
-
-		if(!$model->validate()) return Status::INVALID_ARGS;
-
-		try
-		{
-			$model->update();
-		}catch (Exception $e)
-		{
-			return Status::EVENT_EXIST;
-		}
-
-		return Status::SUCCESS;
+	public function actionRename($eventName,$eventId)
+	{
+		return (string) Event::rename($eventId,$eventName);
 	}
 
 	public function actionGetNoAssign()

@@ -16,18 +16,17 @@ class RoleController
 
 	public static $map = [
 		self::NORMAL => [
-			'indexController' => 'app\controllers\index\NormalController',
+			'indexController' => 'index/normal',
 			'account' => 1,
 			'task' => 1
 		],
 		self::GROUP_ADMIN => [
-			'indexController' => 'app\controllers\index\GroupSystemController',
+			'indexController' => 'index/normal',
 			'account' => 1,
 			'task' => 3,
 			'group' => 2
 		],
 		self::SYSTEM_ADMIN => [
-			'indexController' => 'app\controllers\index\GroupSystemController',
 			'account' => 3,
 			'group' => 1,
 			'system' => 1
@@ -51,4 +50,8 @@ class RoleController
 		}
 	}
 
+	public static function getRole()
+	{
+		return \Yii::$app->getSession()->get('role');
+	}
 }

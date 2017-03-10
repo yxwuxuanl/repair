@@ -3,51 +3,102 @@
 
         'init': function () {
             var
-                $panel;
+                self = this, $panel;
 
             $panel = this['$panel'] = $('#report-contain');
 
             $service.ajax('zone/get-parent').done(function (response) {
-                report.renderOption(response.content, '请选择主要区域', { 'value': 'zone_id', 'text': 'zone_name' }, '#parent-zone');
-                report.watchSelect();
+                report.renderZone(response.content, 'parent-zone');
+                report.watch();
+            }).fail(function (response) {
+                $service.alert().error('数据获取失败 <br/>' + response.describe);
             });
 
             report.validateForm();
-            $panel.find('form').submit(function () {
-                report.post($(this));
-            });
         },
+
+        'watch': function ()
+        {
+            this.$panel.find('#parent-zone').change(function () {
+                var
+                    $option = $(this).find('option:selected');
+                
+                if ($option.val() == '')
+                {
+                    var
+                        $children = $('#children-zone'),
+                        $event = $('#event');
+                    
+                    $children.val('');
+                    $children.find('option:gt(0)').remove();
+
+                    $event.val('');
+                    $event.find('option:gt(0)').remove();
+
+                    report.renderCustom({});
+
+                    return;
+                }    
+
+                $service.ajax('report/get-info', {
+                    'zoneId': $option.data('zid')
+                }).done(function (response) {
+                    report.renderZone(response.content.childZone,'children-zone');
+                    report.renderEvent(response.content.events.in);
+                    report.renderCustom(response.content.custom || {});
+                });
+            });
+
+            this.$panel.find('form').submit(function (event) {
+                event.preventDefault();
+                $(this).valid() && report.post($(this));
+            });
+
+            this.$panel.find('#my-report form').submit(function (event) {
+                event.preventDefault();
+                if ($(this).valid())
+                {
+                    report.renderRow($(this).find('[type=text]').val());
+                }    
+            })
+        }   ,
 
         'post': function ($form)
         {
-            if ($form.valid())
-            {
-                var
-                    data = {
-                        '_csrf' : $service.getCsrf()
-                    };    
-
-                $form.find('[type="text"],select,textarea').each(function () {
-                    data[this.id] = $(this).val();
-                })
-
-                $service.ajax('report/post', 'POST', data).done(function () {
-                    $service.alert().success('报告成功');
-                }).fail(function (response) {
-                    $service.alert().error('报告失败<br>' + response.describe);
+            var
+                data = {
+                    reporter_id: $form.find('#reporter-id').val(),
+                    reporter_name: $form.find('#reporter-name').val(),
+                    reporter_tel: $form.find('#tel').val(),
+                    zone_id: $form.find('#children-zone option:selected').data('zid'),
+                    event_id: $form.find('#event option:selected').data('eid'),
+                    custom: $form.find('#custom-input').val(),
+                    describe: $form.find('#other-describe').val(),
+                    _csrf : $service.getCsrf()
+                };
+            
+            $service.ajax('report/post', 'POST', data).done(function (response) {
+                $service.alert().success('报修成功,你可以在 `报障记录` 页面追踪该任务', function () {
+                    $('[href="#my-report"]').tab('show');
+                    report.$panel.find('form')[0].reset();
+                    report.renderRow(data['reporter_id']);
                 });
-            }    
+            });
         },
 
         'customValidateTest': null,
 
         'validateForm': function () {
             $service.loader('validate', function () {
-                $('form').validate({
+                report.$panel.find('#report-form').validate({
                     'rules': {
-                        'stu-number': {
+                        'reporter-id': {
                             'required': true,
                             'stuNumber': true
+                        },
+                        'reporter-name': {
+                            'required': true,
+                            'minlength': 2
                         },
                         'tel': {
                             'required': true,
@@ -67,7 +118,7 @@
                         }
                     },
                     'messages': {
-                        'stu-number': {
+                        'reporter-id': {
                             'required': '学号不能为空',
                         },
                         'tel': {
@@ -81,10 +132,23 @@
                         },
                         'event': {
                             'required': '请选择事件'
+                        },
+                        'reporter-name': {
+                            'required': '请输入姓名',
+                            'minlength': '请输入姓名'
                         }
                     },
                     debug: true
-                })
+                });
+
+                report.$panel.find('#login-form').validate({
+                    'rules': {
+                        'login-stu-id': {
+                            'required': true,
+                            'stuNumber': true
+                        }
+                    }
+                });
 
                 $.validator.addMethod('stuNumber', function (value) {
                     var
@@ -116,87 +180,118 @@
             });
         },
 
-        'renderOption': function (content, defaultOption, map, mount) {
+        'renderRow': function (stuNumber)
+        {
+            $service.ajax('report/get-row', {
+                'stuNumber' : stuNumber
+            }).done(function (response) {
+                if (response.content.length < 1)
+                {
+                    return $service.alert().error('暂无报修记录');
+                }    
+
+                var
+                    status = {
+                        '0': '已提交',
+                        '1': '正在处理',
+                        '2': '已完成'
+                    },
+                    template = $service.template,
+                    data = response.content,
+                    $mount = report.$panel.find('#my-report'),
+                    $ul = $mount.find('ul'),
+                    li;
+                    
+                li = $ul.html();
+                $ul.detach().html('');
+
+                for (var i = 0, len = data.length; i < len; i++)
+                {
+                    var
+                        $li = $(template(li, {
+                            'time': data[i]['post_time'],
+                            'zone': data[i]['zone'] + ' ' + data[i]['custom'],
+                            'event': data[i]['event'],
+                            'status': data[i]['status'] ? status[data[i]['status']] : '已提交',
+                        }));
+                    
+                    $ul.append($li);
+                }    
+
+                $mount.find('.login').hide();
+                $mount.append($ul);
+                $mount.find('.report-row').show();
+            })
+        }   , 
+
+        'renderZone': function (data,mount,clear)
+        {
             var
-                $mount = this.$panel.find(mount),
+                $mount = this.$panel.find('.' + mount + '-mount'),
+                $select = $mount.find('select').detach(),
                 template = $service.template,
-                options = [],
-                option_template;
+                option = '<option value="1">{text}</option>';
             
-            option_template = $service.tag('option', { 'value': '{value}' }, '{text}');
+            $select.find('option:gt(0)').remove();
 
-            options.push(template(option_template, {
-                'value': '',
-                'text': defaultOption
-            }));
+            for (var i = 0, len = data.length; i < len; i++)
+            {
+                var
+                    $option = $(template(option, { 'text': data[i]['zone_name'] }));
+                
+                $option.data('zid', data[i]['zone_id']);
+                $select.append($option);
+            }    
 
-            for (var i = 0, len = content.length; i < len; i++) {
-                options.push(template(option_template, {
-                    'value': content[i][map['value']],
-                    'text': content[i][map['text']]
-                }));
+            $mount.append($select);
+        },
+
+        'renderEvent': function (data)
+        {
+            var
+                $mount = this.$panel.find('.event-mount'),
+                $select = $mount.find('select').detach(),
+                template = $service.template,
+                option = '<option value="1">{text}</option>';
+            
+            $select.find('option:gt(0)').remove();
+
+            for (var i = 0, len = data.length; i < len; i++)
+            {
+                var
+                    $option = $(template(option, { 'text': data[i]['event_name'] }));
+                
+                $option.data('eid', data[i]['event_id']);
+                $select.append($option);
+            }    
+
+            $mount.append($select);
+        },
+
+        'renderCustom': function (data)
+        {
+            var
+                $label = this.$panel.find('#custom-label');
+
+            $label.find('input').val('');
+
+            if ($.isEmptyObject(data))
+            {
+                report.customValidateTest = null;
+                return $label.hide();
+            }    
+            
+            $label.find('label').text(data.tips);
+
+            if (data.test == '')
+            {
+                report.customValidateTest = null;
+            } else {
+                report.customValidateTest = data.test;
             }
 
-            $mount.html(options.join(''));
-        },
-
-        'watchSelect': function () {
-            var
-                _this = this;
-
-            this.$panel.find('#parent-zone').change(function () {
-                var
-                    zid = $(this).val();
-                
-                report.$panel.find('#custom-label').hide();
-
-                if (zid == 0) {
-                    report.customValidateTest = null;
-                    report.renderOption([], '请选择主要区域', {}, '#sub-zone');
-                    report.renderOption([], '请选择区域', {}, '#event');
-                    return;
-                }
-
-                $service.ajax('zone/get-subs', {
-                    'zid': zid
-                }).done(function (response) {
-                    report.renderOption(response.content, '请选择子区域', { 'value': 'zone_id', 'text': 'zone_name' }, '#sub-zone');
-                    report.renderLabel(zid);
-                }).fail(function (response) {
-                    $service.alert().error('数据获取失败<br/>' + response.describe);
-                });
-            });
-
-            this.$panel.find('#sub-zone').change(function () {
-                $service.ajax('zone/get-events', {
-                    'zid': _this.$panel.find('#parent-zone').val(),
-                    'onlyIn': 1
-                }).done(function (response) {
-                    _this.renderOption(response.content, '请选择事件', { 'value': 'event_id', 'text': 'event_name' }, '#event');
-                }).fail(function (response) {
-                    $service.alert().error('数据获取失败<br/>' + response.describe);
-                });
-            })
-        },
-
-        'renderLabel': function (zid) {
-            $service.ajax('zone/get-label', {
-                'zid': zid
-            }).done(function (response) {
-                response = response.content;
-
-                if (!$.isArray(response)) {
-                    var
-                        $custom = report.$panel.find('#custom-label');
-                    
-                    $custom.find('input').val('');
-                    report.customValidateTest = response.test;
-                    $custom.find('label').eq(0).text(response.tips);
-                    $custom.find('label').eq(1).remove();
-                    $custom.show();
-                }
-            })
-        }
+            $label.show();
+        }   , 
     }
 
     $service.addModule('report', report);

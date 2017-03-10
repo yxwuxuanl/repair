@@ -37,7 +37,7 @@ class LoginController extends Controller
 		$session = \Yii::$app->getSession();
 		$session->set('uid',$userData['account_id']);
 		$session->set('role',$userData['role']);
-		$session->set('account_group',$userData['account_group']);
+		$session->set('group',$userData['account_group']);
 		$session->set('account_name',$userData['account_name']);
 		$session->set('IS_LOGIN',true);
 	}
@@ -47,15 +47,15 @@ class LoginController extends Controller
 		return [
 			'response' => [
 				'class' => CustomResponseFilter::className(),
-				'only' => ['ajax','out']
+				'only' => ['ajax','login-out']
 			],
 			NoCsrf::className()
 		];
 	}
 
-	public function actionOut()
+	public function actionLoginOut()
 	{
-		\Yii::$app->getSession()->destroy();
+		\Yii::$app->getSession()->set('IS_LOGIN',false);
 		return Status::SUCCESS;
 	}
 }

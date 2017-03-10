@@ -7,6 +7,7 @@
  */
 
 use app\controllers\PanelController as Panel;
+use app\controllers\RoleController as Role;
 
 $panels = [];
 ?>
@@ -58,6 +59,17 @@ $panels = [];
         </div>
 
         <div id="panels">
+
+			<?php
+			if(isset(Role::$map[Role::getRole()]['indexController']))
+			{
+				$router = Role::$map[Role::getRole()]['indexController'];
+				echo '<div class="tab-pane fade active in" id="index-panel">';
+				echo \Yii::$app->createController($router)[0]->actionIndex();
+				echo '</div>';
+			}
+			?>
+
             <?php
                 foreach($panels as $item => $value):
                     foreach($value as $v):

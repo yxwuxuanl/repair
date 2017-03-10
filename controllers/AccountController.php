@@ -24,9 +24,14 @@ class AccountController extends Controller
 		return Account::getUserList();
 	}
 
-	public function actionGetAdminList($group)
+	public function actionGetAdminList($groupId)
 	{
-		return Account::getAdminList($group);
+		return Account::getAdminList($groupId);
+	}
+
+	public function actionChangeGroup($accountId)
+	{
+		return (string) Account::changeGroup($accountId,\Yii::$app->getSession()->get('group'));
 	}
 
 	public function actionGetNoAssign()
@@ -34,42 +39,15 @@ class AccountController extends Controller
 		return Account::getNoAssign();
 	}
 
-	public function actionAdd()
+
+	public function actionAdd($accountName,$groupId)
 	{
-		$model = new Account();
-		$model->scenario = Account::CREATE;
-
-		$model->account_name = \Yii::$app->getRequest()->post('account_name','');
-		$model->account_group = \Yii::$app->getRequest()->post('group','g_noassign');
-		$model->account_id = 'a_' . substr(uniqid(),-8);
-		$model->role = Role::NORMAL;
-		$model->password = \Yii::$app->params['defaultPassword'];
-
-		if(!$model->validate()) return [Status::INVALID_ARGS,$model->errors];
-
-		try
-		{
-			$model->insert();
-		}catch (Exception $e)
-		{
-			return Status::ACCOUNT_EXIST;
-		}
-
-		return ['account_id' => $model->account_id];
+		return Account::add($accountName,$groupId);
 	}
 
-	public function actionDelete()
+	public function actionDelete($accountId)
 	{
-		$model = new Account();
-		$model->scenario = Account::DELETE;
-		$aid = \Yii::$app->getRequest()->post('aid', false);
-
-		$model->account_id = $aid;
-
-		if (!$model->validate()) return [Status::INVALID_ARGS,$model->errors];
-		if (!$model->deleteUser()) return Status::OTHER_ERROR;
-
-		return Status::SUCCESS;
+		return Account::remove($accountId);
 	}
 
 	public function behaviors()
@@ -90,5 +68,10 @@ class AccountController extends Controller
 //			],
 			NoCsrf::className()
 		];
+	}
+
+	public static function getAccountId()
+	{
+		return \Yii::$app->getSession()->get('uid');
 	}
 }

@@ -12,7 +12,7 @@
         <form action="" id="login-form" role="form">
             <div class="form-group">
                 <label for="login-un-input">用户名</label>
-                <input type="text" name="login-un-input" class="form-control" id="login-un-input" required maxlength="6" minlength="2">
+                <input type="text" name="login-un-input" class="form-control" id="login-un-input" required minlength="2">
             </div>
 
             <div class="form-group">

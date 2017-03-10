@@ -1,0 +1,73 @@
+#system-zone-panel,#system-event-panel
+{
+  .add-row
+  {
+  text-align: center;
+  font-size: 1.2em;
+  }
+
+  .action-icons
+  {
+    display: none;
+    float: right;
+    span
+    {
+      margin: 0 6px;
+    }
+  }
+
+  .list-group-item:hover > .action-icons
+  {
+    display: inline;
+  }
+}
+
+#system-zone-panel
+{
+  .parent
+  {
+    font-size: 1.1em;
+  }
+
+  .children
+  {
+    display: none;
+
+    ul
+    {
+      padding-left: 0;
+    }
+
+    .empty
+    {
+      line-height: 1.5em;
+    }
+  }
+
+  .event
+  {
+    ul
+    {
+      padding-left: 0px;
+      height: 200px;
+      overflow: scroll;
+    }
+
+    .list-group-item
+    {
+      display: inline-block;
+      width: 50%;
+
+      &:hover .glyphicon
+      {
+        display: inline;
+      }
+    }
+
+    .glyphicon
+    {
+      float: right;
+      display: none;
+    }
+  }
+}

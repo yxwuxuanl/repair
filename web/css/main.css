@@ -14,76 +14,37 @@ body {
 #alert.success-alert button {
   background-color: #3c763d; }
 
-#system-zone-panel {
-  padding-left: 0; }
-  #system-zone-panel .subs-zone {
-    display: none; }
-    #system-zone-panel .subs-zone ul {
-      margin-bottom: 0; }
-  #system-zone-panel .subs-active {
-    display: block; }
-  #system-zone-panel .show-subs {
-    display: block; }
-  #system-zone-panel .action-icons {
-    text-align: center;
-    cursor: pointer;
-    display: none;
-    float: right; }
-    #system-zone-panel .action-icons span {
-      display: inline-block;
-      padding: 0 5px; }
-  #system-zone-panel .parent-zone {
-    background-color: #428bca;
-    font-size: 1.1em; }
-    #system-zone-panel .parent-zone:hover .action-icons {
-      display: inline-block; }
-  #system-zone-panel .add-row {
-    background-color: #696969;
-    text-align: center;
-    font-size: 1.2em;
-    color: #fff;
-    cursor: pointer; }
-  #system-zone-panel .subs-zone .list-group-item {
-    background-color: #fff;
-    font-size: 1em; }
-    #system-zone-panel .subs-zone .list-group-item:hover .action-icons {
-      display: inline-block; }
-  #system-zone-panel .event ul {
-    padding-left: 0;
-    height: 200px;
-    overflow: scroll; }
-  #system-zone-panel .event .in {
-    margin-bottom: 20px; }
-  #system-zone-panel .event h5 {
-    text-align: center; }
-  #system-zone-panel .event .list-group-item {
-    padding: 7px 15px;
-    display: inline-block;
-    width: 50%; }
-    #system-zone-panel .event .list-group-item:hover .action-icons {
-      display: inline-block; }
+#system-zone-panel .add-row, #system-event-panel .add-row {
+  text-align: center;
+  font-size: 1.2em; }
+#system-zone-panel .action-icons, #system-event-panel .action-icons {
+  display: none;
+  float: right; }
+  #system-zone-panel .action-icons span, #system-event-panel .action-icons span {
+    margin: 0 6px; }
+#system-zone-panel .list-group-item:hover > .action-icons, #system-event-panel .list-group-item:hover > .action-icons {
+  display: inline; }
 
-#system-event-panel {
-  padding-left: 0; }
-  #system-event-panel .list-group-item {
-    background-color: #428bca;
-    font-size: 1.1em; }
-    #system-event-panel .list-group-item:hover .action-icons {
-      display: inline-block; }
-  #system-event-panel .action-icons {
-    text-align: center;
-    cursor: pointer;
-    display: none;
-    float: right; }
-    #system-event-panel .action-icons span {
-      display: inline-block;
-      padding: 0 5px; }
-  #system-event-panel .add-row {
-    background-color: #696969;
-    text-align: center;
-    font-size: 1.2em;
-    color: #fff;
-    cursor: pointer; }
+#system-zone-panel .parent {
+  font-size: 1.1em; }
+#system-zone-panel .children {
+  display: none; }
+  #system-zone-panel .children ul {
+    padding-left: 0; }
+  #system-zone-panel .children .empty {
+    line-height: 1.5em; }
+#system-zone-panel .event ul {
+  padding-left: 0px;
+  height: 200px;
+  overflow: scroll; }
+#system-zone-panel .event .list-group-item {
+  display: inline-block;
+  width: 50%; }
+  #system-zone-panel .event .list-group-item:hover .glyphicon {
+    display: inline; }
+#system-zone-panel .event .glyphicon {
+  float: right;
+  display: none; }
 
 #spinner {
   margin: 100px auto;
@@ -136,23 +97,106 @@ body {
 #custom-label {
   display: none; }
 
+#my-report .login {
+  margin-top: 20px; }
+
+#report-contain .nav-tabs li {
+  width: 50%;
+  text-align: center; }
+#report-contain .tab-pane {
+  display: none; }
+#report-contain .active {
+  display: block; }
+#report-contain .report-row {
+  display: none; }
+  #report-contain .report-row ul {
+    padding-left: 0; }
+
 #account-manage-panel .ga-tips {
   display: none; }
 
 #group-manage-panel .actions .glyphicon {
   margin-right: 15px; }
-#group-manage-panel .events .select span {
+#group-manage-panel .event-mount .select span {
   display: inline; }
-#group-manage-panel .events ul {
+#group-manage-panel .event-mount ul {
   padding-left: 0;
   height: 200px;
   overflow: scroll; }
-#group-manage-panel .events li {
+#group-manage-panel .event-mount li {
   display: inline-block;
   width: 50%; }
-#group-manage-panel .events span {
+#group-manage-panel .event-mount span {
   float: right;
   display: none; }
+#group-manage-panel #group-event-modal li:hover > .glyphicon {
+  display: inline; }
+#group-manage-panel #group-event-modal h5 {
+  text-align: center; }
+
+#group-setting-panel .mode {
+  height: 100px; }
+  #group-setting-panel .mode select {
+    width: 80%;
+    display: inline-block; }
+#group-setting-panel .rule {
+  display: none; }
+  #group-setting-panel .rule tr:hover .glyphicon {
+    visibility: visible; }
+#group-setting-panel .glyphicon {
+  visibility: hidden;
+  float: right; }
+#group-setting-panel h4, #group-setting-panel h5 {
+  text-align: center; }
+#group-setting-panel ul {
+  padding-left: 0;
+  height: 200px;
+  overflow: scroll; }
+#group-setting-panel .select > .glyphicon {
+  visibility: visible; }
+#group-setting-panel .member li:hover > .glyphicon {
+  visibility: visible; }
+
+#task-assign-panel .time {
+  text-align: center;
+  font-size: 1.1em;
+  border-bottom: 2px solid #696969; }
+#task-assign-panel .empty {
+  text-align: center;
+  font-size: 1.5em;
+  line-height: 4em; }
+
+.task-attr {
+  font-size: 1.1em; }
+
+#task-assign-modal .modal-body > div {
+  border-bottom: 2px solid #696969;
+  margin-bottom: 10px; }
+#task-assign-modal .describe {
+  display: none; }
+  #task-assign-modal .describe .content {
+    height: 10%;
+    overflow: scroll;
+    word-wrap: break-word; }
+
+#task-all-panel .mount {
+  margin-top: 10px; }
+  #task-all-panel .mount > div {
+    display: none; }
+
+#index-panel {
+  padding-top: 20px; }
+  #index-panel h3 {
+    text-align: center;
+    margin-bottom: 40px; }
+    #index-panel h3 span {
+      font-size: 0.8em; }
+  #index-panel p {
+    font-size: 1.2em;
+    border-bottom: 2px solid #696969;
+    margin-bottom: 40px; }
+  #index-panel .number {
+    font-size: 1.2em; }
 
 .container {
   margin-top: 20px; }
@@ -188,5 +232,16 @@ body {
 
 .nav-tabs {
   margin-bottom: 10px; }
+
+.glyphicon {
+  cursor: pointer; }
+
+ul {
+  padding-left: 0; }
+
+.empty {
+  text-align: center;
+  font-size: 1.5em;
+  line-height: 4em; }
 
 /*# sourceMappingURL=main.css.map */

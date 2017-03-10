@@ -22,6 +22,12 @@ class CustomResponseFormatter extends Component implements ResponseFormatterInte
 			$response->getHeaders()->set('Content-Type', 'application/json; charset=UTF-8');
 			$data = (array) $data;
 
+			if(empty($data))
+			{
+				$response->content = Json::encode(['status' => Status::SUCCESS,'content' => []]);
+				return;
+			}
+
 			if(!ArrayHelper::isAssociative($data) && is_string($data[0]) && key_exists($data[0],Status::$describe) && $data[0] != Status::SUCCESS){
 				$responseData = $this->fail($data);
 			}else{

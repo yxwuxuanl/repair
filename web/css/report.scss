@@ -2,3 +2,43 @@
 {
     display: none;
 }
+
+#my-report
+{
+    .login
+    {
+        margin-top: 20px;
+    }
+}
+
+#report-contain
+{
+    .nav-tabs
+    {
+        li
+        {
+            width: 50%;
+            text-align: center;
+        }
+    }
+
+    .tab-pane
+    {
+        display: none;
+    }
+
+    .active
+    {
+        display: block;
+    }
+
+    .report-row
+    {
+        display: none;
+        
+        ul
+        {
+            padding-left: 0;
+        }
+    }
+}

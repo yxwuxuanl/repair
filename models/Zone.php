@@ -3,57 +3,17 @@
 namespace app\models;
 
 use app\controllers\ZoneController;
+use app\formatter\Status;
 use Yii;
+use yii\base\Exception;
 use yii\db\Query;
 
 
 class Zone extends \yii\db\ActiveRecord
 {
-	const ADD_EVENT = 'add_event';
-
-	public function scenarios()
-	{
-		return [
-            'add' => ['zone_name'],
-            'rename' => ['zone_id','zone_name'],
-            'delete' => ['zone_id'],
-			self::ADD_EVENT => ['events'],
-        ];
-	}
-
 	public static function tableName()
     {
         return 'zone';
-    }
-
-    public function rules()
-    {
-        return [
-             [['zone_name','zone_id','events'],'required'],
-
-			['events',function($attr){
-        		if(!Event::checkEid($this->$attr) || !Event::isExist($this->$attr)
-					|| parent::find()->where('`events` like \'%:eid%\'',[':eid' => $this->$attr])->count() > 0)
-				{
-					$this->addError($attr);
-				}
-			}],
-
-             ['zone_id',function(){
-				if(!static::checkZid($this->zone_id)){
-					$this->addError('zone_id','INVALID_ZONE_ID');
-				}
-			 }],
-
-             [['zone_name'], 'string', 'max' => 50,'min' => 3],
-
-             ['zone_id',function(){
-                 if(!static::checkZid($this->zone_id,true)){
-					$this->addError('zone_id','INVALID_ZONE_ID');
-				 }
-             },'on' => 'necessaryParent']
-
-        ];
     }
 
     public function attributes()
@@ -61,57 +21,21 @@ class Zone extends \yii\db\ActiveRecord
 		return ['zone_name','zone_id','events'];
 	}
 
-    public function deleteZone()
-    {
-        if(static::checkZid($this->zone_id,true)){
-
-			zeMap::deleteZone($this->zone_id);
-
-            return parent::deleteAll(['between','zone_id',$this->zone_id,$this->zone_id + 99]);
-        }else{
-            if(!empty(($ar = parent::findOne($this->zone_id)))){
-                return $ar->delete();
-            }else{
-                return 0;
-            }
-        }
-    }
-
-    public static function getUsableId($parent)
-    {
-        $ar = parent::find()->select('zone_id')->orderBy(['zone_id' => SORT_DESC])->asArray();
-
-        if(!$parent)
-        {
-            $row = $ar->where('right(`zone_id`,2) = 0')->one();
-            if(empty($row)) return 1000;
-            return $row['zone_id'] + 100;
-        }else{
-            $row = $ar->where(['between','zone_id',$parent,$parent + 99])->one();
-
-            if(empty($row)){
-                return null;
-            }else{
-                return $row['zone_id'] + 1;
-            }
-        }
-    }
-
     public static function all()
     {
         return parent::find()->select('`zone`.*,`zone_event_map`.`events`')->join('LEFT JOIN','zone_event_map','`zone`.`zone_id`=`zone_event_map`.`zone_id`')->asArray()->all();
     }
 
-    public function getParent()
+    public static function getParent()
 	{
 		return parent::find()->where('right(`zone_id`,2) = 00')->asArray()->all();
 	}
 
-	public function getSubs()
+	public static function getSubs($parent)
 	{
-		return parent::find()->where(['between','zone_id',$this->zone_id + 1,$this->zone_id + 99])->asArray()->all();
+		if(!static::checkZid($parent)) return Status::INVALID_ARGS;
+		return parent::find()->where(['between','zone_id',$parent + 1,$parent + 99])->asArray()->all();
 	}
-
 
 	public static function checkZid($zone_id,$isParent = false)
 	{
@@ -131,4 +55,145 @@ class Zone extends \yii\db\ActiveRecord
 		return !!parent::find()->where('`zone_id`=:zid',[':zid' => $zid])->count();
 	}
 
+	public static function checkZoneName($zoneName)
+	{
+		return is_string($zoneName) && strlen($zoneName);
+	}
+
+	public static function create($zoneName,$parent)
+	{
+		if(!static::checkZoneName($zoneName) || ($parent != 0 && !static::checkZid($parent,true))) return Status::INVALID_ARGS;
+
+		$ar = parent::find()->orderBy(['zone_id' => SORT_DESC])->asArray();
+
+		if($parent == 0)
+		{
+			$row = $ar->where('right(`zone_id`,2) = 0')->one();
+			if(empty($row))
+			{
+				$zoneId = 1000;
+			}else{
+				$zoneId = $row['zone_id'] + 100;
+			}
+		}else{
+			$row = $ar->where(['between','zone_id',$parent,$parent + 99])->one();
+			if(empty($row)) return Status::INVALID_ARGS;
+			$zoneId = $row['zone_id'] + 1;
+		}
+
+		$model = new self();
+		$model->zone_id = $zoneId;
+		$model->zone_name = $zoneName;
+
+		$transaction = \Yii::$app->getDb()->beginTransaction();
+
+		try
+		{
+			$model->insert();
+
+			if($parent == 0)
+			{
+				zeMap::create($zoneId);
+			}
+
+			$transaction->commit();
+		}catch (Exception $e)
+		{
+			$transaction->rollBack();
+			return Status::ZONE_EXIST;
+		}
+
+		return $zoneId;
+	}
+
+	public static function rename($zoneId,$zoneName)
+	{
+		if(!static::checkZid($zoneId) || !static::checkZoneName($zoneName)) return Status::INVALID_ARGS;
+
+		try
+		{
+			parent::updateAll(['zone_name' => $zoneName],'`zone_id`=:zid',[':zid' => $zoneId]);
+		}catch(Exception $e)
+		{
+			return Status::ZONE_EXIST;
+		}
+
+		return Status::SUCCESS;
+	}
+
+	public static function remove($zoneId)
+	{
+		if(!static::checkZid($zoneId)) return Status::INVALID_ARGS;
+
+		$transaction = \Yii::$app->getDb()->beginTransaction();
+
+		try
+		{
+//			父区域
+			if(static::checkZid($zoneId,true))
+			{
+				parent::deleteAll(['between','zone_id',$zoneId,$zoneId + 99]);
+				zeMap::remove($zoneId);
+			}else{
+				parent::deleteAll('`zone_id`=:zid',[':zid' => $zoneId]);
+			}
+
+			$transaction->commit();
+
+		}catch(Exception $e)
+		{
+			$transaction->rollBack();
+			return Status::DATABASE_SAVE_FAIL;
+		}
+
+		return Status::SUCCESS;
+	}
+
+	public static function getEvent($zoneId,$onlyIn)
+	{
+		if(!static::checkZid($zoneId)) return Status::INVALID_ARGS;
+
+		$event = zeMap::find()->where(['zone_id' => $zoneId])->select('events')->asArray()->scalar();
+
+		if($event === FALSE) return Status::INVALID_ARGS;
+
+		$in = Event::find()->where(['in','event_id',explode(',',$event)])->asArray()->all();
+
+		if($onlyIn) return ['in' => $in];
+
+		$notIn = Event::all(true)->andWhere(['not in','event_id',explode(',',$event)])->asArray()->all();
+
+		return ['in' => $in,'notIn' => $notIn];
+	}
+
+	public static function addEvent($zoneId,$eventId)
+	{
+		if(!static::checkZid($zoneId,true) || !Event::checkEid($eventId) || !Event::isExist($eventId)) return Status::INVALID_ARGS;
+
+		$ar = zeMap::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->one();
+
+		if($ar === NULL) return Status::INVALID_ARGS;
+
+		if(strpos($ar->events,$eventId)) return Status::SUCCESS;
+
+		$ar->events .= ',' . $eventId;
+		return $ar->update();
+	}
+
+	public static function removeEvent($zoneId,$eventId)
+	{
+		if(!static::checkZid($zoneId,true) || !Event::checkEid($eventId)) return Status::INVALID_ARGS;
+
+		$ar = zeMap::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->one();
+
+		if($ar === NULL) return Status::INVALID_ARGS;
+
+		$ar->events = str_replace(',' . $eventId,'',$ar->events);
+		return $ar->update();
+	}
+
+	public static function getZoneName($zoneId)
+	{
+		return parent::find()->select('group_concat(`zone_name`)')->where(['in','zone_id',[substr($zoneId,0,2) . '00',$zoneId]])->scalar();
+	}
 }

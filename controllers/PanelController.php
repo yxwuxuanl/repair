@@ -14,7 +14,7 @@ class PanelController
 {
 	public static $panels = [
 		'system' => [
-			'label' => '系统设置',
+			'label' => '区域和事件',
 			'1' => [
 				['区域设置','zone'],
 				['事件设置','event']
@@ -36,20 +36,19 @@ class PanelController
 				['管理组','manage']
 			],
 			'2' => [
-				['组成员','member'],
+				['组设置','setting'],
 			],
 		],
 		'task' => [
 			'label' => '任务',
 			'1' => [
-				['查看分配的任务','assign'],
-				['查看已完成的任务','done'],
+				['进行中','assign'],
+				['已完成','complete'],
+				['任务池','pool']
 			],
 			'2' => [
-				['查看组的未完成的任务','group'],
-				['查看组已完成的任务','group-done'],
-				['手动分配任务','manual-assign']
-			],
+				['查看组任务','all']
+			]
 		]
 	];
 

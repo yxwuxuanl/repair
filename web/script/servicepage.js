@@ -17,11 +17,10 @@ $(function (global) {
                     this.eventHanlders[m][name] = [];
                 }
 
-                if (func)
-                {
+                if (func) {
                     this.eventHanlders[m][name].push([actions, func]);
                 } else {
-                     this.eventHanlders[m][name].push(actions);
+                    this.eventHanlders[m][name].push(actions);
                 }
             },
 
@@ -36,13 +35,11 @@ $(function (global) {
                         define = defines[i],
                         m_, split, handle;
                     
-                    if (typeof define[0] == 'object')
-                    {
+                    if (typeof define[0] == 'object') {
                         m_ = define[0];
                         handle = define[1];
                     } else {
-                        if (define[0].indexOf(':') > 0)
-                        {
+                        if (define[0].indexOf(':') > 0) {
                             split = define[0].split(':');
                             m_ = split[0];
                             handle = split[1];
@@ -56,8 +53,7 @@ $(function (global) {
                     
                     if (!(m_['_module_name_'] in $service.contain.$contains)) continue;
 
-                    if (typeof handle == 'string')
-                    {
+                    if (typeof handle == 'string') {
                         m_[handle].apply(m_, params);
                     } else {
                         handle.apply(m_, params);
@@ -164,16 +160,11 @@ $(function (global) {
                         var
                             module_ = this.$modules[name];
                             
-                        module_._module_name_ = name;
+                        module_._module_name_ = name;   
 
-                        module_.trigger = function (event, params)
+                        for (var key in $service.plugin)
                         {
-                            $service.trigger(name, event, params);
-                        }
-
-                        module_.on = function (m, event, func)
-                        {
-                            $service.on(m, event, module_, func);
+                            module_[key] = $service.plugin[key];
                         }    
 
                         this.contain.set(name, module_);
@@ -471,7 +462,7 @@ $(function (global) {
         }
         
         return $.ajax(args).then(function (response) {
-            if ([200, 304, 1].indexOf(response.status) > -1 || response.status == 'success') {
+            if ([200, 304, 1, '1'].indexOf(response.status) > -1 || response.status == 'success') {
                 delete response.status;
                 return $.Deferred().resolve(response);
             } else {
@@ -635,23 +626,19 @@ $(function (global) {
     };
 
     $service.validate = function ($form, config, callback) {
-
         if (!('validator' in $)) {
             this.loader('script/jquery.validate.min.js', function () {
                 $service.validate($form, config, callback);
             });
         } else {
             config = config || {};
-            $form.validate(config);
             callback && callback();
+            $form.validate(config);
             return $form;
         }
     };
 
     $service.$bootstraps.push(function () {
-        var
-            self = this;
-
         $('#tab').click(function (event) {
             event.preventDefault();
 
@@ -663,11 +650,10 @@ $(function (global) {
                 var
                     moduleName = href.slice(1, -6);
                 
-                self.runModule(moduleName, function () {
+                $service.runModule(moduleName, function () {
                     this.$panel = $(href);
                 });
             }
-
         })
     });
     
@@ -675,22 +661,149 @@ $(function (global) {
 
         $('button.submit').click(function () {
             $(this).parent().parent().submit();
-        })
+        });
 
     });
 
     $service.$bootstraps.push(function () {
         $(document).ajaxSend(function () {
-            $('.spinner').show();
+            $('#spinner').show();
         })
 
         $(document).ajaxComplete(function () {
-            $('.spinner').hide();
+            $('#spinner').hide();
         })
     });
 
-    $service.bootstrap();
+    $service.render = function (_config_) {
+        var
+            frag = document.createDocumentFragment(),
+            config = {
+                '$temp': _config_['$temp'],
+                'clear': ('clear' in _config_) ? _config_.clear : false,
+                'after': ('after' in _config_) ? _config_.after : null,
+                'before': ('before' in _config_) ? _config_.before : null,
+                'filter': ('filter' in _config_) ? _config_.filter : null,
+                'data': ('data' in _config_) ? _config_.data : null
+            };
+        
+        config.temp = config.$temp[0].innerHTML;
+        config.$mount = _config_['$mount'] || config.$temp.parent();
+
+        config.before && config.before.call(config);
+
+        // 是否清空节点
+        config.clear && config.$mount.html('');
+
+        // 如果没有数据则直接渲染模板
+        if (!config.data) {
+            return config.$mount.append($(config.temp));
+        }
+
+        for (var i = 0, len = config.data.length; i < len; i++) {
+
+            var
+                chunk = config.data[i],
+                el = config.temp;
+
+            config.filter && config.filter.call(chunk);
+
+            for (var key in chunk) {
+                el = el.replace(new RegExp('{' + key + '}', 'g'), chunk[key]);
+            }
+
+            el = $.parseHTML(el);
+
+            if (config.after) {
+                el = config.after.call(chunk, el);
+            }
+
+            for (var j = 0, ellen = el.length; j < ellen; j++) {
+                frag.appendChild(el[j]);
+            }
+        }
+
+        config.$mount.append(frag);
+    }
     
+    // 初始化模块的时候以下内容会被注入到模块
+    $service.plugin = {
+        'watcher': {
+            'data': {},
+            'define': function (key, value, changeHandle) {
+
+                if (typeof key == 'object')
+                {
+                    for (var attr in key)
+                    {
+                        this.define(attr, key[attr]['default'], key[attr]['handle']);
+                    }    
+                } else {
+                    this.data[key] = [value, changeHandle];
+                }
+            },
+            'set': function (key, value)
+            {
+                if (key.indexOf('.') > -1)
+                {
+                    var
+                        split = key.split('.');
+                
+
+                    this.data[split[0]][0][split[1]] = value;
+                } else {
+                    this.data[key][0] = value;
+                }
+            }   , 
+            'change': function (key,value,args)
+            {
+                var
+                    oldValue = this.get(key),    
+                    handle = this.data[key.split('.')[0]][1];
+                
+                this.set(key, value);
+
+                handle.apply(this,[oldValue,value].concat(args));
+            },
+            'get': function (key)
+            {
+                if (key.indexOf('.') > -1)
+                {
+                    var
+                        split = key.split('.');
+                    
+                    return this.data[split[0]][0][split[1]];
+                } else {
+                    return this.data[key][0];
+                }
+            }   , 
+            'plus': function (key)
+            {
+                var
+                    oldValue = this.get(key);
+                
+                this.change(key, oldValue + 1, Array.prototype.slice.call(arguments, 1));
+            },
+            'sub': function (key)
+            {
+                var
+                    oldValue = this.get(key);
+                
+                this.change(key, oldValue - 1, Array.prototype.slice.call(arguments, 1));
+            }    
+        },
+        'on': function (m, event, func)
+        {
+            $service.on(m, event, this, func);
+        },
+        'trigger': function (event)
+        {
+            $service.trigger(this._module_name_, event, Array.prototype.slice.call(arguments, 1));
+        }   , 
+
+    };    
+    
+    $service.bootstrap();
     global.$service = $service;
 
 }(window));

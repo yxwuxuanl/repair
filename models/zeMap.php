@@ -8,6 +8,7 @@
 
 namespace app\models;
 
+use app\formatter\Status;
 use yii\db\ActiveRecord;
 
 class zeMap extends ActiveRecord
@@ -33,38 +34,29 @@ class zeMap extends ActiveRecord
 	{
 	}
 
-	public static function addEvent($zid,$eid)
+	public static function getEvent($zoneId)
 	{
-		$ar = parent::find()->where('`zone_id`=:zid',[':zid' => $zid])->one();
+		if(!Zone::checkZid($zoneId,true)) return Status::INVALID_ARGS;
+		$event = parent::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->select('events')->scalar();
+		if($event === FALSE) return Status::INVALID_ARGS;
 
-		if($ar->events == '')
-		{
-			$ar->events = ',' . $eid;
-		}else{
-			if(strpos($ar->events,$eid) !== FALSE)
-			{
-				return false;
-			}
-			$ar->events .= ',' . $eid;
-		}
-		return $ar->update();
+		return Event::find()->where(['in','event_id',explode(',',$event)])->all();
 	}
 
-	public static function addRecord($zid){
+	public static function remove($zoneId)
+	{
+		parent::deleteAll('zone_id=:zid',[':zid' => $zoneId]);
+	}
+
+	public static function create($zoneId)
+	{
 		$model = new self();
-		$model->zone_id = $zid;
+		$model->zone_id = $zoneId;
 		$model->insert();
 	}
 
-	public static function getEvents($zid,$onlyIn)
+	public static function isZoneHasEvent($zoneId,$eventId)
 	{
-		$event = parent::find()->where(['zone_id' => $zid])->select('events')->asArray()->scalar();
-		$in = Event::find()->where(['in','event_id',explode(',',$event)])->from('event')->asArray()->all();
-		
-		if($onlyIn) return $in;
-
-		$notIn = parent::find()->where(['not in','event_id',explode(',',$event)])->from('event')->asArray()->all();
-
-		return ['in' => $in,'notIn' => $notIn];
+		return parent::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->andWhere(['like','events',$eventId])->count();
 	}
 }

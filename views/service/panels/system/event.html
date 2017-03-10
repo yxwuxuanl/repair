@@ -3,9 +3,26 @@
 </script>
 
 <div class="content">
-    <ul class="grid list-group">
-        <li class="list-group-item add-row">添加事件</li>
-    </ul>
+    <div class="mount">
+        <h4 class="add-row">添加事件</h4>
+
+        <ul>
+            <template name="content">
+                <li class="list-group-item">
+                    <span class="event-name">{eventName}</span>
+                    <span class="action-icons">
+                        <span class="glyphicon glyphicon-pencil" action="rename"></span>
+                        <span class="glyphicon glyphicon-trash" action="delete"></span>
+                    </span>
+                </li>
+            </template>
+
+            <template name="empty">
+                <li class="list-group-item empty">暂无事件</li>
+            </template>
+        </ul>
+        
+    </div>
 </div>
 
 <div class="modal fade" id="event-input-modal">
@@ -26,7 +43,7 @@
                     </div>
 
                     <div class="form-group">
-                        <button type="button" class="btn btn-primary submit"></button>
+                        <button type="button" class="btn btn-primary submit">提交</button>
                     </div>
 
                 </form>

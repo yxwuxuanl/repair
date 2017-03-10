@@ -18,6 +18,7 @@ class Status
 	const ACCOUNT_EXIST = '-4';
 	const GROUP_EXIST = '-5';
 	const EVENT_EXIST = '-6';
+	const ZONE_EXIST = '-7';
 
 	static $describe = [
 		'1' => 'SUCCESS',
@@ -27,6 +28,7 @@ class Status
 		'-3' => 'INVALID_LOGIN_INFO',
 		'-4' => '账户已经存在',
 		'-5' => '组已经存在',
-		'-6' => '事件已经存在'
+		'-6' => '事件已经存在',
+		'-7' => '区域已经存在'
 	];
 }

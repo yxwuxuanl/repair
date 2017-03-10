@@ -1,0 +1,43 @@
+<script>
+    defines['task-all'] = 'script/task/all.js';
+</script>
+
+<div>
+    <select name="" id="" class="form-control">
+        <option value="1">查看组所有进行的任务</option>
+        <option value="2">查看组所有已完成任务</option>
+    </select>
+</div>
+
+<div class="mount">
+    <div class="complete">
+        <ul>
+            <li class="list-group-item content">
+                <p class="time">{post_time} ~ {complete_time}</p>
+                <p class="zone">{zone}</p>
+                <p class="event">{event}</p>
+            </li>
+
+            <li class="list-group-item empty">
+                暂无完成的任务
+            </li>
+
+        </ul>
+    </div>
+
+    <div class="underway">
+        <ul>
+            <li class="list-group-item content">
+                <p class="time"><span class="task-attr">提交日期 :</span> {post_time}</p>
+                <p class="zone"><span class="task-attr">故障区域 :</span> {zone}</p>
+                <p class="event"><span class="task-attr">故障 :</span> {event}</p>
+                <p class="assign"><span class="task-attr">任务拥有者 :</span> {account_name}</p>
+                <button type="" class="btn btn-primary btn-block">重新分配</button>
+            </li>
+
+            <li class="list-group-item empty">
+                暂无进行中的任务
+            </li>
+        </ul>
+    </div>
+</div>

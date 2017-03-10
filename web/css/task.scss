@@ -1,0 +1,55 @@
+#task-assign-panel
+{
+    .time
+    {
+        text-align: center;
+        font-size: 1.1em;
+        border-bottom: 2px solid #696969;
+    }
+
+    .empty
+    {
+        text-align: center;
+        font-size:1.5em;
+        line-height: 4em;
+    }
+}
+
+.task-attr
+{
+    font-size: 1.1em;
+}
+
+#task-assign-modal
+{
+    .modal-body > div
+    {
+        border-bottom: 2px solid #696969;
+        margin-bottom: 10px;
+    }
+
+    .describe
+    {
+        display: none;
+
+        .content
+        {
+            height: 10%;
+            overflow: scroll;
+            word-wrap:break-word;
+        }
+    }
+}
+
+#task-all-panel
+{
+    .mount
+    {
+        margin-top: 10px;
+
+        > div
+        {
+            display: none;
+        }
+    }
+}

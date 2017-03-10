@@ -3,6 +3,7 @@
 namespace app\models;
 
 use app\formatter\Status;
+use yii\base\Exception;
 use yii\db\ActiveRecord;
 use app\controllers\RoleController as Role;
 
@@ -104,56 +105,65 @@ class Account extends ActiveRecord
 		return is_string($aid) && strlen($aid) == 10 && substr($aid,0,2) == 'a_';
 	}
 
-	public function setPassword()
-	{}
-
 	public static function isExist($aid)
 	{
 		return parent::findOne(['account_id' => $aid]) !== NULL;
 	}
 
-	public static function clearGroup($gid)
+	public static function changeGroup($accountId,$groupId)
 	{
-		$sql = 'UPDATE `account` SET `account_group`=\'g_noassign\',`role`=\'normal\' WHERE `account_group`=\'' . $gid . '\'';
-		\Yii::$app->db->createCommand($sql)->execute();
-	}
+		if(!static::checkAid($accountId) || !Group::checkGid($groupId)) return Status::INVALID_ARGS;
+		$ar = parent::find()->where('`account_id`=:aid and (`account_group`=\'g_noAssign\' or `account_group`=:gid)',[':aid' => $accountId,':gid' => $groupId])->one();
+		if($ar === NULL) return Status::INVALID_ARGS;
 
-	public static function changeGroup($aid,$gid,$admin = false)
-	{
-		$ar = parent::find()->where('`account_id`=:aid',[':aid' => $aid])->one();
-
-		$ar->account_group = $gid;
-
-		if($ar->role == Role::GROUP_ADMIN)
+		if($ar->account_group == $groupId)
 		{
-			$ar->role = Role::NORMAL;
+			$ar->account_group = 'g_noAssign';
+		}else{
+			$ar->account_group = $groupId;
 		}
 
-		if($admin)
-		{
-			$ar->role = Role::GROUP_ADMIN;
-		}
-
-		$ar->update();
+		return $ar->update();
 	}
 
 	public static function getNoMembers($gid,$includeAdmin = true)
 	{
 	}
 
-	public static function getMembers($gid)
+	public static function getMember($group,$admin)
 	{
+		if(!Group::checkGid($group)) return Status::INVALID_ARGS;
 
+		$query = parent::find();
+
+		$query->where('`account_group`=:gid',[':gid' => $group]);
+
+		if(!$admin)
+		{
+			$query->andWhere('`role` != \'group_admin\'');
+		}
+
+		$query->orderBy(['role' => 'desc']);
+		$query->select('`account_id`,`account_name`');
+
+		$row = $query->asArray()->all();
+
+		if($row === NULL)
+		{
+			return Status::INVALID_ARGS;
+		}else{
+			return $row;
+		}
 	}
 
-	public static function getAdminList($gid)
+	public static function getAdminList($groupId)
 	{
-		if(!Group::checkGid($gid)) return Status::INVALID_ARGS;
+		if(!Group::checkGid($groupId)) return Status::INVALID_ARGS;
 
 		$ar = parent::find();
 		$ar->select(['account_id','account_name']);
-		$ar->where('(`account_group`=:gid and `role` != :role)',[':gid' => $gid,':role' => Role::GROUP_ADMIN]);
-		$ar->orWhere('`account_group`=\'g_noassign\'');
+		$ar->where('(`account_group`=:gid and `role` != :role)',[':gid' => $groupId,':role' => Role::GROUP_ADMIN]);
+		$ar->orWhere('`account_group`=\'g_noAssign\'');
 
 		return $ar->asArray()->all();
 	}
@@ -161,15 +171,22 @@ class Account extends ActiveRecord
 	public static function getNoAssign()
 	{
 		$query = parent::find();
-		$query->where('`account_group`=\'g_noassign\'');
+		$query->where('`account_group`=\'g_noAssign\'');
 		$query->select('`account_id`,`account_name`');
-		return $query->asArray()->all();
-	}
 
+		$row = $query->asArray()->all();
+
+		if($row === NULL)
+		{
+			return [];
+		}else{
+			return $row;
+		}
+	}
 
 	public static function isNoAssign($aid)
 	{
-		$ar = parent::find()->where('`account_id`=:aid and `account_group`=\'g_noassign\'',[':aid' => $aid])->count();
+		$ar = parent::find()->where('`account_id`=:aid and `account_group`=\'g_noAssign\'',[':aid' => $aid])->count();
 		return !!$ar;
 	}
 
@@ -179,4 +196,64 @@ class Account extends ActiveRecord
 		$ar->role = $role;
 		$ar->update();
 	}
+
+	public static function remove($accountId)
+	{
+		if(!static::checkAid($accountId)) return Status::INVALID_ARGS;
+		$ar = parent::find()->where('`account_id`=:aid',[':aid' => $accountId])->one();
+		if($ar === NULL) return Status::INVALID_ARGS;
+		$transaction = \Yii::$app->getDb()->beginTransaction();
+
+		try
+		{
+			if($ar->role == Role::GROUP_ADMIN)
+			{
+				Group::updateAll(['group_admin' => null],'`group_id`=:gid',[':gid' => $ar->account_group]);
+			}
+			$ar->delete();
+			$transaction->commit();
+		}catch (Exception $e)
+		{
+			$transaction->rollBack();
+			return Status::DATABASE_SAVE_FAIL;
+		}
+
+		return Status::SUCCESS;
+	}
+
+	public static function add($accountName,$groupId)
+	{
+		if(!static::checkAccountName($accountName) || ($groupId != '0' && !Group::checkGid($groupId))) return Status::INVALID_ARGS;
+
+		$model = new self();
+		$model->account_name = $accountName;
+
+
+		if($groupId == '0')
+		{
+			$model->account_group = 'g_noAssign';
+		}else{
+			$model->account_group = $groupId;
+		}
+
+		$model->role = Role::NORMAL;
+		$model->password = \Yii::$app->params['defaultPassword'];
+		$model->account_id = 'a_' . substr(uniqid(),-8);
+
+		try
+		{
+			$model->insert();
+		}catch(Exception $e)
+		{
+			return Status::DATABASE_SAVE_FAIL;
+		}
+
+		return $model->account_id;
+	}
+
+	public static function checkAccountName($accountName)
+	{
+		return is_string($accountName) && strlen($accountName) >= 2;
+	}
+
 }

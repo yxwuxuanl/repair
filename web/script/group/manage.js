@@ -1,364 +1,683 @@
 (function ($service) {
     var
         groupManage = {
-            'destory': function () {
-                this.$panel.html('');
-            },
             'init': function () {
                 $service.ajax('group/get-all').done(function (response) {
-                    groupManage.renderGrid(response.content);
+                    groupManage.render(response.content);
                     groupManage.watch();
                 }).fail(function (response) {
                     $service.alert().error('数据获取失败请刷新后重试');
                 });
+                
+                this.on('account-manage', 'deleteAccount', '_deleteAccount_');
+                this.on(this._module_name_, 'removeGroup', '_removeGroup_');
+                this.on(this._module_name_, 'addGroup', '_addGroup_');
+                this.on('system-event', 'deleteEvent', '_deleteEvent_');
             },
+
+            '_deleteEvent_': function (eventId)
+            {
+                if (!('_event_' in this.modals)) return;
+                
+                var
+                    $mount = this.modals._event_.$body.find('.event-mount');
+                    
+                $mount.find('li').each(function () {
+                    var
+                        $li = $(this);
+                    
+                    if ($li.data('eid') == eventId)
+                    {
+                        $li.remove();
+                        return false;
+                    }    
+                });
+            },
+            
+            '_renameEvent_': function (eventId, eventName)
+            {
+                if (!('_event_' in this)) return;
+
+                var
+                    $mount = this.$body.find('.event-mount');
+                
+                $mount.find('li').each(function () {
+                    var
+                        $li = $(this);
+                    
+                    if ($li.data('eid') == eventId)
+                    {
+                        $li.text(eventName);
+                        return false;
+                    }    
+                })
+             }    ,
+
+            '_addGroup_': function ()
+            {
+                if ('_changeAdmin_' in this.modals)
+                {
+                    this.modals._changeAdmin_.reload = true;
+                }    
+            }   , 
+
+            '_removeGroup_': function ()
+            {
+                if ('_add_' in this.modals)
+                {
+                    this.modals._add_.reload = true;
+                }    
+
+                if ('_changeAdmin_' in this.modals)
+                {
+                    this.modals._changeAdmin_.reload = true;
+                }    
+            }, 
+            
+            '_deleteAccount_': function ($active)
+            {
+                if (!('_changeAdmin_' in this.modals)) return;
+                var
+                    $body = this.modals._changeAdmin_.$body;
+                
+                $body.find('option').each(function () {
+                    var
+                        $option = $(this);
+                    
+                    if ($option.data('aid') == accountId)
+                    {
+                        $option.remove();
+                        return false;
+                    }    
+                })
+            }   , 
+
             'watch': function () {
-                this.$panel.find('.data-mount').click(function (event) {
+                this.$panel.find('table').click(function (event) {
                     var
                         $target = $(event.target);
                     
-                    if ($target[0].tagName == 'SPAN' && $target.hasClass('glyphicon')) {
-                        groupManage.modals[$target.attr('action')]().extend({ '$active': $target.parent().parent() }).show();
+                    if ($target[0].tagName == 'SPAN' && $target.hasClass('glyphicon'))
+                    {
+                        groupManage.modals[$target.attr('action')]($target.parent().parent());
                     }
                 });
 
                 this.$panel.find('.add-row').click(function () {
-                    groupManage.modals.add().show();
-                })
+                    groupManage.modals.add();
+                });
             },
             'modals': {
                 'add': function () {
-                    if (!('_add_' in this)) {
-                        this._add_ = new $service.modal('#group-add-modal', {
-                            'init': function () {
+                    if ('_add_' in this)
+                    {
+                        return this._add_.show();
+                    }    
+
+                    var
+                        init, extend;
+                    
+                    init = {
+                        'init': function () {
+                            var
+                                self = this,
+                                $form = this.$body.find('form');
+                            
+                            this.reload = true;
+                            
+                            $service.validate($form);
+
+                            $form.submit(function (event) {
+                                var
+                                    $this = $(this);
+
+                                event.preventDefault();
+                                if ($this.valid()) {
+                                    self.post($this);
+                                }
+                            });
+
+
+                        },
+                        'show': function () {
+                            if (this.reload) {
                                 var
                                     self = this;
                                 
-                                this.$body.find('button').click(function () {
-                                    self.$body.find('form').submit();
+                                $service.ajax('account/get-no-assign').done(function (response) {
+                                    self.renderAdmin(response.content);
+                                }).fail(function (response) {
+                                    $service.alert().error('数据获取失败 <br/>' + response.describe);
+                                });
+                            
+                                $service.ajax('event/get-no-assign').done(function (response) {
+                                    self.renderEvent(response.content);
+                                    self.watch();
                                 });
 
-                                this.renderAdminList();
-                                this.renderEvent();
+                                this.reload = false;
+                            }
+                        }, 
+                        'close': function ()
+                        {
+                            this.$body.find('form')[0].reset();
+                            this.$body.find('.select').removeClass('.select');
+                         }    
+                    };
 
-                                $service.validate(this.$body.find('form'));
+                    extend = {
+                        'renderAdmin': function (data, insert)
+                        {
+                            var
+                                $mount = this.$body.find('.admin-mount'),
+                                $select = $mount.find('select'),
+                                template = $service.template,
+                                option;
+                            
+                            option = '<option value="">{text}</option>'
+                            
+                            if (!insert)
+                            {
+                                $select.detach();
+                                $select.html('');
+                            }    
 
-                                this.$body.find('form').submit(function (event) {
-                                    event.preventDefault();
-                                    if (!$(this).valid()) return false;
+                            for (var i = 0, len = data.length; i < len; i++)
+                            {
+                                var
+                                    $option = $(template(option, { 'text': data[i]['account_name'] }));
+                                
+                                $option.data('aid', data[i]['account_id']);
+                                $select.append($option);
+                            }    
 
-                                    var
-                                        events = self.$body.find('.select'),
-                                        eid = [],
-                                        $form = $(this),
-                                        groupName = $form.find('[type=text]').val(),
-                                        $option = self.$body.find('option:selected');
-                                    
-                                    if (events.length < 1) {
-                                        $service.alert().error('必须选择一个事件');
-                                        return false;
-                                    }
-                                    
-                                    events.each(function () {
-                                        eid.push($(this).data('eid'));
-                                    });
+                            if (!insert)
+                            {
+                                $mount.append($select);
+                            }    
+                        },
+                        'renderEvent': function (data, insert)
+                        {
+                            var
+                                $mount = this.$body.find('.event-mount'),
+                                $ul = $mount.find('ul'),
+                                template = $service.template,
+                                li;
+                            
+                            li = '<li class="list-group-item">{text}' +
+                                '<span class="glyphicon glyphicon-ok"></span>' +
+                                '</li>';
+                            
+                            if (!insert)
+                            {
+                                $ul = $ul.detach();
+                                $ul.html('');
+                            }    
+                            
+                            for (var i = 0, len = data.length; i < len; i++)
+                            {
+                                var
+                                    $li = $(template(li, { 'text': data[i]['event_name'] }));
+                                $li.data('eid', data[i]['event_id']);
+                                $ul.append($li);
+                            }    
 
-                                    $service.ajax('group/add', {
-                                        'groupName': groupName,
-                                        'groupAdmin': $option.data('aid'),
-                                        'events': eid.join(',')
-                                    }).done(function (response) {
-                                        groupManage.modals.add().close();
-                                        $service.alert().success('添加成功', 400, function () {
-                                            var
-                                                data = {},
-                                                gid = response.content;
-                                            
-                                            data[gid] = {
-                                                'group_name': groupName,
-                                                'group_admin': $option.text(),
-                                            }
-                                            groupManage.trigger('add', [data]);
-                                            groupManage.renderGrid(data);
-                                            events.remove();
-                                            $option.remove();
-                                        });
-                                    }).fail(function (response) {
-                                        groupManage.modals.add().close();
-                                        $service.alert().error('添加失败<br/>' + response.describe);
-                                    });
+                            if (!insert)
+                            {
+                                $mount.append($ul);
+                             }    
+                        },
+                        'post': function ($form)
+                        {
+                            var
+                                groupName = $form.find('[type=text]').val(),
+                                $option = $form.find('option:selected'),
+                                $events = this.$body.find('.select'),
+                                events = [];
+                            
+                            if ($events.length < 1)
+                            {
+                                return $service.alert().error('至少选择一个事件');
+                            }    
+
+                            $events.each(function () {
+                                events.push($(this).data('eid'));
+                            })
+
+                            this.close();
+
+                            $service.ajax('group/add', {
+                                'groupName': groupName,
+                                'groupAdmin': $option.data('aid'),
+                                'events': events.join(',')
+                            }).done(function (response) {
+                                $events.remove();
+                                $option.remove();
+
+                                var
+                                    data = {
+                                        'group_name': groupName,
+                                        'group_id': response.content[0],
+                                        'group_admin': $option.text()
+                                    };
+
+                                groupManage.render([data], true);
+
+                                $service.alert().success('添加成功', 400);
+
+                                groupManage.trigger('addGroup', data);
+                                
+                            }).fail(function (response) {
+                                $service.alert().error('添加失败 <br/>' + response.describe);
+                            });
+                        }, 
+                        'watch': function ()
+                        {
+                            this.$body.find('.event-mount').click(function (event) {
+                                var
+                                    $target = $(event.target);
+                                
+                                if ($target[0].tagName == 'LI')
+                                {
+                                    $target.toggleClass('select');
+                                }    
+                            })
+                        }    
+                    };
+
+                    this._add_ = new $service.modal('#group-add-modal', init, extend);
+                    this._add_.show();
+                },
+                'rename': function ($active) { 
+                    if ('_rename_' in this)
+                    {
+                        return this._rename_.extend({'$active' : $active}).show();
+                    }    
+
+                    var
+                        init, extend;
+                    
+                    init = {
+                        'init': function ()
+                        {
+                            var
+                                $form = this.$body.find('form'),
+                                self = this;
+                            
+                            $service.validate($form);
+                            $form.submit(function (event) {
+                                event.preventDefault();
+
+                                if ($(this).valid())
+                                {
+                                    self.post($(this));
+                                }    
+                            })
+                        },
+                        'close': function ()
+                        {
+                            this.$body.find('form')[0].reset();
+                        },
+                        'show': function ()
+                        {
+                            this.setTitle('重命名 [' + this.$active.find('.group-name').text() + ']');
+                         }    
+                    };
+                    extend = {
+                        'post': function ($form)
+                        {
+                            var
+                                $active = this.$active,    
+                                groupId = $active.data('gid'),
+                                oldName = $active.find('.group-name').text(),
+                                groupName = $form.find('[type=text]').val();
+                            
+                            this.close();
+
+                            $service.ajax('group/rename', {
+                                'groupId': groupId,
+                                'groupName': groupName
+                            }).done(function () {
+                                $active.find('.group-name').text(groupName);
+
+                                groupManage.trigger('renameGroup', oldName, groupName);
+
+                                $service.alert().success('重命名成功', 400);
+                            }).fail(function (response) {
+                                $service.alert().error('重命名失败 <br/>' + response.describe);
+                            });
+                            
+                        }    
+                    };
+
+                    this._rename_ = new $service.modal('#group-rename-modal', init, extend);
+                    this._rename_.extend({ '$active': $active }).show();
+                },
+                'delete': function ($active) {
+                    if ('_delete_' in this)
+                    {
+                        return this._delete_.extend({ '$active': $active }).show();
+                    }    
+
+                    var
+                        init, extend;
+                    
+                    init = {
+                        'init': function ()
+                        {
+                            var
+                                self = this;
+
+                            this.$body.find('button').click(function () {
+                                self.post();
+                            });
+                        },
+                        'show': function ()
+                        {
+                            this.setTitle('删除 [' + this.$active.find('.group-name').text() + ']');
+                        }    
+                    };
+                    extend = {
+                        'post': function ()
+                        {    
+                            var
+                                $active = this.$active;
+                            
+                            this.close();
+
+                            $service.ajax('group/delete', {
+                                'groupId': $active.data('gid')
+                            }).done(function () {
+
+                                groupManage.trigger('removeGroup', $active.find('.group-name').text());
+
+                                $active.remove();
+                                $service.alert().success('删除成功', 400);
+                            }).fail(function (response) {
+                                $service.alert().error('删除失败 <br/>' + response.describe);
+                            });
+                        }    
+                    };
+
+                    this._delete_ = new $service.modal('#group-delete-modal', init, extend);
+                    this._delete_.extend({ '$active': $active }).show();
+                },
+                'changeAdmin': function ($active) {
+                    if ('_changeAdmin_' in this)
+                    {
+                        return this._changeAdmin_.extend({ '$active': $active }).show();
+                    }    
+
+                    var
+                        init, extend;
+                    
+                    init = {
+                        'init': function ()
+                        {
+                            var
+                                self = this;
+                            
+                            this.$body.find('button').click(function () {
+                                self.post();
+                            });
+                        },
+                        'show': function ()
+                        {
+                            this.setTitle('更改 [' + this.$active.find('.group-name').text() + '] 组管理员');
+
+                            if (this.reload)
+                            {
+                                var
+                                    groupId = this.$active.data('gid'),
+                                    self = this;
+                                
+                                $service.ajax('account/get-admin-list', {
+                                    'groupId': groupId
+                                }).done(function (response) {
+                                    self.render(response.content);
+                                }).fail(function (response) {
+                                    $service.alert().error('数据获取失败 <br/>' + response.describe);
                                 });
+                                
+                                this.reload = false;
+                            }    
+                        }    
+                    };
 
-                                this.$body.find('.events').click(function (event) {
+                    extend = {
+                        'reload': true,
+                        'render': function (data)
+                        {
+                            var
+                                $mount = this.$body.find('.account-mount'),
+                                $select = $mount.find('select').detach(),
+                                template = $service.template,
+                                option;
+                            
+                            $select.html('');
+
+                            option = '<option value="">{text}</option>';
+
+                            for (var i = 0, len = data.length; i < len; i++)
+                            {
+                                var
+                                    $option = $(template(option, { 'text': data[i]['account_name'] }));
+                                
+                                $option.data('aid', data[i]['account_id']);
+
+                                $select.append($option);
+                            }    
+
+                            $mount.append($select);
+                        },
+                        'post': function ()
+                        {
+                            var
+                                $active = this.$active,
+                                groupId = $active.data('gid'),
+                                $option = this.$body.find('option:selected'),
+                                $groupAdmin = $active.find('.group-admin');
+                            
+                            this.close();
+
+                            $service.ajax('group/change-admin', {
+                                'groupId': groupId,
+                                'adminId': $option.data('aid')
+                            }).done(function () {
+                                groupManage.trigger('changeAdmin', $groupAdmin.text(), $option.text(),$active.find('.group-name').text());
+                                $groupAdmin.text($option.text());
+                                $service.alert().success('更换管理员成功', 400);
+                            }).fail(function (response) {
+                                $service.alert().error('更换管理员失败 <br/>' + response.describe);
+                            });
+                        }    
+                    };
+                    
+                    this._changeAdmin_ = new $service.modal('#group-change-admin-modal', init, extend);
+                    this._changeAdmin_.extend({ '$active': $active }).show();
+                },
+                'event': function ($active) {
+                    if ('_event_' in this)
+                    {
+                        return this._event_.extend({ '$active': $active }).show();
+                    }    
+
+                    var
+                        init, extend;
+                    
+                    init = {
+                        'init': function ()
+                        {
+                            var
+                                self = this;    
+
+                            $service.ajax('event/get-no-assign').done(function (response) {
+                                self.render(response.content, 'not-has');
+                                self.watch();
+                            }).fail(function (response) {
+                                $service.alert().error('数据获取失败 <br/>' + response.describe);
+                            });
+                            
+                        },
+                        'show': function ()
+                        {
+                            if (this.last == this.$active.data('gid')) return;
+                            this.last = this.$active.data('gid');
+                            this.setTitle('更改 [' + this.$active.find('.group-name').text() + '] 的事件');
+
+                            var
+                                self = this;    
+
+                            $service.ajax('group/get-event', {
+                                'groupId': this.$active.data('gid')
+                            }).done(function (response) {
+                                self.render(response.content, 'has');
+                            }).fail(function (response) {
+                                $service.alert().error('数据获取失败 <br/>' + response.describe);
+                            });
+                        },
+                        'close': function ()
+                        {
+                            this.$active = null;
+                        }    
+                    };
+
+                    extend = {
+                        'render': function (data, mount, insert)
+                        {
+                            var
+                                $mount = this.$body.find('.' + mount),
+                                $ul = $mount.find('ul'),
+                                template = $service.template,
+                                icon, li;
+                            
+                            if (!insert)
+                            {
+                                $ul = $ul.detach();
+                                if (mount == 'has')                                
+                                {
+                                    $ul.html('');
+                                }
+                            }    
+
+                            if (mount == 'has')
+                            {
+                                icon = '<span class="glyphicon glyphicon-trash" action="remove"></span>';
+                            } else {
+                                icon = '<span class="glyphicon glyphicon-plus" action="add"></span>';
+                            }
+
+                            li = '<li class="list-group-item">{text}' + icon + '</li>';
+
+                            for (var i = 0, len = data.length; i < len; i++)
+                            {
+                                var
+                                    $li = $(template(li, { 'text': data[i]['event_name'] }));
+                                
+                                $li.data('eid', data[i]['event_id']);
+                                $ul.append($li);
+                            }    
+
+                            if (!insert)
+                            {
+                                $mount.append($ul);
+                            }    
+                        },
+                        'watch': function ()
+                        {
+                            var
+                                self = this;
+
+                            this.$body.find('.event-mount').click(function (event) {
+                                if (event.target.tagName == 'SPAN')
+                                {
                                     var
                                         $target = $(event.target);
                                     
-                                    if ($target[0].tagName == 'LI') {
-                                        $target.toggleClass('select')
-                                    }
-                                })
-                                
-                            },
-                            'close': function () {
-                                this.$body.find('.select').removeClass('select');
-                                this.$body.find('form')[0].reset();
-                            }
+                                    self[$target.attr('action')]($target.parent());
+                                }    
+                            })
                         },
-                            {
-                                'renderEvent': function () {
-                                    var
-                                        self = this;
-                                    $service.ajax('event/get-no-assign').done(function (response) {
-                                        var
-                                            _template = $service.template,
-                                            _tag = $service.tag,
-                                            $mount = self.$body.find('ul').detach(),
-                                            template;
-                                    
-                                        template = _tag('li', '.list-group-item', [
-                                            '{event_name}',
-                                            _tag('span', '.glyphicon glyphicon-ok')
-                                        ]);
-                                        
-                                        $mount.html('');
+                        'remove': function ($target)
+                        {
+                            var
+                                eventId = $target.data('eid'),
+                                groupId = this.$active.data('gid'),
+                                self = this;
+                            
+                            $service.ajax('group/remove-event', {
+                                'eventId': eventId,
+                                'groupId': groupId
+                            }).done(function () {
+                                self.render([{ 'event_id': eventId, 'event_name': $target.text() }], 'not-has', true);
+                                $target.remove();
+                                $service.alert().success('删除成功', 400);
+                            }).fail(function (response) {
+                                $service.alert().error('删除失败 <br/>' + response.describe);
+                            });
+                        },
+                        'add': function ($target)
+                        {
+                            var
+                                eventId = $target.data('eid'),
+                                groupId = this.$active.data('gid'),
+                                self = this;
+                            
+                            $service.ajax('group/add-event', {
+                                'eventId': eventId,
+                                'groupId': groupId
+                            }).done(function () {
+                                self.render([{ 'event_id': eventId, 'event_name': $target.text() }], 'has', true);
+                                $target.remove();
+                                $service.alert().success('添加成功', 400);
+                            }).fail(function (response) {
+                                $service.alert().error('添加失败 <br/>' + response.describe);
+                            });
+                        }    
+                    };
 
-                                        for (var i = 0, len = response.content.length; i < len; i++) {
-                                            var $li = $(_template(template, {
-                                                'event_name': response.content[i]['event_name']
-                                            }));
-
-                                            $li.data('eid', response.content[i]['event_id']);
-                                            $mount.append($li);
-                                        }
-
-                                        self.$body.find('.events').append($mount);
-                                    });
-                                },
-                                'renderAdminList': function () {
-                                    var
-                                        self = this;
-
-                                    $service.ajax('account/get-no-assign').done(function (response) {
-                                        var
-                                            options = [],
-                                            _template = $service.template,
-                                            _tag = $service.tag,
-                                            $select = self.$body.find('select'),
-                                            data = response.content,
-                                            template;
-                                    
-                                        $select.children().remove();
-
-                                        template = _tag('option', {}, '{text}');
-
-                                        for (var i = 0, len = data.length; i < len; i++) {
-                                            var
-                                                $option = $(_template(template, { 'text': data[i]['account_name'] }));
-                                            
-                                            $option.data('aid', data[i]['account_id']);
-
-                                            $select.append($option);
-                                        }
-                                    });
-                                }
-                            }
-                        );
-                    }
-
-                    return this._add_;
+                    this._event_ = new $service.modal('#group-event-modal', init, extend);
+                    this._event_.extend({ '$active': $active }).show();
                 },
-                'rename': function () {
-                    if (!('_rename_' in this)) {
-                        this._rename_ = new $service.modal('#group-rename-modal', {
-                            'init': function () {
-                                var
-                                    $form = this.$body.find('form'),
-                                    self = this;
-
-                                $service.validate($form);
-
-                                $form.submit(function (event) {
-                                    event.preventDefault();
-                                    var
-                                        $form = $(this);
-                                    
-                                    if (!$form.valid()) return false;
-                                    
-                                    var
-                                        gid = self.$active.data('gid'),
-                                        gname = $form.find('[type=text]').val();
-
-                                    $service.ajax('group/rename', {
-                                        'group': gid,
-                                        'name': gname
-                                    }).done(function (response) {
-                                        var
-                                            $old = self.$active.find('td').eq(0);
-                                        
-                                        groupManage.trigger('rename', [gname, $old.text()]);
-                                        $old.text(gname);
-                                        self.close();
-                                        $service.alert().success('重命名成功', 400);
-                                    }).fail(function (response) {
-                                        $service.alert().error('重命名失败<br/>' + response.describe);
-                                    });
-                                })
-                            },
-                            'close': function () {
-                                this.$body.find('form')[0].reset();
-                                this.$active = null;
-                            },
-                            'show': function () {
-                                this.setTitle('重命名 [' + this.$active.find('td').eq(0).text() + ']');
-                            }
-                        });
-                    }
-                    return this._rename_;
-                },
-                'delete': function () {
-                    if (!('_delete_' in this)) {
-                        this._delete_ = new $service.modal('#group-delete-modal', {
-                            'init': function () {
-                                var
-                                    self = this;
-
-                                this.$body.find('button').click(function () {
-                                    $service.ajax('group/delete', {
-                                        'group': self.$active.data('gid')
-                                    }).done(function () {
-                                        groupManage.trigger('delete', [self.$active.find('td').eq(0).text()]);
-                                        self.$active.remove();
-                                        self.close();
-                                        $service.alert().success('删除成功', 400);
-                                    }).fail(function (response) {
-                                        $service.alert().error('删除失败<br/>' + response.describe)
-                                    });
-                                });
-                            },
-                            'close': function () {
-                                this.$active = null;
-                            },
-                            'show': function () {
-                                this.setTitle('删除 [' + this.$active.find('td').eq(0).text() + ']');
-                            }
-
-                        });
-                    }
-
-                    return this._delete_;
-                },
-                'changeAdmin': function () {
-                    if (!('_changeAdmin_' in this)) {
-                        this._changeAdmin_ = new $service.modal('#group-change-admin-modal', {
-                            'init': function () {
-                                var
-                                    self = this;
-                                this.$body.find('button').click(function () {
-                                    var
-                                        $option = self.$body.find('option:selected'),
-                                        group = self.$active.data('gid');
-                                    $service.ajax('group/change-admin', {
-                                        'admin': $option.data('aid'),
-                                        'group': group
-                                    }).done(function () {
-
-                                        var
-                                            newAdmin = $option.text(),
-                                            $oldAdmin = self.$active.find('td').eq(1);
-
-                                        groupManage.trigger('change-admin', [newAdmin, $oldAdmin.text()]);
-                                        $oldAdmin.text(newAdmin);
-
-                                        self.close();
-                                        $service.alert().success('分配成功', 400);
-                                    })
-                                });
-                            },
-                            'show': function () {
-                                this.setTitle('更换 [' + this.$active.find('td').eq(0).text() + '] 管理员');
-                                this.renderAdminList();
-                            }
-                        }, {
-                                'renderAdminList': function () {
-                                    var
-                                        self = this;
-                                    
-                                    $service.ajax('account/get-admin-list', {
-                                        'group': self.$active.data('gid')
-                                    }).done(function (response) {
-                                        var
-                                            _template = $service.template,
-                                            data = response.content,
-                                            $select = self.$body.find('select').detach(),
-                                            template;
-                                        
-                                        $select.children().remove();
-                                        
-                                        template = $service.tag('option', {}, '{text}');
-
-                                        for (var i = 0, len = data.length; i < len; i++) {
-                                            var
-                                                $option = $(_template(template, { 'text': data[i]['account_name'] }));
-                                            
-                                            $option.data('aid', data[i]['account_id']);
-                                            $select.append($option);
-                                        }
-
-                                        self.$body.find('.accounts').append($select);
-                                    })
-                                }
-                            }
-                        );
-                    }
-
-                    return this._changeAdmin_;
-                },
-                'event': function ()
-                {
-
-                }    
             },
-            'renderGrid': function (data) {
+            'render': function (data,insert) {
                 var
-                    $mount = this.$panel.find('.data-mount'),
-                    _template = $service.template,
-                    _tag = $service.tag,
-                    template, actions, detach;
+                    $mount = this.$panel.find('.mount'),
+                    $tbody = $mount.find('tbody'),
+                    template = $service.template,
+                    tr;
                 
-                if (!$mount.data('IS_LOAD')) {
-                    $mount = $mount.detach();
-                    detach = true;
-                }
+                if (!insert)
+                {
+                    $tbody.detach();
+                }    
 
-                actions = _tag('td', '.actions', [
-                    _tag('span', { 'action': 'rename', 'class': 'glyphicon glyphicon-pencil' }),
-                    _tag('span', { 'action': 'delete', 'class': 'glyphicon glyphicon-trash' }),
-                    _tag('span', { 'action': 'changeAdmin', 'class': 'glyphicon glyphicon-user' }),
-                    _tag('span', { 'action': 'event', 'class': 'glyphicon glyphicon-th-list' })
-                ]);
-
-                template = _tag('tr', {}, [
-                    _tag('td', '{groupName}'),
-                    _tag('td', '{groupAdmin}'),
-                    actions
-                ]);
+                tr = '<tr>' +
+                    '<td class="group-name">{groupName}</td>' +
+                    '<td class="group-admin">{groupAdmin}</td>' +
+                    '<td class="actions">' +
+                    '<span class="glyphicon glyphicon-pencil" action="rename"></span>' +
+                    '<span class="glyphicon glyphicon-trash" action="delete"></span>' +
+                    '<span class="glyphicon glyphicon-user" action="changeAdmin"></span>' +
+                    '<span class="glyphicon glyphicon-th-list" action="event"></span>' +
+                    '</tr>';
                 
-                for (var gid in data) {
-                    var $tr = $(_template(template, {
-                        'groupName': data[gid]['group_name'],
-                        'groupAdmin': data[gid]['group_admin']
-                    }));
+                for (var i = 0, len = data.length; i < len; i++)
+                {
+                    var
+                        $tr = $(template(tr, {
+                            'groupName': data[i]['group_name'],
+                            'groupAdmin': data[i]['group_admin'] || '未指派'
+                        }));
+                    
+                    $tr.data('gid', data[i]['group_id']);
+                    $tbody.append($tr);
+                }    
 
-                    $tr.data('gid', gid);
-                    $mount.append($tr);
-                }
-
-                if (detach) {
-                    this.$panel.find('table').append($mount);
-                    $mount.data('IS_LOAD', true);
-                } else {
-                    $mount.append($tr);
-                }
+                if (!insert)
+                {
+                    $mount.append($tbody);
+                }    
             }
         };
 
