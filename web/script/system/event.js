@@ -1,16 +1,43 @@
 (function ($service) {
     var
-        systemEvent = {
+        event = {
             'init': function () {
-                var
-                    $ul = this.$panel.find('.mount ul');
-                
-                this.els['content'] = $ul.find('.content').detach()[0].outerHTML;
-                this.els['empty'] = $ul.find('.empty').detach()[0].outerHTML;
+                this.watcher().define('events', function (old, _new_, $mount) {
+                    if (_new_ > 0)
+                    {
+                        if (old == 0)
+                        {
+                            $mount.find('.empty').remove();
+                        }    
+                    } else {
+                        $service.render({
+                            '$temp': $('#t-empty', event.$panel),
+                            '$mount': $mount || false
+                        });
+                    }
+                });
 
                 $service.ajax('event/get-events').done(function (response) {
-                    systemEvent.render(response.content);
-                    systemEvent.watch();
+                    var
+                        data = response.content;
+                    
+                    if (data.length > 0) {
+                        $service.render({
+                            '$temp': $('#t-content', event.$panel),
+                            'data': data,
+                            'before': function () {
+                                event.watcher().change('events', this.data.length, this.$mount);
+                            },
+                            'after': function (el) {
+                                $.data(el[1], 'eid', this.event_id);
+                                return el;
+                            }
+                        })
+                    } else {
+                        event.watcher().change('events', 0);
+                    }
+
+                    event.watch();
                 }).fail(function () {
                     $service.alert().error('数据获取失败');
                 });
@@ -43,39 +70,8 @@
                 }
 
                 $ul.data('children', children - 1);
-            }   , 
-
-            'render': function (data, insert) {
-                var
-                    $mount = this.$panel.find('.mount'),
-                    $ul = $mount.find('ul'),
-                    template = $service.template,
-                    len = data.length,
-                    li = this.els.content;
-
-                if (!insert)
-                {
-                    if (len < 1)
-                    {
-                        $ul.data('children', 0);
-                        return $ul.html(this.els.empty);
-                    }    
-
-                    $ul = $ul.detach();
-                    $ul.data('children', len);
-                }
-                
-                for (var i = 0; i < len; i++) {
-                    var
-                        $li = $(template(li, { 'eventName': data[i]['event_name'] }));
+            }, 
             
-                    $li.data('eid', data[i]['event_id']);
-                    $ul.append($li);
-                }
-
-                !insert && $mount.append($ul);
-            },
-
             'modals': {
                 'input': function ($active,extend)
                 {
@@ -146,15 +142,16 @@
                     extend = {
                         'post': function () {
                             var
-                                $active = this.$active,
-                                self = this;
+                                $active = this.$active;
+                            
+                            this.close();
 
                             $service.ajax('event/remove', { 'eventId': $active.data('eid') }).done(function () {
 
-                                systemEvent.trigger('deleteEvent', $active.data('eid'));
+                                // event.trigger('deleteEvent', $active.data('eid'));
 
+                                event.watcher().sub('events');
                                 $active.remove();
-                                self.close();
                                 $service.alert().success('删除成功', 400);
                             }).fail(function (response) {
                                 $service.alert().error('删除失败<br/>' + response.describe);
@@ -195,13 +192,24 @@
                     this.input(null, {
                         'post': function ($form) {
                             var
-                                eventName = $form.find('[type=text]').val(),
-                                self = this;
+                                eventName = $form.find('[type=text]').val();
+                            
+                            this.close();
 
                             $service.ajax('event/add', { 'eventName': eventName }).done(function (response) {
-                                self.close();
-                                systemEvent.trigger('add');
-                                systemEvent.render([{ 'event_name': eventName, 'event_id': response.content[0] }], true);
+
+                                $service.render({
+                                    '$temp': $('#t-content', event.$panel),
+                                    'data': [{ 'event_name': eventName, 'event_id': response.content[0] }],
+                                    'before': function () {
+                                        event.watcher().plus('events', this.$mount);
+                                    },
+                                    'after': function (el) {
+                                        $.data(el[1], 'eid', this.event_id);
+                                        return el;
+                                    }
+                                });
+
                                 $service.alert().success('添加成功', 400);
                             }).fail(function (response) {
                                 $service.alert().error('删除失败 <br/>' + response.describe);
@@ -214,24 +222,24 @@
                 }    
             },
             'watch': function () {
-                this.$panel.find('.mount').click(function (event) {
-                    if (event.target.tagName == 'SPAN')
+                this.$panel.find('.mount').click(function ($event) {
+                    if ($event.target.tagName == 'SPAN')
                     {
                         var
-                            $target = $(event.target);
+                            $target = $($event.target);
                         
                         if ($target.hasClass('glyphicon'))
                         {
-                            systemEvent.modals[$target.attr('action')]($target.parent().parent());
+                            event.modals[$target.attr('action')]($target.parent().parent());
                         }    
                     }    
                 });
 
                 this.$panel.find('.add-row').click(function () {
-                    systemEvent.modals.add();
+                    event.modals.add();
                 });
             },
         }
     
-    $service.addModule('system-event', systemEvent);
+    $service.addModule('system-event', event);
 })($service);

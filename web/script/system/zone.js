@@ -3,7 +3,7 @@
         zone = {
             'init': function ()
             {
-                this.watcher.define('parent', 0,
+                this.watcher().define('parent', 0,
                     function (old, value, $mount) {
                         if (value >= 1) {
                             if (old == 0) {
@@ -17,7 +17,7 @@
                     }
                 );
 
-                this.watcher.define('subszone', {}, function (old, _new_, $mount) { 
+                this.watcher().define('subszone', {}, function (old, _new_, $mount) { 
                     if (_new_ >= 1)
                     {
                         if (!old)
@@ -42,7 +42,7 @@
                             '$temp': $('#t-parent', zone.$panel),
                             'data': data,
                             'before': function () {
-                                zone.watcher.change('parent', this.data.length, this.$mount);
+                                zone.watcher().change('parent', this.data.length, this.$mount);
                             },
                             'after': function (el) {
                                 $.data(el[1], 'zid', this.zone_id);
@@ -50,7 +50,7 @@
                             }
                         });
                     } else {
-                        zone.watcher.change('parent', 0);
+                        zone.watcher().change('parent', 0);
                     }
 
                     zone.watch();
@@ -124,7 +124,7 @@
                                 '$mount': $mount.find('ul'),
                                 'data': data,
                                 'before': function () {
-                                    zone.watcher.change('subszone.' + (zoneId + '').slice(0, 2), this.data.length, this.$mount);
+                                    zone.watcher().change('subszone.' + (zoneId + '').slice(0, 2), this.data.length, this.$mount);
                                 },
                                 'after': function (el) {
                                     $.data(el[1], 'zid', this.zone_id);
@@ -132,7 +132,7 @@
                                 }
                             });
                         } else {
-                            zone.watcher.change('subszone.' + (zoneId + '').slice(0, 2), 0, $mount.find('ul'));
+                            zone.watcher().change('subszone.' + (zoneId + '').slice(0, 2), 0, $mount.find('ul'));
                         }
 
                         zone.showChildren($target);
@@ -230,7 +230,7 @@
                                                     return el;
                                                 },
                                                 'before': function () {
-                                                    zone.watcher.plus('subszone.' + parent.slice(0, 2), this.$mount);
+                                                    zone.watcher().plus('subszone.' + (parent + '').slice(0, 2), this.$mount);
                                                 }
                                             });
                                         }    
@@ -240,7 +240,7 @@
                                             '$temp': $('#t-parent', zone.$panel),
                                             'data': [{ 'zone_id': zoneId, 'zone_name': zoneName }],
                                             'before': function () {
-                                                zone.watcher.plus('parent', this.$mount);
+                                                zone.watcher().plus('parent', this.$mount);
                                             },
                                             'after': function (el) {
                                                 $.data(el[1], 'zid', this.zone_id);
@@ -335,10 +335,10 @@
                             }).done(function () {
                                 if ($active.hasClass('parent'))
                                 {
-                                    zone.watcher.sub('parent');
+                                    zone.watcher().sub('parent');
                                     $active.next().remove();
                                 } else {
-                                    zone.watcher.sub('subszone.' + (zoneId + '').slice(0, 2), $active.parent());
+                                    zone.watcher().sub('subszone.' + (zoneId + '').slice(0, 2), $active.parent());
                                 }
 
                                 $active.remove();
