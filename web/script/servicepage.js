@@ -726,72 +726,69 @@ $(function (global) {
         config.$mount.append(frag);
     }
     
+    $service.watcher = {
+        '$data' : {},
+        'define': function (key, value, changeHandle) {
+
+            if (typeof value == 'function') {
+                changeHandle = value;
+                value = null;
+            }
+
+            this.data[key] = [value, changeHandle];
+        },
+        'set': function (key, value) {
+            if (key.indexOf('.') > -1) {
+                var
+                    split = key.split('.');
+
+
+                this.data[split[0]][0][split[1]] = value;
+            } else {
+                this.data[key][0] = value;
+            }
+        },
+        'change': function (key, value, args) {
+            var
+                oldValue = this.get(key),
+                handle = this.data[key.split('.')[0]][1];
+
+            this.set(key, value);
+
+            handle.apply(this, [oldValue, value].concat(args));
+        },
+        'get': function (key) {
+            if (key.indexOf('.') > -1) {
+                var
+                    split = key.split('.');
+
+                return this.data[split[0]][0][split[1]];
+            } else {
+                return this.data[key][0];
+            }
+        },
+        'plus': function (key) {
+            var
+                oldValue = this.get(key);
+
+            this.change(key, oldValue + 1, Array.prototype.slice.call(arguments, 1));
+        },
+        'sub': function (key) {
+            var
+                oldValue = this.get(key);
+
+            this.change(key, oldValue - 1, Array.prototype.slice.call(arguments, 1));
+        }
+    };
+
     // 初始化模块的时候以下内容会被注入到模块
     $service.plugin = {
-        'watcher': {
-            'data': {},
-            'define': function (key, value, changeHandle) {
-
-                if (typeof key == 'object')
-                {
-                    for (var attr in key)
-                    {
-                        this.define(attr, key[attr]['default'], key[attr]['handle']);
-                    }    
-                } else {
-                    this.data[key] = [value, changeHandle];
-                }
-            },
-            'set': function (key, value)
-            {
-                if (key.indexOf('.') > -1)
-                {
-                    var
-                        split = key.split('.');
-                
-
-                    this.data[split[0]][0][split[1]] = value;
-                } else {
-                    this.data[key][0] = value;
-                }
-            }   , 
-            'change': function (key,value,args)
-            {
-                var
-                    oldValue = this.get(key),    
-                    handle = this.data[key.split('.')[0]][1];
-                
-                this.set(key, value);
-
-                handle.apply(this,[oldValue,value].concat(args));
-            },
-            'get': function (key)
-            {
-                if (key.indexOf('.') > -1)
-                {
-                    var
-                        split = key.split('.');
-                    
-                    return this.data[split[0]][0][split[1]];
-                } else {
-                    return this.data[key][0];
-                }
-            }   , 
-            'plus': function (key)
-            {
-                var
-                    oldValue = this.get(key);
-                
-                this.change(key, oldValue + 1, Array.prototype.slice.call(arguments, 1));
-            },
-            'sub': function (key)
-            {
-                var
-                    oldValue = this.get(key);
-                
-                this.change(key, oldValue - 1, Array.prototype.slice.call(arguments, 1));
-            }    
-        },
+        'watcher': function ()
+        {
+            $service.watcher.data = this._data_;
+            return $service.watcher;
+        }   ,
+        '_data_' : {},
         'on': function (m, event, func)
         {
             $service.on(m, event, this, func);
