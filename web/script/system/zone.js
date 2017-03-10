@@ -230,7 +230,7 @@
                                                     return el;
                                                 },
                                                 'before': function () {
-                                                    zone.watcher().plus('subszone.' + parent.slice(0, 2), this.$mount);
+                                                    zone.watcher().plus('subszone.' + (parent + '').slice(0, 2), this.$mount);
                                                 }
                                             });
                                         }    
