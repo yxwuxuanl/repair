@@ -2,9 +2,52 @@
     var
         accountManage = {
             'init': function () {
+
+                this.watcher().define('accounts', function (old, _new_, $mount) {
+                    if (_new_ > 0) {
+                        if (old == 0) {
+                            $mount.find('.empty').remove();
+                        }
+                            
+                    } else {
+                        $service.render({
+                            '$temp': $('#t-empty', accountManage.$panel),
+                            '$mount' : $mount || null
+                        });
+                    }
+                });
+
                 $service.ajax('account/get-all').done(function (response) {
-                    accountManage.render(response.content);
-                    accountManage.watch();
+                    var
+                        data = response.content;
+                    
+                    if (data.length > 0)
+                    {
+                        $service.render({
+                            'data': data,
+                            '$temp': $('#t-content', accountManage.$panel),
+                            'before': function () {
+                                accountManage.watcher().change('accounts', this.data.length, this.$mount);
+                            },
+                            'filter': function () {
+                                var
+                                    role = this.role;
+                                
+                                if (role == 'normal') {
+                                    this.role = '普通账户';
+                                } else {
+                                    this.role = '部门管理员';
+                                }
+                            },
+                            'after': function (el) {
+                                $.data(el[1], 'aid', this.account_id);
+                                return el;
+                            }
+                        });
+                        accountManage.watch();
+                    } else {
+                        accountManage.watcher().change('accounts', 0);
+                    } 
                 }).fail(function (response) {
                     $service.alert().error('数据获取失败');
                 });
@@ -180,9 +223,8 @@
                             $service.ajax('account/delete', {
                                 'accountId': accountId
                             }).done(function () {
-
                                 accountManage.trigger('deleteAccount', $active);
-                                
+                                accountManage.watcher().sub('accounts');
                                 $active.remove();
                                 $service.alert().success('删除成功', 400);
                             }).fail(function (response) {
@@ -251,12 +293,21 @@
                                 'accountName': accountName,
                                 'groupId': groupId
                             }).done(function (response) {
-                                accountManage.render([{
-                                    'account_id': response.content[0],
-                                    'account_name': accountName,
-                                    'group_name': $option.text(),
-                                    'role': 'normal'
-                                }], true);
+                                $service.render({
+                                    '$temp': $('#t-content', accountManage.$panel),
+                                    'data': [{
+                                        'account_name': accountName,
+                                        'group_name': groupId == 0 ? '未分配' : $option.text(),
+                                        'role': '普通账户'
+                                    }],
+                                    'before': function () {
+                                        accountManage.watcher().plus('accounts', this.$mount);
+                                    },
+                                    'after': function (el) {
+                                        $.data(el[1], 'aid', response.content[0]);
+                                        return el;
+                                    }
+                                });
                                 $service.alert().success('添加成功', 400);
                             }).fail(function (response) {
                                 $service.alert().error('添加失败 <br/>' + response.describe);
@@ -375,7 +426,7 @@
                         
                         accountManage.modals.delete($target.parent().parent());
                     }
-                }).end().find('h4').click(function () {
+                }).end().find('.add').click(function () {
                     accountManage.modals.add(); 
                 });
             },
