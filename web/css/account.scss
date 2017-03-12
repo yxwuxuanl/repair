@@ -4,4 +4,22 @@
     {
         display: none;
     }
+
+    thead
+    {
+        font-size: 1.1em;
+        line-height: 1.8em;
+    }
+
+    .empty,thead
+    {
+        background-color: #696969;
+        color:#fff;
+    }
+
+    table
+    {
+        margin-top: 10px;
+    }
 }
+

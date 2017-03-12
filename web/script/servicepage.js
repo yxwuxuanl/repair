@@ -727,7 +727,6 @@ $(function (global) {
     }
     
     $service.watcher = {
-        '$data' : {},
         'define': function (key, value, changeHandle) {
 
             if (typeof value == 'function') {

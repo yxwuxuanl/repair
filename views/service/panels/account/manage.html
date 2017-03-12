@@ -3,7 +3,7 @@
 </script>
 
 <div class="content">
-    <h4><span class="add-row">创建账户</span></h4>
+    <button class="btn btn-block btn-default add">创建账户</button>
 
     <table class="table text-center table-hover">
         <thead>
@@ -14,7 +14,29 @@
                 <td>删除账户</td>
             </tr>
         </thead>
-        <tbody></tbody>        
+
+        <tbody>
+            <template id="t-empty">
+                <tr class="empty">
+                    <td colspan="4">无账户</td>
+                </tr>
+            </template>    
+
+            <template id="t-content">
+                <tr>
+                    <td>
+                        <span class="account-name">
+                            {account_name}
+                        </span>
+                    </td>
+                    <td>{group_name}</td>
+                    <td>{role}</td> 
+                    <td>
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </td>
+                </tr>
+            </template>
+        </tbody>        
     </table>
 </div>
 
