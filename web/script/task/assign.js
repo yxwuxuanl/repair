@@ -1,9 +1,9 @@
-(function ($service) {
+(function ($rs) {
     var
         assignTask = {
             'init': function ()
             {
-                $service.ajax('task/get-task').done(function (response) {
+                $rs.ajax('task/get-task').done(function (response) {
                     assignTask.render(response.content);
                 });
             },
@@ -12,7 +12,7 @@
                 var
                     $mount = this.$panel.find('.mount'),
                     $ul = $mount.find('ul'),
-                    template = $service.template,
+                    template = $rs.template,
                     len = data.length,
                     li;
                 
@@ -66,7 +66,7 @@
                             
                             this.last = taskId;
                             
-                            $service.ajax('task/get-detail', {
+                            $rs.ajax('task/get-detail', {
                                 'taskId' : taskId
                             }).done(function (response) {
                                 self.render(response.content);
@@ -98,7 +98,7 @@
                         }    
                     };
 
-                    this._main_ = new $service.modal(assignTask.$panel.find('#task-assign-modal'), init, extend);
+                    this._main_ = new $rs.modal(assignTask.$panel.find('#task-assign-modal'), init, extend);
                     this._main_.extend({ '$active': $active }).show();
                 },
                 'complete': function ($active)
@@ -106,14 +106,14 @@
                     var
                         taskId = $active.data('tid');
 
-                    $service.ajax('task/finish', {
+                    $rs.ajax('task/finish', {
                         'taskId': taskId
                     }).done(function (response) {
-                        $service.alert().success('任务已结束!', 400, function () {
+                        $rs.alert().success('任务已结束!', 400, function () {
                             $active.remove();
                         });
                     }).fail(function (response) {
-                        $service.alert().error('结束任务失败 <br/>' + response.describe);
+                        $rs.alert().error('结束任务失败 <br/>' + response.describe);
                     });
                 }    
             },
@@ -135,5 +135,5 @@
         };
     
 
-    $service.addModule('task-assign', assignTask);
-})($service);
+    $rs.addModule('task-assign', assignTask);
+})($rs);

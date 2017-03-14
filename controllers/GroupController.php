@@ -56,7 +56,7 @@ class GroupController extends Controller
 		}
 	}
 
-	public function actionAdd($groupName,$groupAdmin,$events)
+	public function actionAdd($groupName,$events,$groupAdmin = NULL)
 	{
 		return Group::create($groupName,$groupAdmin,$events);
 	}
@@ -70,7 +70,6 @@ class GroupController extends Controller
 	{
 		return Group::remove($groupId);
 	}
-
 
 	public function actionChangeTaskMode($mode)
 	{
@@ -209,5 +208,13 @@ class GroupController extends Controller
 		}
 
 		return ['events' => $events,'members' => $members];
+	}
+
+	public function actionGetCreateData()
+	{
+		return [
+			'account' => Account::getNoAssign(),
+			'event' => Event::getNoAssign()
+		];
 	}
 }

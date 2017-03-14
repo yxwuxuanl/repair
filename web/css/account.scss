@@ -21,6 +21,16 @@
     {
         margin-top: 10px;
     }
+
+    tr:hover .glyphicon
+    {
+        visibility: visible;
+    }
+
+    .glyphicon
+    {
+        visibility: hidden;
+    }
 }
 
 #account-changepwd-panel

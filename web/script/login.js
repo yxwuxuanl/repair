@@ -1,7 +1,7 @@
 $(function () {    
     var login = {
         'init': function () {
-            $service.validate($('#login-form'), {
+            $rs.validate($('#login-form'), {
                 'messages': {
                     'login-un-input': {
                         'required': '用户名不能为空',
@@ -35,17 +35,17 @@ $(function () {
                 pwd = $form.find('#login-pwd-input').val(),
                 _this = this;
 
-            $service.ajax('login/ajax', 'post', {
+            $rs.ajax('login/ajax', 'post', {
                 'un': un,
                 'pwd': pwd,
-                '_csrf': $service.getCsrf()
+                '_csrf': $rs.getCsrf()
             }).done(function () {
                 location.reload();
             }).fail(function (response) {
-                $service.alert().error('登录失败');
+                $rs.alert().error('登录失败');
             });
         }
     };
 
-    $service.addModule('login', login);
+    $rs.addModule('login', login);
 });

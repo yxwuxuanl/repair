@@ -1,4 +1,4 @@
-(function ($service) {
+(function ($rs) {
     var
         taskPool = {
             'init': function ()
@@ -10,7 +10,7 @@
                 var
                     $mount = this.$panel.find('.mount'),
                     $ul = $mount.find('ul').detach(),
-                    template = $service.template,
+                    template = $rs.template,
                     li = $ul.html();
                 
                 $ul.html('');
@@ -26,5 +26,5 @@
             }    
         };
     
-    $service.addModule('task-pool', taskPool);
-})($service);
+    $rs.addModule('task-pool', taskPool);
+})($rs);

@@ -1,4 +1,4 @@
-(function ($service) {
+(function ($rs) {
     var
         zone = {
             'init': function ()
@@ -10,7 +10,7 @@
                                 $mount.find('.empty').remove();
                             }
                         } else {
-                            $service.render({
+                            $rs.render({
                                 '$temp': $('#t-empty', zone.$panel)
                             });
                         }
@@ -25,20 +25,20 @@
                             $mount.find('.empty').remove();
                         }    
                     } else {
-                        $service.render({
+                        $rs.render({
                             '$temp': $('#t-children-empty', zone.$panel),
                             '$mount': $mount
                         });
                     }
                 });
 
-                $service.ajax('zone/get-parent').done(function (response) {
+                $rs.ajax('zone/get-parent').done(function (response) {
                     var
                         data = response.content;
                     
                     if (data.length > 0)
                     {
-                        $service.render({
+                        $rs.render({
                             '$temp': $('#t-parent', zone.$panel),
                             'data': data,
                             'before': function () {
@@ -109,7 +109,7 @@
                     var
                         zoneId = $target.data('zid');
 
-                    $service.ajax('zone/get-children', {
+                    $rs.ajax('zone/get-children', {
                         'parent': zoneId
                     }).done(function (response) {
                         var
@@ -119,7 +119,7 @@
                         
                         if (data.length > 0)
                         {
-                            $service.render({
+                            $rs.render({
                                 '$temp': $('#t-children', zone.$panel),
                                 '$mount': $mount.find('ul'),
                                 'data': data,
@@ -161,7 +161,7 @@
                                 $form = this.$body.find('form'),
                                 self = this;
                             
-                            $service.validate($form);
+                            $rs.validate($form);
 
                             $form.submit(function (event) { 
                                 event.preventDefault();
@@ -182,7 +182,7 @@
                         }    
                     };
                     
-                    this._input_ = new $service.modal('#zone-input-modal', init);
+                    this._input_ = new $rs.modal('#zone-input-modal', init);
                     this._input_.extend(extend).show();
                 }   , 
                 'add': function ($active)
@@ -207,7 +207,7 @@
 
                                 this.close();
 
-                                $service.ajax('zone/add', {
+                                $rs.ajax('zone/add', {
                                     'parent': parent,
                                     'name': zoneName
                                 }).done(function (response) {
@@ -221,7 +221,7 @@
                                         
                                         if ($mount.data('IS_LOAD'))
                                         {
-                                            $service.render({
+                                            $rs.render({
                                                 '$temp': $('#t-children', zone.$panel),
                                                 'data': [{ 'zone_id': zoneId, 'zone_name': zoneName }],
                                                 '$mount': $mount.find('ul'),
@@ -236,7 +236,7 @@
                                         }    
 
                                     } else {
-                                        $service.render({
+                                        $rs.render({
                                             '$temp': $('#t-parent', zone.$panel),
                                             'data': [{ 'zone_id': zoneId, 'zone_name': zoneName }],
                                             'before': function () {
@@ -249,9 +249,9 @@
                                         });
                                     }
                                         
-                                    $service.alert().success('添加成功', 400);
+                                    $rs.alert().success('添加成功', 400);
                                 }).fail(function (response) {
-                                    $service.alert().error('添加失败<br/>' + response.describe);
+                                    $rs.alert().error('添加失败<br/>' + response.describe);
                                 });
                             }    
                         };
@@ -277,14 +277,14 @@
 
                             this.close();
 
-                            $service.ajax('zone/rename', {
+                            $rs.ajax('zone/rename', {
                                 'zoneId': zoneId,
                                 'zoneName': name
                             }).done(function () {
                                 $active.find('.zone-name').text(name);
-                                $service.alert().success('重命名成功', 400);
+                                $rs.alert().success('重命名成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('重命名失败 <br/>' + response.describe);
+                                $rs.alert().error('重命名失败 <br/>' + response.describe);
                             });
                         }    
                     };
@@ -330,7 +330,7 @@
                             
                             this.close();
 
-                            $service.ajax('zone/delete', {
+                            $rs.ajax('zone/delete', {
                                 'zoneId': zoneId,
                             }).done(function () {
                                 if ($active.hasClass('parent'))
@@ -342,14 +342,14 @@
                                 }
 
                                 $active.remove();
-                                $service.alert().success('删除成功', 400);
+                                $rs.alert().success('删除成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('删除失败 <br/>' + response.describe);
+                                $rs.alert().error('删除失败 <br/>' + response.describe);
                             });
                         }    
                     };
 
-                    this._delete_ = new $service.modal('#zone-delete-modal', init, extend);
+                    this._delete_ = new $rs.modal('#zone-delete-modal', init, extend);
                     this._delete_.extend({ '$active': $active }).show();
                 },
                 'event': function ($active)
@@ -382,13 +382,13 @@
                                 this.last = zoneId;
                             }
 
-                            $service.ajax('zone/get-events', {
+                            $rs.ajax('zone/get-events', {
                                 'zoneId': zoneId
                             }).done(function (response) {
                                 self.render(response.content.in, 'in');
                                 self.render(response.content.notIn, 'not-in');
                             }).fail(function (response) {
-                                $service.alert().error('数据获取失败 <br/>' + response.describe);
+                                $rs.alert().error('数据获取失败 <br/>' + response.describe);
                             });
                         }    
                     };
@@ -409,7 +409,7 @@
                         },
                         'render': function (data, type, insert) {
                             var
-                                template = $service.template,
+                                template = $rs.template,
                                 $mount = this.$body.find('.' + type),
                                 $ul = $mount.find('ul'),
                                 icon, li;
@@ -445,15 +445,15 @@
                                 zoneId = this.$active.data('zid'),
                                 self = this;
 
-                            $service.ajax('zone/remove-event', {
+                            $rs.ajax('zone/remove-event', {
                                 'eventId': eventId,
                                 'zoneId': zoneId
                             }).done(function () {
                                 self.render([{ 'event_id': eventId, 'event_name': $target.text() }], 'not-in', true);
                                 $target.remove();
-                                $service.alert().success('删除成功', 400);
+                                $rs.alert().success('删除成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('删除失败 <br/>' + response.describe);
+                                $rs.alert().error('删除失败 <br/>' + response.describe);
                             });
                         },
                         'addEvent': function ($target) {
@@ -462,20 +462,20 @@
                                 zoneId = this.$active.data('zid'),
                                 self = this;
 
-                            $service.ajax('zone/add-event', {
+                            $rs.ajax('zone/add-event', {
                                 'eventId': eventId,
                                 'zoneId': zoneId
                             }).done(function () {
                                 self.render([{ 'event_id': eventId, 'event_name': $target.text() }], 'in', true);
                                 $target.remove();
-                                $service.alert().success('添加成功', 400);
+                                $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('添加失败 <br/>' + response.describe);
+                                $rs.alert().error('添加失败 <br/>' + response.describe);
                             });
                         }
                     };
 
-                    this._event_ = new $service.modal('#zone-event-modal', init, extend);
+                    this._event_ = new $rs.modal('#zone-event-modal', init, extend);
                     this._event_.extend({ '$active': $active }).show();
                 },
                 'custom': function ($active)
@@ -512,7 +512,7 @@
                             this.last = $active.data('zid');
 
                             this.setTitle('设置 [' + $active.find('.zone-name').text() + '] 自定义区域');
-                            $service.ajax('zone/get-custom', {
+                            $rs.ajax('zone/get-custom', {
                                 'zoneId': $active.data('zid')
                             }).done(function (response) {
                                 if (response.content !== null) {
@@ -525,7 +525,7 @@
                                     self.oldValue = { 'test': null, 'tips': null };
                                 }
                             }).fail(function (response) {
-                                $service.alert().error('数据获取失败 <br/>' + response.describe);
+                                $rs.alert().error('数据获取失败 <br/>' + response.describe);
                             });
                         }
                     };
@@ -545,31 +545,31 @@
 
                             if (tips == '' && test != '') 
                             {
-                                return $service.alert().error('请输入提示文字');
+                                return $rs.alert().error('请输入提示文字');
                             }    
 
                             this.close();
                             this.last = null;
                             
-                            $service.ajax('zone/change-custom', {
+                            $rs.ajax('zone/change-custom', {
                                 'tips': tips,
                                 'test': test,
                                 'zoneId': zoneId
                             }).done(function (response) {
-                                $service.alert().success(response.content, 400);
+                                $rs.alert().success(response.content, 400);
                             }).fail(function (response) {
-                                $service.alert().error(response.describe);
+                                $rs.alert().error(response.describe);
                             });
 
                         }    
                     };
 
-                    this._custom_ = new $service.modal('#zone-custom-modal', init, extend);
+                    this._custom_ = new $rs.modal('#zone-custom-modal', init, extend);
                     this._custom_.extend({ '$active': $active }).show();
                 }    
             },
         };
     
-    $service.addModule('system-zone', zone);
-})($service);
+    $rs.addModule('system-zone', zone);
+})($rs);
 
