@@ -7,11 +7,11 @@
 
             $panel = this['$panel'] = $('#report-contain');
 
-            $service.ajax('zone/get-parent').done(function (response) {
+            $rs.ajax('zone/get-parent').done(function (response) {
                 report.renderZone(response.content, 'parent-zone');
                 report.watch();
             }).fail(function (response) {
-                $service.alert().error('数据获取失败 <br/>' + response.describe);
+                $rs.alert().error('数据获取失败 <br/>' + response.describe);
             });
 
             report.validateForm();
@@ -40,7 +40,7 @@
                     return;
                 }    
 
-                $service.ajax('report/get-info', {
+                $rs.ajax('report/get-info', {
                     'zoneId': $option.data('zid')
                 }).done(function (response) {
                     report.renderZone(response.content.childZone,'children-zone');
@@ -74,11 +74,11 @@
                     event_id: $form.find('#event option:selected').data('eid'),
                     custom: $form.find('#custom-input').val(),
                     describe: $form.find('#other-describe').val(),
-                    _csrf : $service.getCsrf()
+                    _csrf : $rs.getCsrf()
                 };
             
-            $service.ajax('report/post', 'POST', data).done(function (response) {
-                $service.alert().success('报修成功,你可以在 `报障记录` 页面追踪该任务', function () {
+            $rs.ajax('report/post', 'POST', data).done(function (response) {
+                $rs.alert().success('报修成功,你可以在 `报障记录` 页面追踪该任务', function () {
                     $('[href="#my-report"]').tab('show');
                     report.$panel.find('form')[0].reset();
                     report.renderRow(data['reporter_id']);
@@ -89,7 +89,7 @@
         'customValidateTest': null,
 
         'validateForm': function () {
-            $service.loader('validate', function () {
+            $rs.loader('validate', function () {
                 report.$panel.find('#report-form').validate({
                     'rules': {
                         'reporter-id': {
@@ -182,12 +182,12 @@
 
         'renderRow': function (stuNumber)
         {
-            $service.ajax('report/get-row', {
+            $rs.ajax('report/get-row', {
                 'stuNumber' : stuNumber
             }).done(function (response) {
                 if (response.content.length < 1)
                 {
-                    return $service.alert().error('暂无报修记录');
+                    return $rs.alert().error('暂无报修记录');
                 }    
 
                 var
@@ -196,7 +196,7 @@
                         '1': '正在处理',
                         '2': '已完成'
                     },
-                    template = $service.template,
+                    template = $rs.template,
                     data = response.content,
                     $mount = report.$panel.find('#my-report'),
                     $ul = $mount.find('ul'),
@@ -229,7 +229,7 @@
             var
                 $mount = this.$panel.find('.' + mount + '-mount'),
                 $select = $mount.find('select').detach(),
-                template = $service.template,
+                template = $rs.template,
                 option = '<option value="1">{text}</option>';
             
             $select.find('option:gt(0)').remove();
@@ -251,7 +251,7 @@
             var
                 $mount = this.$panel.find('.event-mount'),
                 $select = $mount.find('select').detach(),
-                template = $service.template,
+                template = $rs.template,
                 option = '<option value="1">{text}</option>';
             
             $select.find('option:gt(0)').remove();
@@ -294,5 +294,5 @@
         }   , 
     }
 
-    $service.addModule('report', report);
+    $rs.addModule('report', report);
 })();

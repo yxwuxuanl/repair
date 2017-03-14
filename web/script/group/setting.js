@@ -1,4 +1,4 @@
-(function ($service) {
+(function ($rs) {
     var
         groupSetting = {
             'init': function ()
@@ -6,7 +6,7 @@
                 var
                     self = this;    
                 
-                $service.ajax('group/get-setting').done(function (response) {
+                $rs.ajax('group/get-setting').done(function (response) {
                     self.renderMember(response.content.member, 'in');
                     self.renderMember(response.content.noAssign, 'no-assign');
                     self.$panel.find('.mode select').val(response.content.mode).data('value', response.content.mode);
@@ -43,7 +43,7 @@
                 var
                     $mount = this.$panel.find('.' + mount),
                     $ul = $mount.find('ul'),
-                    template = $service.template,
+                    template = $rs.template,
                     li, icon;
                 
                 if (mount == 'in')
@@ -110,7 +110,7 @@
                         }    
                     };
 
-                    this._confirm_ = new $service.modal('#group-confirm-modal', init);
+                    this._confirm_ = new $rs.modal('#group-confirm-modal', init);
                     this._confirm_.extend($.extend(extend, {'$active' : $active})).show();
                 }   , 
                 'removeRule': function ($active)
@@ -132,16 +132,16 @@
                             
                             this.close();
                             
-                            $service.ajax('allocation/remove', {
+                            $rs.ajax('allocation/remove', {
                                 'eventId': eventId
                             }).done(function () {
                                 $active.remove();
-                                $service.alert().success('删除成功', 400);
+                                $rs.alert().success('删除成功', 400);
 
                                 groupSetting.trigger('removeRule');
 
                             }).fail(function (response) {
-                                $service.alert().error('删除失败 <br/>' + response.describe);
+                                $rs.alert().error('删除失败 <br/>' + response.describe);
                             });
                         }    
                     });
@@ -163,14 +163,14 @@
                             
                             this.close();
 
-                            $service.ajax('account/change-group', {
+                            $rs.ajax('account/change-group', {
                                 'accountId': accountId
                             }).done(function () {
                                 groupSetting.renderMember([{ 'account_id': accountId, 'account_name': $active.text() }], 'in', true);
                                 $active.remove(); 
-                                $service.alert().success('添加成功', 400);
+                                $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('添加失败 <br/>' + response.describe);
+                                $rs.alert().error('添加失败 <br/>' + response.describe);
                             });
                         }    
                     });
@@ -191,16 +191,16 @@
                                 accountId = $active.data('aid'),
                                 self = this;
 
-                            $service.ajax('account/change-group', {
+                            $rs.ajax('account/change-group', {
                                 'accountId': accountId
                             }).done(function () {
                                 groupSetting.renderMember([{ 'account_id': accountId, 'account_name': $active.text() }], 'no-assign', true);
                                 $active.remove();
                                 self.close();
-                                $service.alert().success('删除成功', 400);
+                                $rs.alert().success('删除成功', 400);
                             }).fail(function (response) {
                                 self.close();
-                                $service.alert().error('删除失败 <br/>' + response.describe);
+                                $rs.alert().error('删除失败 <br/>' + response.describe);
                             });
                         }    
                     });
@@ -221,7 +221,7 @@
                                 mode = $active.find('option:selected').val(),
                                 self = this;
 
-                            $service.ajax('group/change-task-mode', {
+                            $rs.ajax('group/change-task-mode', {
                                 'mode': mode
                             }).done(function () {
 
@@ -229,11 +229,11 @@
 
                                 $active.data('value', mode);
                                 self.close();
-                                $service.alert().success('已更改', 400);
+                                $rs.alert().success('已更改', 400);
 
                             }).fail(function (response) {
                                 self.close();
-                                $service.alert().error('更改失败 <br/>' + response.describe);
+                                $rs.alert().error('更改失败 <br/>' + response.describe);
                             });
                         }    
                     });
@@ -263,7 +263,7 @@
                                 var
                                     self = this;    
 
-                                $service.ajax('group/get-create-rule-info').done(function (response) {
+                                $rs.ajax('group/get-create-rule-info').done(function (response) {
                                     self.renderEvent(response.content.events);
                                     self.renderMember(response.content.members);
                                 });
@@ -280,7 +280,7 @@
                             var
                                 $mount = this.$body.find('.event-mount'),
                                 $select = $mount.find('select').detach(),
-                                template = $service.template,
+                                template = $rs.template,
                                 option = '<option value="">{text}</option>';
                             
                             $select.html('');
@@ -301,7 +301,7 @@
                             var
                                 $mount = this.$body.find('.member-mount'),
                                 $ul = $mount.find('ul').detach(),
-                                template = $service.template,
+                                template = $rs.template,
                                 li = '<li class="list-group-item">{text} <span class="glyphicon glyphicon-ok"></span> </li>';
                             
                             $ul.html('');
@@ -348,12 +348,12 @@
 
                             if (assign.length < 1)
                             {
-                                return $service.alert().error('至少选择一个成员');
+                                return $rs.alert().error('至少选择一个成员');
                             }    
 
                             this.close();
 
-                            $service.ajax('allocation/add', {
+                            $rs.ajax('allocation/add', {
                                 'event': $option.data('eid'),
                                 'assign': assign.join(','),
                                 'level': level
@@ -371,15 +371,15 @@
                                     $assign.remove();
                                 }
 
-                                $service.alert().success('添加成功', 400);
+                                $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('添加失败 <br/>' + response.describe);
+                                $rs.alert().error('添加失败 <br/>' + response.describe);
                             });
                         }    
 
                     };
                     
-                    this._addRule_ = new $service.modal('#group-add-rule-modal', init, extend);
+                    this._addRule_ = new $rs.modal('#group-add-rule-modal', init, extend);
                     this._addRule_.show();
                  }    
             },
@@ -418,7 +418,7 @@
                 var
                     $mount = this.$panel.find('.rule table'),
                     $tbody = $mount.find('tbody').detach(),
-                    template = $service.template,
+                    template = $rs.template,
                     tr, map = false;
                 
                 if (typeof assignMap == 'object')
@@ -467,5 +467,5 @@
             }    
         };
     
-    $service.addModule('group-setting', groupSetting);
-})($service);
+    $rs.addModule('group-setting', groupSetting);
+})($rs);

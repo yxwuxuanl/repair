@@ -3,17 +3,38 @@
 </script>
 
 <div class="content">
-    <h4><span class="add-row">创建组</span></h4>
+    <button type="" class="btn btn-default btn-block add">创建部门</button>
 
-    <table class="table text-center table-hover mount">
+    <table class="table text-center table-hover">
         <thead>
             <tr>
                 <td>组名</td>
                 <td>组管理员</td>
-                <td colspan="2">删除/更改组管理员</td>
+                <td colspan="2"></td>
             </tr>
         </thead>
-        <tbody></tbody>
+        <tbody>
+            <template id="t-empty">
+                <tr class="empty">
+                    <td colspan="4">暂无部门</td>
+                </tr>
+            </template>
+
+            <template id="t-content">
+                <tr>
+                    <td class="group-name">{group_name}</td>
+                    <td class="group-admin">{group_admin}</td>
+                    <td>
+                        <span class="actions">
+                            <span class="glyphicon glyphicon-pencil" action="rename"></span>
+                            <span class="glyphicon glyphicon-trash" action="delete"></span>
+                            <span class="glyphicon glyphicon-user" action="changeAdmin"></span>
+                            <span class="glyphicon glyphicon-th-list" action="event"></span>
+                        </span>
+                    </td>
+                </tr>
+            </template>
+        </tbody>
     </table>
 </div>
 
@@ -40,13 +61,24 @@
                             <div class="form-group admin-mount">
                                 <label for="">组管理员:</label>
                                 <select class="form-control">
+                                    <option value="0">不指派</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
                     <div class="event-mount">
-                        <ul></ul>
+                        <ul>
+                            <template id="t-event-empty">
+                                <li class="empty">全部事件已经绑定</li>
+                            </template>
+
+                            <template id="t-event-content">
+                                <li class="list-group-item">{event_name}
+                                    <span class="glyphicon glyphicon-ok"></span>
+                                </li>
+                            </template>
+                        </ul>
                     </div>
                 
                     <div class="form-group">
@@ -143,9 +175,25 @@
             <div class="modal-body">
                 <div class="event-mount">
                     <h5>该组响应以下事件</h5>
-                    <div class="has"><ul></ul></div>
+                    <div class="has">
+                        <ul>
+                            <template>
+                                <li class="list-group-item">{event_name}
+                                    <span class="glyphicon glyphicon-trash" action="remove"></span>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
                     <h5>以下事件可以指派给该组</h5>
-                    <div class="not-has"><ul></ul></div>
+                    <div class="not-has">
+                        <ul>
+                            <template>
+                                <li class="list-group-item">{event_name}
+                                    <span class="glyphicon glyphicon-plus" action="add"></span>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

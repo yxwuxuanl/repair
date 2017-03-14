@@ -1,12 +1,12 @@
-(function ($service) {
+(function ($rs) {
     var
         loginout = {
             'init': function ()
             {
-                $service.ajax('login/login-out').done(function () {
+                $rs.ajax('login/login-out').done(function () {
                     location.reload();
                 });
             }    
         }
-    $service.addModule('account-loginout', loginout);
-})($service);
+    $rs.addModule('account-loginout', loginout);
+})($rs);

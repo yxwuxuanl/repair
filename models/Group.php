@@ -69,6 +69,9 @@ class Group extends ActiveRecord
 			['group_admin',function($attr){
 				// 组管理员必须是 no_assign 状态
 				$aid = $this->$attr;
+
+				if($aid === NULL) return;
+
 				$ar = Account::find();
 				$ar->where('`account_id`=:aid and `account_group`=:gid',[':aid' => $aid,':gid' => 'g_noassign']);
 

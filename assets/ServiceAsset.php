@@ -22,7 +22,7 @@ class ServiceAsset extends AssetBundle
     ];
 
     public $js = [
-        'script/servicepage.js'
+        'script/rs.js'
     ];
 
     public $depends = [

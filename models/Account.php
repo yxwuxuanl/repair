@@ -256,4 +256,12 @@ class Account extends ActiveRecord
 		return is_string($accountName) && strlen($accountName) >= 2;
 	}
 
+	public static function changePwd($pwd,$uid)
+	{
+		if(!is_string($pwd) || strlen($pwd) < 5) return Status::INVALID_ARGS;
+
+		$sql = "UPDATE `account` SET `password` = PASSWORD('$pwd') WHERE `account_id` = '$uid'";
+		return (string) \Yii::$app->getDb()->createCommand($sql)->execute();
+	}
+
 }

@@ -2,10 +2,38 @@
 {
     .actions
     {
+        visibility: hidden;
         .glyphicon
         {
             margin-right: 15px;
         }
+    }
+
+    tr:hover .actions
+    {
+        visibility: visible;
+    }
+
+    thead
+    {
+        font-size: 1.1em;
+        line-height: 1.8em;
+    }
+
+    .empty,thead
+    {
+        background-color: #696969;
+        color:#fff;
+    }
+
+    td
+    {
+        width: 33%;
+    }
+
+    table
+    {
+        margin-top: 10px;
     }
     .event-mount
     {
@@ -18,7 +46,6 @@
         }
         ul
         {
-            padding-left:0;
             height: 200px;
             overflow:scroll;
         }
@@ -26,7 +53,8 @@
         li
         {
             display: inline-block;
-            width: 50%;
+            width: 30%;
+            margin: 2px 4px;
         }
 
         span

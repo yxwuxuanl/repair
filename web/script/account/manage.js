@@ -1,4 +1,4 @@
-(function ($service) {
+(function ($rs) {
     var
         accountManage = {
             'init': function () {
@@ -10,20 +10,20 @@
                         }
                             
                     } else {
-                        $service.render({
+                        $rs.render({
                             '$temp': $('#t-empty', accountManage.$panel),
                             '$mount' : $mount || null
                         });
                     }
                 });
 
-                $service.ajax('account/get-all').done(function (response) {
+                $rs.ajax('account/get-all').done(function (response) {
                     var
                         data = response.content;
                     
                     if (data.length > 0)
                     {
-                        $service.render({
+                        $rs.render({
                             'data': data,
                             '$temp': $('#t-content', accountManage.$panel),
                             'before': function () {
@@ -49,7 +49,7 @@
                         accountManage.watcher().change('accounts', 0);
                     } 
                 }).fail(function (response) {
-                    $service.alert().error('数据获取失败');
+                    $rs.alert().error('数据获取失败');
                 });
                 
                 this.on('group-manage', 'renameGroup', '_renameGroup_');
@@ -220,20 +220,20 @@
                             
                             this.close();
 
-                            $service.ajax('account/delete', {
+                            $rs.ajax('account/delete', {
                                 'accountId': accountId
                             }).done(function () {
                                 accountManage.trigger('deleteAccount', $active);
                                 accountManage.watcher().sub('accounts');
                                 $active.remove();
-                                $service.alert().success('删除成功', 400);
+                                $rs.alert().success('删除成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('删除失败 <br/>' + response.describe);
+                                $rs.alert().error('删除失败 <br/>' + response.describe);
                             });
                         }    
                     };
 
-                    this._delete_ = new $service.modal('#account-delete-modal', init, extend);
+                    this._delete_ = new $rs.modal('#account-delete-modal', init, extend);
                     return this._delete_.extend('$active', $active).show();
                 },
                 'add': function () {
@@ -253,7 +253,7 @@
                                 $form = this.$body.find('form'),
                                 self = this;
                             
-                            $service.validate($form);
+                            $rs.validate($form);
 
                             $form.submit(function (event) {
                                 event.preventDefault();
@@ -264,12 +264,12 @@
                                 }    
                             });
 
-                            $service.ajax('group/get-all', {
+                            $rs.ajax('group/get-all', {
                                 'includeAdmin': 0
                             }).done(function (response) {
-                                self.render(response.content);
+                                self.renderGroup(response.content);
                             }).fail(function (response) {
-                                $service.alert().error('数据获取失败 <br/>' + response.describe);
+                                $rs.alert().error('数据获取失败 <br/>' + response.describe);
                             });
                         },
                         'close': function ()
@@ -289,11 +289,11 @@
 
                             this.close();
 
-                            $service.ajax('account/add', {
+                            $rs.ajax('account/add', {
                                 'accountName': accountName,
                                 'groupId': groupId
                             }).done(function (response) {
-                                $service.render({
+                                $rs.render({
                                     '$temp': $('#t-content', accountManage.$panel),
                                     'data': [{
                                         'account_name': accountName,
@@ -308,43 +308,28 @@
                                         return el;
                                     }
                                 });
-                                $service.alert().success('添加成功', 400);
+                                $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('添加失败 <br/>' + response.describe);
+                                $rs.alert().error('添加失败 <br/>' + response.describe);
                             });
                         },
-                        'render': function (data,insert)
+                        'renderGroup': function (data)
                         {
                             var
-                                template = $service.template,
-                                $mount = this.$body.find('.mount'),
-                                $select = $mount.find('select'),
-                                option;
-                            
-                            option = '<option>{text}</option>';
+                                $body = this.$body;    
 
-                            if (!insert)
-                            {
-                                $select = $select.detach();
-                            }    
-
-                            for (var i = 0, len = data.length; i < len; i++)
-                            {
-                                var
-                                    $option = $(template(option, { 'text': data[i]['group_name'] }));
-                                
-                                $option.data('gid', data[i]['group_id']);
-                                $select.append($option);
-                            }    
-
-                            if (!insert)
-                            {
-                                $mount.append($select);
-                            }    
+                            $rs.render({
+                                '$temp': $('#option', $body),
+                                'data': data,
+                                'after': function (el) {
+                                    $.data(el[1], 'gid', this.group_id);
+                                    return el;
+                                }
+                            });
                         }
                     };
 
-                    this._add_ = new $service.modal('#account-add-modal', init, extend);
+                    this._add_ = new $rs.modal('#account-add-modal', init, extend);
                     this._add_.show();
                 }
             },
@@ -434,7 +419,7 @@
                 var
                     $mount = this.$panel.find('table'),
                     $tbody = $mount.find('tbody'),
-                    template = $service.template,
+                    template = $rs.template,
                     tr;
                     
                 if (!insert)
@@ -468,5 +453,5 @@
 
         };
     
-    $service.addModule('account-manage', accountManage);
-})($service);
+    $rs.addModule('account-manage', accountManage);
+})($rs);

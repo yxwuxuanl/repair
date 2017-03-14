@@ -11,7 +11,7 @@
                 <td>账户名称</td>
                 <td>所属组</td>
                 <td>角色</td>
-                <td>删除账户</td>
+                <td></td>
             </tr>
         </thead>
 
@@ -83,6 +83,11 @@
                                 <label for="">分配到:</label>
                                 <select class="form-control">
                                     <option value="0">不分配</option>
+
+                                    <template id="option">
+                                        <option>{group_name}</option>
+                                    </template>
+                                    
                                 </select>
                             </div>
                         </div>

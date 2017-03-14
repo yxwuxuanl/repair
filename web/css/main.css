@@ -122,18 +122,39 @@ body {
   color: #fff; }
 #account-manage-panel table {
   margin-top: 10px; }
+#account-manage-panel tr:hover .glyphicon {
+  visibility: visible; }
+#account-manage-panel .glyphicon {
+  visibility: hidden; }
 
-#group-manage-panel .actions .glyphicon {
-  margin-right: 15px; }
+#account-changepwd-panel {
+  margin-top: 20px; }
+
+#group-manage-panel .actions {
+  visibility: hidden; }
+  #group-manage-panel .actions .glyphicon {
+    margin-right: 15px; }
+#group-manage-panel tr:hover .actions {
+  visibility: visible; }
+#group-manage-panel thead {
+  font-size: 1.1em;
+  line-height: 1.8em; }
+#group-manage-panel .empty, #group-manage-panel thead {
+  background-color: #696969;
+  color: #fff; }
+#group-manage-panel td {
+  width: 33%; }
+#group-manage-panel table {
+  margin-top: 10px; }
 #group-manage-panel .event-mount .select span {
   display: inline; }
 #group-manage-panel .event-mount ul {
-  padding-left: 0;
   height: 200px;
   overflow: scroll; }
 #group-manage-panel .event-mount li {
   display: inline-block;
-  width: 50%; }
+  width: 30%;
+  margin: 2px 4px; }
 #group-manage-panel .event-mount span {
   float: right;
   display: none; }

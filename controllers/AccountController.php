@@ -40,6 +40,10 @@ class AccountController extends Controller
 		return Account::getNoAssign();
 	}
 
+	public function actionChangePwd($pwd)
+	{
+		return Account::changePwd($pwd,\Yii::$app->getSession()->get('uid'));
+	}
 
 	public function actionAdd($accountName,$groupId)
 	{

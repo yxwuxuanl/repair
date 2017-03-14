@@ -1,4 +1,4 @@
-(function ($service) {
+(function ($rs) {
     var
         allTask = {
             'init': function () {
@@ -29,7 +29,7 @@
                     url = 'task/get-group-underway';
                 }
 
-                $service.ajax(url).done(function (response) {
+                $rs.ajax(url).done(function (response) {
                     var
                         $ul = $mount.find('ul'),
                         data = response.content,
@@ -68,5 +68,5 @@
             }    
         };
     
-    $service.addModule('task-all', allTask);
-})($service);
+    $rs.addModule('task-all', allTask);
+})($rs);

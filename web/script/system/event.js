@@ -1,4 +1,4 @@
-(function ($service) {
+(function ($rs) {
     var
         event = {
             'init': function () {
@@ -10,19 +10,19 @@
                             $mount.find('.empty').remove();
                         }    
                     } else {
-                        $service.render({
+                        $rs.render({
                             '$temp': $('#t-empty', event.$panel),
                             '$mount': $mount || false
                         });
                     }
                 });
 
-                $service.ajax('event/get-events').done(function (response) {
+                $rs.ajax('event/get-events').done(function (response) {
                     var
                         data = response.content;
                     
                     if (data.length > 0) {
-                        $service.render({
+                        $rs.render({
                             '$temp': $('#t-content', event.$panel),
                             'data': data,
                             'before': function () {
@@ -39,7 +39,7 @@
 
                     event.watch();
                 }).fail(function () {
-                    $service.alert().error('数据获取失败');
+                    $rs.alert().error('数据获取失败');
                 });
                 
                 this.on(this._module_name_, 'deleteEvent', '_remove_');
@@ -90,7 +90,7 @@
                                 self = this,
                                 $form = this.$body.find('form');
                                 
-                            $service.validate($form);
+                            $rs.validate($form);
 
                             $form.submit(function (event) {
                                 event.preventDefault();
@@ -110,7 +110,7 @@
                         }    
                     };
                     
-                    this._input_ = new $service.modal('#event-input-modal', init);
+                    this._input_ = new $rs.modal('#event-input-modal', init);
                     this._input_.extend($.extend({ '$active': $active }, extend)).show();
                 }   , 
                 'delete': function ($active)
@@ -146,20 +146,20 @@
                             
                             this.close();
 
-                            $service.ajax('event/remove', { 'eventId': $active.data('eid') }).done(function () {
+                            $rs.ajax('event/remove', { 'eventId': $active.data('eid') }).done(function () {
 
                                 // event.trigger('deleteEvent', $active.data('eid'));
 
                                 event.watcher().sub('events');
                                 $active.remove();
-                                $service.alert().success('删除成功', 400);
+                                $rs.alert().success('删除成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('删除失败<br/>' + response.describe);
+                                $rs.alert().error('删除失败<br/>' + response.describe);
                             });
                         }
                     };
                     
-                    this._delete_ = new $service.modal('#event-delete-modal', init, extend);
+                    this._delete_ = new $rs.modal('#event-delete-modal', init, extend);
                     this.delete($active);
                 },
                 'rename': function ($active)
@@ -171,15 +171,15 @@
                                 $active = this.$active,
                                 self = this;
 
-                            $service.ajax('event/rename', {
+                            $rs.ajax('event/rename', {
                                 'eventName': eventName,
                                 'eventId': $active.data('eid')
                             }).done(function () {
                                 $active.find('.event-name').text(eventName);
                                 self.close();
-                                $service.alert().success('重命名成功', 400);
+                                $rs.alert().success('重命名成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('重命名失败 <br/>' + response.describe);
+                                $rs.alert().error('重命名失败 <br/>' + response.describe);
                             });
                         },
                         'title': function () {
@@ -196,9 +196,9 @@
                             
                             this.close();
 
-                            $service.ajax('event/add', { 'eventName': eventName }).done(function (response) {
+                            $rs.ajax('event/add', { 'eventName': eventName }).done(function (response) {
 
-                                $service.render({
+                                $rs.render({
                                     '$temp': $('#t-content', event.$panel),
                                     'data': [{ 'event_name': eventName, 'event_id': response.content[0] }],
                                     'before': function () {
@@ -210,9 +210,9 @@
                                     }
                                 });
 
-                                $service.alert().success('添加成功', 400);
+                                $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {
-                                $service.alert().error('删除失败 <br/>' + response.describe);
+                                $rs.alert().error('删除失败 <br/>' + response.describe);
                             });
                         },
                         'title': function () {
@@ -241,5 +241,5 @@
             },
         }
     
-    $service.addModule('system-event', event);
-})($service);
+    $rs.addModule('system-event', event);
+})($rs);

@@ -4,8 +4,8 @@
 
 $(function (global) {
     defines['validate'] = 'script/jquery.validate.min.js';
-    var
-        $service = {
+    var    
+        $rs = {
             'eventHanlders': {},
 
             'on': function (m, name, actions, func) {
@@ -27,7 +27,7 @@ $(function (global) {
             'trigger': function (m, name, params) {
                 if (!(m in this.eventHanlders) || !(name in this.eventHanlders[m])) return;
                 var
-                    defines = $service.eventHanlders[m][name];
+                    defines = $rs.eventHanlders[m][name];
 
                 for (var i = 0, len = defines.length; i < len; i++) {
 
@@ -48,10 +48,10 @@ $(function (global) {
                             handle = define[1];
                         }
 
-                        m_ = $service.$modules[m_];
+                        m_ = $rs.$modules[m_];
                     }
                     
-                    if (!(m_['_module_name_'] in $service.contain.$contains)) continue;
+                    if (!(m_['_module_name_'] in $rs.contain.$contains)) continue;
 
                     if (typeof handle == 'string') {
                         m_[handle].apply(m_, params);
@@ -83,7 +83,7 @@ $(function (global) {
 
                     if (typeof name == 'object') {
                         for (var i = 0, len = name.length; i < len; i++) {
-                            $service.contain.reRun(name[i]);
+                            $rs.contain.reRun(name[i]);
                         }
                     }
 
@@ -96,7 +96,7 @@ $(function (global) {
                         
                     } else {
                         name = this.moduleName;
-                        $service.contain.reRun(name);
+                        $rs.contain.reRun(name);
                     }
 
                 },
@@ -153,7 +153,7 @@ $(function (global) {
             'runModule': function (name, init) {
                 if (!(name in this.$modules)) {
                     this.loader(name, function () {
-                        $service.runModule(name, init);
+                        $rs.runModule(name, init);
                     });
                 } else {
                     if (!this.contain.has(name)) {
@@ -162,9 +162,9 @@ $(function (global) {
                             
                         module_._module_name_ = name;   
 
-                        for (var key in $service.plugin)
+                        for (var key in $rs.plugin)
                         {
-                            module_[key] = $service.plugin[key];
+                            module_[key] = $rs.plugin[key];
                         }    
 
                         this.contain.set(name, module_);
@@ -175,7 +175,7 @@ $(function (global) {
             }
         }
     
-    $service.alert = function () {
+    $rs.alert = function () {
         
         var
             classs = ['error-alert', 'success-alert'],
@@ -184,23 +184,23 @@ $(function (global) {
         if (arguments.length == 0) {
             return {
                 'success': function () {
-                    $service.alert.apply(null, [1, '操作成功'].concat($service.toArray(arguments)));
+                    $rs.alert.apply(null, [1, '操作成功'].concat($rs.toArray(arguments)));
                 },
                 'error': function () {
-                    $service.alert.apply(null, [0, '操作失败'].concat($service.toArray(arguments)));
+                    $rs.alert.apply(null, [0, '操作失败'].concat($rs.toArray(arguments)));
                 },
             }
         }
 
-        if (!('_alert_' in $service)) {
-            $service['_alert_'] = modal = new $service.modal('#alert')
+        if (!('_alert_' in $rs)) {
+            $rs['_alert_'] = modal = new $rs.modal('#alert')
         }
             
-        modal = modal || $service._alert_;
+        modal = modal || $rs._alert_;
 
         $modal = modal.$modal;
 
-        args = $service.args(arguments, {
+        args = $rs.args(arguments, {
             'level': [
                 function (value) {
                     return !isNaN(value);
@@ -242,7 +242,7 @@ $(function (global) {
 
     };
 
-    $service.modal = function (modal, init, extend) {
+    $rs.modal = function (modal, init, extend) {
 
         if (typeof modal == 'string') {
             modal = $(modal);
@@ -281,7 +281,7 @@ $(function (global) {
         }
     };
 
-    $service.modal.prototype = {
+    $rs.modal.prototype = {
 
         'eventMap': {
             'shown': 'shown.bs.modal',
@@ -313,7 +313,7 @@ $(function (global) {
             var
                 args;
 
-            args = $service.args(arguments,
+            args = $rs.args(arguments,
                 {
                     'title': [
                         function (value) {
@@ -391,19 +391,19 @@ $(function (global) {
         },
         
         'setTitle': function (content) {
-            $service.setContent(this.$title, content);
+            $rs.setContent(this.$title, content);
             return this;
         },
 
         'setContent': function (content) {
-            $service.setContent(this.$body, content);
+            $rs.setContent(this.$body, content);
             return this;
         }
     };
 
-    $service.ajax = function () {
+    $rs.ajax = function () {
         var
-            args = $service.args(arguments, {
+            args = $rs.args(arguments, {
                 'url': function (value) {
                     return typeof value == 'string';
                 },
@@ -471,11 +471,11 @@ $(function (global) {
         })
     };
 
-    $service.toArray = function (args) {
+    $rs.toArray = function (args) {
         return Array.prototype.slice.call(args, 0);
     };
 
-    $service.template = function (text, params) {
+    $rs.template = function (text, params) {
 
         for (var key in params) {
             text = text.replace(new RegExp('{' + key + '}', 'g'), params[key]);
@@ -484,18 +484,18 @@ $(function (global) {
         return text;
     };
 
-    $service.tag = function () {
+    $rs.tag = function () {
         var
             tag_template = '<{tag} {attributes}>{content}</{tag}>',
             attr_template = '{attr}="{value}"',
-            t = $service.template,
+            t = $rs.template,
             attrs = [],
             contents = [],
             attr_func,
             args,
             tag;
         
-        args = $service.args(arguments, {
+        args = $rs.args(arguments, {
             'tagName': function (value) {
                 return typeof value == 'string';
             },
@@ -562,7 +562,7 @@ $(function (global) {
 
                     } else if ($.isArray(args.content[i])) {
 
-                        contents.push($service.tag.apply(null, args.content[i]));
+                        contents.push($rs.tag.apply(null, args.content[i]));
 
                     }
 
@@ -583,7 +583,7 @@ $(function (global) {
         return tag;
     };
 
-    $service.args = function (arguments_, params) {
+    $rs.args = function (arguments_, params) {
         var
             args = {}, defaultValue, func;
 
@@ -609,15 +609,15 @@ $(function (global) {
         return args;
     };
 
-    $service.getCsrf = function () {
+    $rs.getCsrf = function () {
         return $('meta[name="csrf-token"]').attr('content');
     };
 
-    $service.setContent = function ($ele, content) {
+    $rs.setContent = function ($ele, content) {
         if (!content && content != 0) {
             $ele.html('');
         } else if ($.isArray(content)) {
-            $ele.html($service.tag.apply(null, content));
+            $ele.html($rs.tag.apply(null, content));
         } else if (typeof content == 'string') {
             $ele.html(content);
         } else if (content instanceof jQuery) {
@@ -625,10 +625,10 @@ $(function (global) {
         }
     };
 
-    $service.validate = function ($form, config, callback) {
+    $rs.validate = function ($form, config, callback) {
         if (!('validator' in $)) {
             this.loader('script/jquery.validate.min.js', function () {
-                $service.validate($form, config, callback);
+                $rs.validate($form, config, callback);
             });
         } else {
             config = config || {};
@@ -638,7 +638,7 @@ $(function (global) {
         }
     };
 
-    $service.$bootstraps.push(function () {
+    $rs.$bootstraps.push(function () {
         $('#tab').click(function (event) {
             event.preventDefault();
 
@@ -650,14 +650,14 @@ $(function (global) {
                 var
                     moduleName = href.slice(1, -6);
                 
-                $service.runModule(moduleName, function () {
+                $rs.runModule(moduleName, function () {
                     this.$panel = $(href);
                 });
             }
         })
     });
     
-    $service.$bootstraps.push(function () {
+    $rs.$bootstraps.push(function () {
 
         $('button.submit').click(function () {
             $(this).parent().parent().submit();
@@ -665,7 +665,7 @@ $(function (global) {
 
     });
 
-    $service.$bootstraps.push(function () {
+    $rs.$bootstraps.push(function () {
         $(document).ajaxSend(function () {
             $('#spinner').show();
         })
@@ -675,7 +675,7 @@ $(function (global) {
         })
     });
 
-    $service.render = function (_config_) {
+    $rs.render = function (_config_) {
         var
             frag = document.createDocumentFragment(),
             config = {
@@ -687,7 +687,7 @@ $(function (global) {
                 'data': ('data' in _config_) ? _config_.data : null
             };
         
-        config.temp = config.$temp[0].innerHTML;
+        config.temp = _config_.temp || config.$temp[0].innerHTML;
         config.$mount = _config_['$mount'] || config.$temp.parent();
 
         config.before && config.before.call(config);
@@ -700,8 +700,12 @@ $(function (global) {
             return config.$mount.append($(config.temp));
         }
 
-        for (var i = 0, len = config.data.length; i < len; i++) {
+        if (!$.isArray(config.data))
+        {
+            config.data = [config.data];
+        }    
 
+        for (var i = 0, len = config.data.length; i < len; i++) {
             var
                 chunk = config.data[i],
                 el = config.temp;
@@ -726,7 +730,7 @@ $(function (global) {
         config.$mount.append(frag);
     }
     
-    $service.watcher = {
+    $rs.watcher = {
         'define': function (key, value, changeHandle) {
 
             if (typeof value == 'function') {
@@ -781,26 +785,26 @@ $(function (global) {
     };
 
     // 初始化模块的时候以下内容会被注入到模块
-    $service.plugin = {
+    $rs.plugin = {
         'watcher': function ()
         {
-            $service.watcher.data = this._data_;
-            return $service.watcher;
+            $rs.watcher.data = this._data_;
+            return $rs.watcher;
         }   ,
         '_data_' : {},
         'on': function (m, event, func)
         {
-            $service.on(m, event, this, func);
+            $rs.on(m, event, this, func);
         },
         'trigger': function (event)
         {
-            $service.trigger(this._module_name_, event, Array.prototype.slice.call(arguments, 1));
+            $rs.trigger(this._module_name_, event, Array.prototype.slice.call(arguments, 1));
         }   , 
 
     };    
     
-    $service.bootstrap();
-    global.$service = $service;
+    $rs.bootstrap();
+    global.$rs = $rs;
 
 }(window));
 
