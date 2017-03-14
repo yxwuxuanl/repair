@@ -1,6 +1,6 @@
 (function ($rs) {
     var
-        groupManage = {
+        _module_ = {
             'init': function () {
                 this.watcher().define('groups', function (old, _new_, $mount) {
                     if (_new_ > 0) {
@@ -9,7 +9,7 @@
                         }
                     } else {
                         $rs.render({
-                            '$temp': $('#t-empty', groupManage.$panel)
+                            '$temp': $('#t-empty', _module_.$panel)
                         });
                     }
                 });
@@ -18,15 +18,14 @@
                     var
                         data = response.content;
                     
-                    if (data.length < 1)
-                    {
-                        groupManage.watcher().change('groups', 0);
+                    if (data.length < 1) {
+                        _module_.watcher().change('groups', 0);
                     } else {
                         $rs.render({
-                            '$temp': $('#t-content', groupManage.$panel),
+                            '$temp': $('#t-content', _module_.$panel),
                             'data': data,
                             'before': function () {
-                                groupManage.watcher().change('groups', this.data.length, this.$mount);
+                                _module_.watcher().change('groups', this.data.length, this.$mount);
                             },
                             'filter': function () {
                                 if (this.group_admin == null) {
@@ -39,15 +38,18 @@
                             }
                         });
                     }
-                    groupManage.watch();
+                    _module_.watch();
                 }).fail(function (response) {
                     $rs.alert().error('数据获取失败请刷新后重试');
                 });
-                
+
                 this.on('account-manage', 'deleteAccount', '_deleteAccount_');
                 this.on(this._module_name_, 'removeGroup', '_removeGroup_');
                 this.on(this._module_name_, 'addGroup', '_addGroup_');
                 this.on('system-event', 'deleteEvent', '_deleteEvent_');
+                this.on(this._module_name_, 'syncEventList', function ($mount) {
+                    C($mount);
+                });
             },
 
             '_deleteEvent_': function (eventId)
@@ -134,12 +136,12 @@
                     
                     if ($target[0].tagName == 'SPAN' && $target.hasClass('glyphicon'))
                     {
-                        groupManage.modals[$target.attr('action')]($target.parent().parent().parent());
+                        _module_.modals[$target.attr('action')]($target.parent().parent().parent());
                     }
                 });
 
                 this.$panel.find('.add').click(function () {
-                    groupManage.modals.add();
+                    _module_.modals.add();
                 });
             },
             'modals': {
@@ -237,7 +239,8 @@
                                 groupName = $form.find('[type=text]').val(),
                                 $option = $form.find('option:selected'),
                                 $events = this.$body.find('.select'),
-                                events = [];
+                                events = [],
+                                $eventMount = this.$body.find('.event-mount');
                             
                             if ($events.length < 1)
                             {
@@ -246,7 +249,7 @@
 
                             $events.each(function () {
                                 events.push($(this).data('eid'));
-                            })
+                            });
 
                             this.close();
 
@@ -266,19 +269,22 @@
                                 $option.remove();
 
                                 $rs.render({
-                                    '$temp': $('#t-content', groupManage.$panel),
-                                    'data': [data],
+                                    '$temp': $('#t-content', _module_.$panel),
+                                    'data': data,
                                     'after': function (el) {
                                         $.data(el[1], 'gid', this.group_id);
                                         return el;
                                     },
                                     'before': function () {
-                                        groupManage.watcher().plus('groups', this.$mount);
+                                        _module_.watcher().plus('groups', this.$mount);
                                     }
                                 });
 
                                 $rs.alert().success('添加成功', 400);
-                                groupManage.trigger('addGroup', data);
+                                _module_.trigger('addGroup', data);
+
+                                _module_.trigger('syncEventList', $eventMount.clone(true));
+
                             }).fail(function (response) {
                                 $rs.alert().error('添加失败 <br/>' + response.describe);
                             });
@@ -353,7 +359,7 @@
                                 $active.find('.group-name').text(groupName);
 
                                 // Todo
-                                groupManage.trigger('renameGroup', oldName, groupName);
+                                _module_.trigger('renameGroup', oldName, groupName);
 
                                 $rs.alert().success('重命名成功', 400);
                             }).fail(function (response) {
@@ -401,8 +407,8 @@
                             $rs.ajax('group/delete', {
                                 'groupId': $active.data('gid')
                             }).done(function () {
-                                groupManage.trigger('removeGroup', $active.find('.group-name').text());
-                                groupManage.watcher().sub('groups');
+                                _module_.trigger('removeGroup', $active.find('.group-name').text());
+                                _module_.watcher().sub('groups');
 
                                 $active.remove();
                                 $rs.alert().success('删除成功', 400);
@@ -497,7 +503,7 @@
                                 'groupId': groupId,
                                 'adminId': $option.data('aid')
                             }).done(function () {
-                                groupManage.trigger('changeAdmin', $groupAdmin.text(), $option.text(),$active.find('.group-name').text());
+                                _module_.trigger('changeAdmin', $groupAdmin.text(), $option.text(),$active.find('.group-name').text());
                                 $groupAdmin.text($option.text());
                                 $option.remove();
                                 $rs.alert().success('更换管理员成功', 400);
@@ -637,5 +643,5 @@
             }
         };
 
-    $rs.addModule('group-manage', groupManage);
+    $rs.addModule('group-manage', _module_);
 })($rs);

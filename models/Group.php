@@ -269,7 +269,7 @@ class Group extends ActiveRecord
 		if(!static::checkGid($groupId)) return Status::INVALID_ARGS;
 
 		$events = parent::find()->where('`group_id`=:gid',[':gid' => $groupId])->select('events')->scalar();
-		if(!$events) return Status::INVALID_ARGS;
+		if($events === FALSE) return Status::INVALID_ARGS;
 
 		return Event::find()->where(['in','event_id',explode(',',$events)])->asArray()->all();
 	}

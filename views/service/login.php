@@ -32,7 +32,7 @@
 
     window.onload = function()
     {
-        $service.runModule('login');
+        $rs.runModule('login');
     }
 </script>
 
