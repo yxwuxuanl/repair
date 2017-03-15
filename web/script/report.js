@@ -44,7 +44,7 @@
                     'zoneId': $option.data('zid')
                 }).done(function (response) {
                     report.renderZone(response.content.childZone,'children-zone');
-                    report.renderEvent(response.content.events.in);
+                    report.renderEvent(response.content.events);
                     report.renderCustom(response.content.custom || {});
                 });
             });

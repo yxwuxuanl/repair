@@ -1,48 +1,45 @@
 (function ($rs) {
     var
-        assignTask = {
+        _module_ = {
             'init': function ()
             {
-                $rs.ajax('task/get-task').done(function (response) {
-                    assignTask.render(response.content);
+                this.watcher().define('tasks', function (old, _new_, $mount) {
+                    if (_new_ > 0) {
+                        if (old == 0) {
+                            $mount.find('.empty').remove();
+                        }
+                    } else {
+                        $rs.render({
+                            '$temp': $('#t-empty', _module_.$panel)
+                        });
+                    }
                 });
-            },
-            'render': function (data)
-            {
-                var
-                    $mount = this.$panel.find('.mount'),
-                    $ul = $mount.find('ul'),
-                    template = $rs.template,
-                    len = data.length,
-                    li;
-                
-                if (len < 1)
-                {
-                    return $ul.find('.content').remove();
-                }    
 
-                $ul.detach().find('.empty').remove();                
-                li = $ul.html();
-
-                $ul.html('');
-
-                for (var i = 0, len; i < len; i++) {
+                $rs.ajax('task/get-assign-task').done(function (response) {
                     var
-                        $li = $(template(li, {
-                            'time': data[i]['post_time'],
-                            'zone': data[i]['zone'],
-                            'event': data[i]['event']
-                        }));
+                        data = response.content;
+                    
+                    if (data.length > 0) {
+                        $rs.render({
+                            '$temp': $('#t-content', _module_.$panel),
+                            'data': data,
+                            'before': function () {
+                                _module_.watcher().change('tasks', this.data.length, this.$mount);
+                            },
+                            'after': function (el) {
+                                $.data(el[1], 'tid', this.task_id);
+                                return el;
+                            }
+                        });
+                    } else {
+                        _module_.watcher().change('tasks', 0);
+                    }
+                });
 
-                    $li.data('tid', data[i]['task_id']);
-                    $ul.append($li);
-                }    
-
-                $mount.append($ul);
-                assignTask.watch();
+                this.watch();
             },
             'modals': {
-                'main': function ($active)
+                'detail': function ($active)
                 {
                     if ('_main_' in this)
                     {
@@ -98,7 +95,7 @@
                         }    
                     };
 
-                    this._main_ = new $rs.modal(assignTask.$panel.find('#task-assign-modal'), init, extend);
+                    this._main_ = new $rs.modal(_module_.$panel.find('#task-assign-modal'), init, extend);
                     this._main_.extend({ '$active': $active }).show();
                 },
                 'complete': function ($active)
@@ -110,6 +107,7 @@
                         'taskId': taskId
                     }).done(function (response) {
                         $rs.alert().success('任务已结束!', 400, function () {
+                            _module_.watcher().sub('tasks');
                             $active.remove();
                         });
                     }).fail(function (response) {
@@ -120,20 +118,15 @@
             'watch': function ()
             {
                 this.$panel.find('ul').click(function (event) {
-                    if (event.target.tagName == 'LI')
-                    {
-                        assignTask.modals.main($(event.target));
-                    } else if (event.target.tagName == 'P')
-                    {
+                    if (event.target.tagName == 'LI') {
+                        _module_.modals.detail($(event.target));
+                    } else if (event.target.tagName == 'P') {
                         $(event.target).parent().click();
-                    } else if (event.target.tagName == 'BUTTON')
-                    {
-                        assignTask.modals.complete($(event.target).parent());
-                    }    
-                })
+                    } else if (event.target.tagName == 'BUTTON') {
+                        _module_.modals.complete($(event.target).parent());
+                    }
+                });
             }    
         };
-    
-
-    $rs.addModule('task-assign', assignTask);
+    $rs.addModule('task-assign', _module_);
 })($rs);

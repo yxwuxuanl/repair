@@ -1,28 +1,43 @@
 <?php
 namespace app\controllers;
 
-use app\behaviors\NoCsrf;
 use app\filters\CustomResponseFilter;
-use app\filters\LoginFilter;
 use app\filters\RoleFilters;
-use app\formatter\Status;
 use app\models\Account;
-use app\models\Group;
-use yii\base\Exception;
 use yii\web\Controller;
 use app\controllers\RoleController as Role;
+use app\filters\LoginFilter;
 
 
 class AccountController extends Controller
 {
-    public function actionInfo($uid)
-    {
-
-    }
+	public function behaviors()
+	{
+		return [
+			'response' => [
+				'class' => CustomResponseFilter::className()
+			],
+			'role' => [
+				'class' => RoleFilters::className(),
+				'rules' => [
+					'get-all' => Role::SYSTEM_ADMIN,
+					'delete' => Role::SYSTEM_ADMIN,
+					'get-admin-list' => Role::SYSTEM_ADMIN,
+					'change-group' => Role::GROUP_ADMIN,
+					'get-no-assign' => Role::GROUP_ADMIN,
+					'add' => Role::SYSTEM_ADMIN
+				]
+			],
+			'login' => [
+				'class' => LoginFilter::className(),
+				'only' => ['get-all','delete','get-admin-list','change-group','get-no-assign','change-pwd','add']
+			]
+		];
+	}
 
     public function actionGetAll()
 	{
-		return Account::getUserList();
+		return Account::getAllAccount();
 	}
 
 	public function actionGetAdminList($groupId)
@@ -32,7 +47,7 @@ class AccountController extends Controller
 
 	public function actionChangeGroup($accountId)
 	{
-		return (string) Account::changeGroup($accountId,\Yii::$app->getSession()->get('group'));
+		return (string) Account::changeGroup($accountId,GroupController::getGroup());
 	}
 
 	public function actionGetNoAssign()
@@ -53,26 +68,6 @@ class AccountController extends Controller
 	public function actionDelete($accountId)
 	{
 		return Account::remove($accountId);
-	}
-
-	public function behaviors()
-	{
-		return [
-			'response' => [
-				'class' => CustomResponseFilter::className()
-			],
-			'role' => [
-				'class' => RoleFilters::className(),
-				'rules' => [
-//					'get-all' => Role::SYSTEM_ADMIN,
-					'delete' => Role::SYSTEM_ADMIN
-				]
-			],
-//			'login' => [
-//				'class' => LoginFilter::className()
-//			],
-			NoCsrf::className()
-		];
 	}
 
 	public static function getAccountId()
