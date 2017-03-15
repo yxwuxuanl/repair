@@ -103,7 +103,7 @@ class GroupController extends Controller
 
 		if($setting['mode'] == '2' || $setting['mode'] == '4')
 		{
-			$setting['rule'] = Allocation::getRuleByGroup($group);
+			$setting['rule'] = Allocation::getGroupRule($group);
 
 			foreach($setting['rule'] as $item)
 			{
@@ -159,7 +159,7 @@ class GroupController extends Controller
 	public function actionDeleteMember($aid)
 	{
 		if(!Account::checkAid($aid) || !Account::isExist($aid)) return Status::INVALID_ARGS;
-		Account::changeGroup($aid,'g_noassign');
+		Account::changeGroup($aid,'g_noAssign');
 		return Status::SUCCESS;
 	}
 

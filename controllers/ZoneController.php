@@ -2,30 +2,37 @@
 
 namespace app\controllers;
 
-use app\behaviors\Response;
 use app\filters\CustomResponseFilter;
 use app\filters\LoginFilter;
-use app\filters\PrivilegeFilter;
+use app\filters\RoleFilters;
 use app\formatter\Status;
 use app\models\CustomLabel;
-use app\models\Event;
-use app\models\ReportLabel;
 use app\models\zeMap;
 use app\models\Zone;
-use yii\base\DynamicModel;
-use yii\base\Exception;
 use yii\web\Controller;
-use yii\filters\VerbFilter;
+use app\controllers\RoleController as Role;
 
 class ZoneController extends Controller
 {
     public function behaviors()
     {
         return [
-//           'login' => [
-//               'class' => LoginFilter::className(),
-//			   'only' => ['add','rename','delete','remove-event']
-//           ],
+           'login' => [
+               'class' => LoginFilter::className(),
+			   'only' => ['add','delete','remove-event','rename','add-event','change-custom']
+           ],
+			'role' => [
+				'class' => RoleFilters::className(),
+				'rules' => [
+					'add' => Role::SYSTEM_ADMIN,
+					'rename' => Role::SYSTEM_ADMIN,
+					'delete' => Role::SYSTEM_ADMIN,
+					'remove-event' => Role::SYSTEM_ADMIN,
+					'add-event' => Role::SYSTEM_ADMIN,
+					'change-custom' => Role::SYSTEM_ADMIN
+				]
+
+			],
 			'response' => [
 				'class' => CustomResponseFilter::className()
 			],
@@ -86,19 +93,6 @@ class ZoneController extends Controller
     public function actionRemoveEvent($zoneId,$eventId)
 	{
 		return Zone::removeEvent($zoneId,$eventId);
-    }
-
-    public function actionGetLabel($zid)
-    {
-		if(!Zone::checkZid($zid,true)) return Status::INVALID_ARGS;
-		$result = ReportLabel::find()->where(['zone_id' => $zid])->asArray()->one();
-
-		if(empty($result))
-		{
-			return Status::SUCCESS;
-		}else{
-			return $result;
-		}
     }
 
 //    is rewrite

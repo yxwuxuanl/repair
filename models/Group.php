@@ -153,15 +153,13 @@ class Group extends ActiveRecord
 	public static function getAll($includeAdmin = true)
 	{
 		$query = parent::find()->where(['not in','group_id',['g_noAssign','system']]);
-		$fields = ['group_name','group_id'];
+		$query->select(['group_name','group_id']);
 
 		if($includeAdmin)
 		{
 			$query->join('left join','account','`account`.`account_id`=`group`.`group_admin`');
-			$fields[] = 'account_name as group_admin';
+			$query->addSelect('account_name as group_admin');
 		}
-
-		$query->select($fields);
 
 		return $query->asArray()->all();
 	}
@@ -277,10 +275,8 @@ class Group extends ActiveRecord
 	public static function removeEvent($group,$event)
 	{
 		if(!static::checkGid($group) || !Event::checkEid($event)) return Status::INVALID_ARGS;
-		$ar = parent::find()->where('`group_id`=:gid',[':gid' => $group])->one();
-		if($ar === NULL) return Status::INVALID_ARGS;
-		$ar->events = str_replace(',' . $event,'',$ar->events);
-		return $ar->update();
+		$sql = "UPDATE `group` SET `events` = REPLACE(`events`,',{$event}','') WHERE `group_id` = '{$group}' LIMIT 1";
+		return \Yii::$app->getDb()->createCommand($sql)->execute();
 	}
 
 	public static function addEvent($group,$event)
@@ -291,17 +287,14 @@ class Group extends ActiveRecord
 		$isExist = parent::find()->where(['like','events',$event])->count();
 		if($isExist > 0) return Status::INVALID_ARGS;
 
-
-		$ar = parent::find()->where('`group_id`=:gid',[':gid' => $group])->one();
-		if($ar === NULL) return Status::INVALID_ARGS;
-		$ar->events .= ',' . $event;
-		return $ar->update();
+		$sql = "UPDATE `group` SET `events` = CONCAT(`events`,',{$event}') WHERE `group_id` = '{$group}' LIMIT 1";	
+		return \Yii::$app->getDb()->createCommand($sql)->execute();
 	}
 
 	public static function changeTaskMode($group,$mode)
 	{
 		$mode = (int) $mode;
-		if(!is_numeric($mode) || !in_array($mode,[1,2,3,4])) return Status::INVALID_ARGS;
+		if(!in_array($mode,[1,2,3,4])) return Status::INVALID_ARGS;
 
 		$transaction = \Yii::$app->getDb()->beginTransaction();
 		$oldMode = Group::getTaskMode($group);
@@ -325,11 +318,11 @@ class Group extends ActiveRecord
 //			删除所有自定义规则并且插入默认规则
 			if($mode == 3)
 			{
-				Allocation::deleteAll('`group_id`=:gid and `level` != \'\0\'',[':gid' => $group]);
+				Allocation::deleteAll('`group_id`=:gid and `level` != \'0\'',[':gid' => $group]);
 
 				if($oldMode != 4)
 				{
-					Allocation::makeDefaultRule($group);
+					Allocation::generateDefaultRule($group);
 				}
 			}
 
@@ -338,7 +331,7 @@ class Group extends ActiveRecord
 			{
 				if($oldMode != 3)
 				{
-					Allocation::makeDefaultRule($group);
+					Allocation::generateDefaultRule($group);
 				}
 			}
 

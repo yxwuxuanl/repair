@@ -25,15 +25,15 @@ class ReportController extends Controller
 
 	public function actionGetInfo($zoneId)
 	{
-		if(!Zone::checkZid($zoneId)) return Status::INVALID_ARGS;
+		if(!Zone::checkZid($zoneId,true) || !Zone::isExist($zoneId)) return Status::INVALID_ARGS;
 
-		$return = [];
+		$data = [
+			'childZone' => Zone::getSubs($zoneId),
+			'events' => Zone::getEvent($zoneId,true),
+			'custom' => CustomLabel::get($zoneId)
+		];
 
-		$return['childZone'] = Zone::getSubs($zoneId);
-		$return['events'] = Zone::getEvent($zoneId,true);
-		$return['custom'] = CustomLabel::get($zoneId);
-
-		return $return;
+		return $data;
 	}
 
 	public function actionPost()

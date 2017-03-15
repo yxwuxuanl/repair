@@ -21,11 +21,6 @@ class Zone extends \yii\db\ActiveRecord
 		return ['zone_name','zone_id','events'];
 	}
 
-    public static function all()
-    {
-        return parent::find()->select('`zone`.*,`zone_event_map`.`events`')->join('LEFT JOIN','zone_event_map','`zone`.`zone_id`=`zone_event_map`.`zone_id`')->asArray()->all();
-    }
-
     public static function getParent()
 	{
 		return parent::find()->where('right(`zone_id`,2) = 00')->asArray()->all();
@@ -157,39 +152,42 @@ class Zone extends \yii\db\ActiveRecord
 
 		if($event === FALSE) return Status::INVALID_ARGS;
 
-		$in = Event::find()->where(['in','event_id',explode(',',$event)])->asArray()->all();
+		$in = [];
+		$notIn = [];
+		$explode = explode(',',$event);
 
-		if($onlyIn) return ['in' => $in];
+		foreach(Event::find()->each() as $event)
+		{
+			if(in_array($event['event_id'],$explode))
+			{
+				$in[] = $event;
+			}else{
+				$notIn[] = $event;
+			}
+		}
 
-		$notIn = Event::all(true)->andWhere(['not in','event_id',explode(',',$event)])->asArray()->all();
-
-		return ['in' => $in,'notIn' => $notIn];
+		if($onlyIn)
+		{
+			return $in;
+		}else{
+			return ['in' => $in,'notIn' => $notIn];
+		}
 	}
 
 	public static function addEvent($zoneId,$eventId)
 	{
 		if(!static::checkZid($zoneId,true) || !Event::checkEid($eventId) || !Event::isExist($eventId)) return Status::INVALID_ARGS;
 
-		$ar = zeMap::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->one();
-
-		if($ar === NULL) return Status::INVALID_ARGS;
-
-		if(strpos($ar->events,$eventId)) return Status::SUCCESS;
-
-		$ar->events .= ',' . $eventId;
-		return $ar->update();
+		$sql = "UPDATE `zone_event_map` SET `events` = CONCAT(`events`,',{$eventId}') WHERE `zone_id` = '{$zoneId}'";
+		return \Yii::$app->getDb()->createCommand($sql)->execute();
 	}
 
 	public static function removeEvent($zoneId,$eventId)
 	{
 		if(!static::checkZid($zoneId,true) || !Event::checkEid($eventId)) return Status::INVALID_ARGS;
 
-		$ar = zeMap::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->one();
-
-		if($ar === NULL) return Status::INVALID_ARGS;
-
-		$ar->events = str_replace(',' . $eventId,'',$ar->events);
-		return $ar->update();
+		$sql = "UPDATE `zone_event_map` SET `events` = REPLACE(`events`,',{$eventId}','') WHERE `zone_id` = '{$zoneId}'";
+		return \Yii::$app->getDb()->createCommand($sql)->execute();
 	}
 
 	public static function getZoneName($zoneId)

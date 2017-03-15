@@ -37,14 +37,7 @@ class RoleController
 	{
 		if(is_array($role))
 		{
-			foreach($role as $r)
-			{
-				if(static::is($r))
-				{
-					return true;
-				}
-			}
-			return false;
+			return in_array(static::getRole(),$role);
 		}else{
 			return \Yii::$app->getSession()->get('role') == $role;
 		}

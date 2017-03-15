@@ -126,7 +126,7 @@ class Task extends ActiveRecord
 
 	public static function assign($taskId,$event,$group)
 	{
-		$rules = Allocation::getRuleByGroup($group['group_id'],true);
+		$rules = Allocation::getGroupRule($group['group_id'],true);
 
 		$eventRule = NULL;
 		$defaultRule = NULL;
@@ -236,7 +236,7 @@ class Task extends ActiveRecord
 		$ar = TaskTrace::find()->where('`assign`=:aid and `status` != \'2\'',[':aid' => $accountId]);
 		$ar->innerJoin('task','task_trace.task_id = task.task_id');
 		$ar->select(['task.task_id as task_id','event','concat(`zone`,\' \',`custom`) as zone','post_time']);
-		$ar->orderBy(['post_time' => 'asc']);
+		$ar->orderBy(['post_time' => 'desc']);
 		return $ar->asArray()->all();
 	}
 

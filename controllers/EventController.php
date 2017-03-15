@@ -4,11 +4,10 @@ namespace app\controllers;
 
 use app\filters\CustomResponseFilter;
 use app\filters\LoginFilter;
-use app\formatter\Status;
+use app\filters\RoleFilters;
 use app\models\Event;
-use yii\base\Exception;
 use yii\web\Controller;
-use app\behaviors\Response;
+use app\controllers\RoleController as Role;
 
 class EventController extends Controller
 {
@@ -17,13 +16,25 @@ class EventController extends Controller
 		return [
 			'response' => [
 				'class' => CustomResponseFilter::className()
+			],
+			'login' => [
+				'class' => LoginFilter::className(),
+				'only' => ['add','remove','rename']
+			],
+			'role' => [
+				'class' => RoleFilters::className(),
+				'rules' => [
+					'add' => Role::SYSTEM_ADMIN,
+					'remove' => Role::SYSTEM_ADMIN,
+					'rename' => Role::SYSTEM_ADMIN
+				]
 			]
 		];
 	}
 
 	public function actionGetEvents()
 	{
-		return Event::all();
+		return Event::find()->asArray()->all();
 	}
 
 	public function actionAdd($eventName)

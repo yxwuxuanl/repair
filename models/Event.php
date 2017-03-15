@@ -19,32 +19,6 @@ class Event extends ActiveRecord
 		return ['event_id','event_name'];
 	}
 
-	public static function deleteEvent($eid)
-	{
-		if(!empty($ar = parent::findOne($eid))){
-
-//			-- DELETE HOOK --
-//			zeMap::deleteEvent($eid);
-
-			return $ar->delete();
-
-		}else{
-			return 0;
-		}
-	}
-
-	public static function all($ar = false)
-	{
-		$row = parent::find()->where('`event_id`!=:eid',[':eid' => '*']);
-
-		if($ar)
-		{
-			return $row;
-		}else{
-			return $row->asArray()->all();
-		}
-	}
-
 	public static function checkEid($eid){
 		return is_string($eid) && strlen($eid) == 10 && substr($eid,0,2) == 'e_';
 	}
@@ -53,7 +27,6 @@ class Event extends ActiveRecord
 	{
 		$query = parent::find();
 		$explode = explode(',',$list);
-
 		$query->where(['in','event_id',$explode]);
 
 		return $query->count() == count($explode);
@@ -62,26 +35,23 @@ class Event extends ActiveRecord
 	public static function isExist($eid)
 	{
 		$query = parent::find()->asArray();
-
-		$query->where('`event_id`=:eid');
-		$query->params([':eid' => $eid]);
+		$query->where('`event_id`=:eid',[':eid' => $eid]);
 
 		return $query->one() !== NULL;
 	}
-
 
 	public static function getNoAssign()
 	{
 		$bind = [];
 
-		foreach(Group::find()->each() as $group)
+		foreach(Group::find()->select('events')->each() as $group)
 		{
 			$bind = array_merge($bind,explode(',',$group['events']));
 		}
 
 		$notBind = [];
 
-		foreach(Event::all(true)->each() as $item)
+		foreach(Event::find()->each() as $item)
 		{
 			if(!in_array($item['event_id'],$bind))
 			{
@@ -90,11 +60,6 @@ class Event extends ActiveRecord
 		}
 
 		return $notBind;
-	}
-
-	public static function isNoAssign($eid)
-	{
-		return Zone::find()->where('`events` like \'%:eid%\'',[':eid' => $eid])->count() < 1;
 	}
 
 	public static function checkEventName($eventName)
@@ -137,7 +102,7 @@ class Event extends ActiveRecord
 
 	public static function remove($eventId)
 	{
-		if(!static::checkEid($eventId)) return Status::INVALID_ARGS;
+		if(!static::checkEid($eventId) || !static::isExist($eventId)) return Status::INVALID_ARGS;
 
 		$transaction = \Yii::$app->getDb()->beginTransaction();
 
@@ -147,12 +112,11 @@ class Event extends ActiveRecord
 			parent::deleteAll(['event_id' => $eventId]);
 
 			// 清除`Group`表
-			\Yii::$app->getDb()->createCommand('UPDATE `group` SET `events` = REPLACE(`events`,\',' . $eventId . '\',\'\')')->execute();
+			\Yii::$app->getDb()->createCommand("UPDATE `group` SET `events` = REPLACE(`events`,',{$eventId}','') LIMIT 1");
 
-			\Yii::$app->getDb()->createCommand('UPDATE `zone_event_map` SET `events` = REPLACE(`events`,\',' . $eventId . '\',\'\')')->execute();
+			\Yii::$app->getDb()->createCommand("UPDATE `zone_event_map` SET `events` = REPLACE(`events`,',{$eventId}','') LIMIT 1");
 
 			Allocation::deleteAll(['event' => $eventId]);
-
 			$transaction->commit();
 		}catch(Exception $e)
 		{

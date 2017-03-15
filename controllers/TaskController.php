@@ -22,7 +22,7 @@ class TaskController extends Controller
 		];
 	}
 
-	public function actionGetTask()
+	public function actionGetAssignTask()
 	{
 		return Task::getAssignTask(AccountController::getAccountId());
 	}

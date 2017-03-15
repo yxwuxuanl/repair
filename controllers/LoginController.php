@@ -1,7 +1,6 @@
 <?php
 
 namespace app\controllers;
-use app\behaviors\NoCsrf;
 use app\filters\CustomResponseFilter;
 use app\formatter\Status;
 use app\models\Account;
@@ -12,25 +11,16 @@ class LoginController extends Controller
 	public function actionAjax()
 	{
 		if(\Yii::$app->request->isAjax){
-			$model = new Account();
-			$model->scenario = Account::LOGIN;
-
-			$model->account_name = \Yii::$app->request->post('un','');
-			$model->password = \Yii::$app->request->post('pwd','');
-
-			if(!$model->validate() || empty(($userData = $model->findUser()))) return Status::INVALID_LOGIN_INFO;
-			$this->login($userData);
-
+			$row = Account::findUser(\Yii::$app->request->post('un',''),\Yii::$app->request->post('pwd',''));
+			if($row === NULL) return Status::INVALID_LOGIN_INFO;
+			$this->login($row);
 			return Status::SUCCESS;
 		}else{
 			\Yii::$app->response->statusCode = 403;
 		}
 	}
 
-	public function actionCookie()
-	{
-
-	}
+	public function actionCookie(){}
 
 	public function login($userData)
 	{
@@ -48,8 +38,7 @@ class LoginController extends Controller
 			'response' => [
 				'class' => CustomResponseFilter::className(),
 				'only' => ['ajax','login-out']
-			],
-			NoCsrf::className()
+			]
 		];
 	}
 

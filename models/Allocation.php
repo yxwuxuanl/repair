@@ -84,13 +84,11 @@ class Allocation extends ActiveRecord
 		return Status::SUCCESS;
 	}
 
-	public static function getRuleByGroup($group,$default = false)
+	public static function getGroupRule($group,$defaultRule = false)
 	{
-		if(!Group::checkGid($group)) return Status::INVALID_ARGS;
-
 		$ar = parent::find()->where('`group_id`=:gid',[':gid' => $group]);
 
-		if(!$default)
+		if(!$defaultRule)
 		{
 			$ar->andWhere('`level` != \'0\'');
 		}
@@ -106,18 +104,12 @@ class Allocation extends ActiveRecord
 		return $rules;
 	}
 
-
-	public static function getRuleByEvent($eventId)
-	{
-
-	}
-
-	public static function makeDefaultRule($group)
+	public static function generateDefaultRule($group)
 	{
 		$model = new self();
 		$model->group_id = $group;
-		$model->event = '*';
-		$model->assign = '*';
+		$model->event = NULL;
+		$model->assign = NULL;
 		$model->level = 0;
 		$model->insert();
 	}

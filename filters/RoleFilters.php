@@ -30,23 +30,16 @@ class RoleFilters extends ActionFilter
 
 	public function judge($actionId)
 	{
-		if($this->rules === null) return true;
+		$rules = $this->rules;
 
-		if(is_string($this->rules))
+		if($rules === null) return true;
+		if(is_string($rules)) return Role::is($rules);
+
+		foreach($rules as $action => $role)
 		{
-			return Role::is($this->rules);
-		}else{
-			if(!ArrayHelper::isAssociative($this->rules))
-			{
-				return Role::is($this->rules);
-			}else{
-				if(key_exists($actionId,$this->rules))
-				{
-					return Role::is($this->rules);
-				}else{
-					return true;
-				}
-			}
+			if($actionId == $action) return Role::is($role);
 		}
+
+		return true;
 	}
 }

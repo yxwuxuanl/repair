@@ -4,17 +4,20 @@
 
 <div class="mount">
     <ul>
+        <template id="t-content">
+            <li class="list-group-item content">
+                <p class="time"><span class="task-attr">报告时间 : </span>{post_time}</p>
+                <p class="zone"><span class="task-attr">故障区域 : </span>{zone}</p>
+                <p class="event"><span class="task-attr">故障 : </span>{event}</p>
+                <button class="btn btn-primary btn-block">完成任务</button>
+            </li>
+        </template>
 
-        <li class="list-group-item content">
-            <p class="time"><span class="task-attr">报告时间 : </span>{time}</p>
-            <p class="zone"><span class="task-attr">故障区域 : </span>{zone}</p>
-            <p class="event"><span class="task-attr">故障 : </span>{event}</p>
-            <button class="btn btn-primary btn-block">完成任务</button>
-        </li>
-
-        <li class="list-group-item empty">
-            暂无进行中的任务
-        </li>   
+        <template id="t-empty">
+            <li class="list-group-item empty">
+                暂无进行中的任务
+            </li>
+        </template>
     </ul>
 </div>
 

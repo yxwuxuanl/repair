@@ -59,45 +59,28 @@ class Account extends ActiveRecord
 		return ['account_name','password','account_id','account_group','role'];
 	}
 
-	public function findGroupUsers()
-	{}
+	public function findGroupUsers(){}
 
-	public static function getUserList()
+	public static function getAllAccount()
 	{
 		$query = parent::find();
 
 		$query->select(['account_id','account_name','role','group_name']);
 		$query->where('`account_group` != \'system\'');
-		$query->leftJoin('group','`account_group`=`group_id`');
+		$query->innerJoin('group','`account_group`=`group_id`');
 		$query->orderBy(['role' => 'desc']);
 		
 		return $query->asArray()->all();
 	}
 
-	public function findUser()
+	public static function findUser($un,$pwd)
 	{
 		$query = parent::find();
 
-		$query->where('`account_name`=:an and `password`=PASSWORD(:pwd)');
-		$query->params([':an' => $this->account_name,':pwd' => $this->password]);
+		$query->where('`account_name`=:an AND `password`=PASSWORD(:pwd)');
+		$query->params([':an' => $un,':pwd' => $pwd]);
 
 		return $query->asArray()->one();
-	}
-
-	public function deleteUser()
-	{
-		$ar = parent::findOne(['account_id' => $this->account_id]);
-
-		if(empty($ar)) return null;
-		if($ar['role'] == Role::SYSTEM_ADMIN) return false;
-
-		if($ar['role'] == Role::GROUP_ADMIN)
-		{
-			$group = $ar['account_group'];
-			Group::changeAdmin($group,'');
-		}
-
-		return $ar->delete();
 	}
 
 	public static function checkAid($aid)
