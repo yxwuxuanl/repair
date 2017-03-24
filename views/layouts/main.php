@@ -37,6 +37,13 @@ use yii\helpers\Html;
 
     <body>
 
+    <div id="spinner">
+        <div class="rect1"></div>
+        <div class="rect2"></div>
+        <div class="rect3"></div>
+        <div class="rect4"></div>
+    </div>
+
     <?= $content ?>
 
     <div class="modal fade" id="alert">

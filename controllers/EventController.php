@@ -44,7 +44,7 @@ class EventController extends Controller
 
 	public function actionRemove($eventId)
 	{
-		return (string) Event::remove($eventId);
+		return Event::remove($eventId);
 	}
 
 	public function actionRename($eventName,$eventId)

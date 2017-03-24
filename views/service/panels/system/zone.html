@@ -104,12 +104,34 @@
                 <div class="event">
                     <div class="in">
                         <h5>该区域响应以下事件</h5>
-                        <ul></ul>
+                        <ul>
+                            <template class="t-content">
+                                <li class="list-group-item">{event_name}
+                                    <span class="glyphicon glyphicon-trash" action="remove"></span>
+                                </li>
+                            </template>
+
+                            <template class="t-empty">
+                                <li class="list-group-item-danger empty list-group-item">
+                                    该区域暂无绑定事件
+                                </li>
+                            </template>
+                        </ul>
                     </div>
 
                     <div class="not-in">
                         <h5>以下事件可以添加到该区域</h5>
-                        <ul></ul>
+                        <ul>
+                            <template class="t-content">
+                                <li class="list-group-item">{event_name}
+                                    <span class="glyphicon glyphicon-plus" action="add"></span>
+                                </li>
+                            </template>
+
+                            <template class="t-empty">
+                                <li class="list-group-item-danger empty list-group-item">所有事件均已绑定</li>
+                            </template>
+                        </ul>
                     </div>
                 </div>
             </div>

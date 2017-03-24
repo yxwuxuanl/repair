@@ -2,12 +2,8 @@
 
 namespace app\models;
 
-use app\controllers\ZoneController;
 use app\formatter\Status;
-use Yii;
 use yii\base\Exception;
-use yii\db\Query;
-
 
 class Zone extends \yii\db\ActiveRecord
 {
@@ -28,7 +24,7 @@ class Zone extends \yii\db\ActiveRecord
 
 	public static function getSubs($parent)
 	{
-		if(!static::checkZid($parent)) return Status::INVALID_ARGS;
+		if(!static::checkZid($parent,true)) return Status::INVALID_ARGS;
 		return parent::find()->where(['between','zone_id',$parent + 1,$parent + 99])->asArray()->all();
 	}
 
@@ -47,33 +43,35 @@ class Zone extends \yii\db\ActiveRecord
 
 	public static function isExist($zid)
 	{
-		return !!parent::find()->where('`zone_id`=:zid',[':zid' => $zid])->count();
+		return parent::find()->where('`zone_id`=:zid',[':zid' => $zid])->one() !== NULL;
 	}
 
 	public static function checkZoneName($zoneName)
 	{
-		return is_string($zoneName) && strlen($zoneName);
+		return is_string($zoneName) && strlen($zoneName) > 2;
 	}
 
 	public static function create($zoneName,$parent)
 	{
-		if(!static::checkZoneName($zoneName) || ($parent != 0 && !static::checkZid($parent,true))) return Status::INVALID_ARGS;
+		if(!static::checkZoneName($zoneName) || ($parent !== null && !static::checkZid($parent,true))) return Status::INVALID_ARGS;
 
-		$ar = parent::find()->orderBy(['zone_id' => SORT_DESC])->asArray();
+		$ar = parent::find()
+            ->orderBy(['zone_id' => SORT_DESC])
+            ->select('zone_id');
 
-		if($parent == 0)
+		if($parent == null)
 		{
-			$row = $ar->where('right(`zone_id`,2) = 0')->one();
-			if(empty($row))
+			$row = $ar->where('right(`zone_id`,2) = 0')->scalar();
+			if($row === FALSE)
 			{
 				$zoneId = 1000;
 			}else{
-				$zoneId = $row['zone_id'] + 100;
+				$zoneId = $row + 100;
 			}
 		}else{
-			$row = $ar->where(['between','zone_id',$parent,$parent + 99])->one();
-			if(empty($row)) return Status::INVALID_ARGS;
-			$zoneId = $row['zone_id'] + 1;
+			$row = $ar->where(['between','zone_id',$parent,$parent + 99])->scalar();
+			if($row === FALSE) return Status::INVALID_ARGS;
+			$zoneId = $row + 1;
 		}
 
 		$model = new self();
@@ -124,7 +122,6 @@ class Zone extends \yii\db\ActiveRecord
 
 		try
 		{
-//			父区域
 			if(static::checkZid($zoneId,true))
 			{
 				parent::deleteAll(['between','zone_id',$zoneId,$zoneId + 99]);
@@ -146,11 +143,13 @@ class Zone extends \yii\db\ActiveRecord
 
 	public static function getEvent($zoneId,$onlyIn)
 	{
-		if(!static::checkZid($zoneId)) return Status::INVALID_ARGS;
+		if(!static::checkZid($zoneId,true)) return Status::INVALID_ARGS;
 
-		$event = zeMap::find()->where(['zone_id' => $zoneId])->select('events')->asArray()->scalar();
-
-		if($event === FALSE) return Status::INVALID_ARGS;
+		$event = zeMap::find()
+            ->where('`zone_id`=:zid')
+            ->params([':zid' => $zoneId])
+            ->select('events')
+            ->scalar();
 
 		$in = [];
 		$notIn = [];
@@ -174,24 +173,13 @@ class Zone extends \yii\db\ActiveRecord
 		}
 	}
 
-	public static function addEvent($zoneId,$eventId)
-	{
-		if(!static::checkZid($zoneId,true) || !Event::checkEid($eventId) || !Event::isExist($eventId)) return Status::INVALID_ARGS;
-
-		$sql = "UPDATE `zone_event_map` SET `events` = CONCAT(`events`,',{$eventId}') WHERE `zone_id` = '{$zoneId}'";
-		return \Yii::$app->getDb()->createCommand($sql)->execute();
-	}
-
-	public static function removeEvent($zoneId,$eventId)
-	{
-		if(!static::checkZid($zoneId,true) || !Event::checkEid($eventId)) return Status::INVALID_ARGS;
-
-		$sql = "UPDATE `zone_event_map` SET `events` = REPLACE(`events`,',{$eventId}','') WHERE `zone_id` = '{$zoneId}'";
-		return \Yii::$app->getDb()->createCommand($sql)->execute();
-	}
-
 	public static function getZoneName($zoneId)
 	{
-		return parent::find()->select('group_concat(`zone_name`)')->where(['in','zone_id',[substr($zoneId,0,2) . '00',$zoneId]])->scalar();
+		return parent::find()
+            ->select('group_concat(`zone_name`)')
+            ->where('`zone_id`=:parent')
+            ->orWhere('`zone_id`=:child')
+            ->params([':parent' => substr($zoneId,0,2) . '00',':child' => $zoneId])
+            ->scalar();
 	}
 }

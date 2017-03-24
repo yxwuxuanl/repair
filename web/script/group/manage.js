@@ -9,125 +9,128 @@
                         }
                     } else {
                         $rs.render({
-                            '$temp': $('#t-empty', _module_.$panel)
+                            '$temp': $('.t-empty', $mount)
                         });
                     }
                 });
 
                 $rs.ajax('group/get-all').done(function (response) {
-                    var
-                        data = response.content;
-                    
-                    if (data.length < 1) {
-                        _module_.watcher().change('groups', 0);
-                    } else {
-                        $rs.render({
-                            '$temp': $('#t-content', _module_.$panel),
-                            'data': data,
-                            'before': function () {
-                                _module_.watcher().change('groups', this.data.length, this.$mount);
-                            },
-                            'filter': function () {
-                                if (this.group_admin == null) {
-                                    this.group_admin = '未指派';
-                                }
-                            },
-                            'after': function (el) {
-                                $.data(el[1], 'gid', this.group_id);
-                                return el;
-                            }
-                        });
-                    }
+                    _module_.render(response.content);
                     _module_.watch();
                 }).fail(function (response) {
                     $rs.alert().error('数据获取失败请刷新后重试');
                 });
 
-                this.on('account-manage', 'deleteAccount', '_deleteAccount_');
-                this.on(this._module_name_, 'removeGroup', '_removeGroup_');
-                this.on(this._module_name_, 'addGroup', '_addGroup_');
-                this.on('system-event', 'deleteEvent', '_deleteEvent_');
-                this.on(this._module_name_, 'syncEventList', function ($mount) {
-                    C($mount);
-                });
+                this.bind(this.events);
             },
 
-            '_deleteEvent_': function (eventId)
-            {
-                if (!('_event_' in this.modals)) return;
-                
-                var
-                    $mount = this.modals._event_.$body.find('.event-mount');
-                    
-                $mount.find('li').each(function () {
-                    var
-                        $li = $(this);
-                    
-                    if ($li.data('eid') == eventId)
+            'events' : [
+                [{
+                    'remove' : [
+                        function () {
+                            if ('_add_' in this.modals) 
+                            {
+                                this.modals._add_.reload = true;
+                            }
+
+                            if('_changeAdmin_' in this.modals)
+                            {
+                                this.modals._changeAdmin_.last = null;
+                            }
+                        }
+                    ],
+                    'change-admin' : function(accountId){
+                        if ('_add_' in this.modals) {
+                            var
+                                $select = this.modals._add_.$body.find('select');
+
+                            $select.find('option').each(function(){
+                                if($.data(this,'aid') == accountId)
+                                {
+                                    $(this).remove();
+                                    return false;
+                                }
+                            })
+                        }
+                    }
+                }],
+                ['account-manage',{
+                    'remove' : function(accountId)
                     {
-                        $li.remove();
-                        return false;
-                    }    
-                });
+                        this.$panel.find('tr').each(function(){
+                            if ($.data(this,'aid') == accountId)
+                            {
+                                $.data(this,'aid',null);
+                                $(this).find('.group-admin').text('未指派');
+                                return false;
+                            }
+                        });
+
+                        if('_add_' in this.modals)
+                        {
+                            var
+                                $select = this.modals._add_.$body.find('select');
+
+                            $select.find('option').each(function(){
+                                if($.data(this,'aid') == accountId)
+                                {
+                                    $(this).remove();
+                                    return false;
+                                }
+                            });
+                        }
+
+                        if('_changeAdmin_' in this.modals)
+                        {
+                            var
+                                $select = this.modals._changeAdmin_.$body.find('select');
+
+                            $select.find('option').each(function(){
+                                if($.data(this,'aid') == accountId)
+                                {
+                                    $(this).remove();
+                                    return false;
+                                }
+                            })
+                        }
+                    }
+                }]
+            ],
+
+            'render' : function(data)
+            {
+                $rs.render({
+                    '$temp' : $('.mount .t-content',_module_.$panel),
+                    'data' : data,
+                    'before' : function()
+                    {
+                        if($.isArray(this.data))
+                        {
+                            if(this.data.length < 1)
+                            {
+                                _module_.watcher().change('groups',0,this.$mount);
+                                return false;
+                            }
+                            _module_.watcher().change('groups',this.data.length,this.$mount);
+                        }else{
+                            _module_.watcher().plus('groups',this.$mount);
+                        }
+                    },
+                    'filter' : function()
+                    {
+                        if(this.group_admin === null)
+                        {
+                            this.group_admin = '未指派';
+                        }
+                    },
+                    'after': function (el) {
+                        $.data(el[1], 'aid', this.account_id);
+                        $.data(el[1], 'gid', this.group_id);
+                        return el;
+                    },
+                    'attrs' : ['group_name','group_admin']
+                })
             },
-            
-            '_renameEvent_': function (eventId, eventName)
-            {
-                if (!('_event_' in this)) return;
-
-                var
-                    $mount = this.$body.find('.event-mount');
-                
-                $mount.find('li').each(function () {
-                    var
-                        $li = $(this);
-                    
-                    if ($li.data('eid') == eventId)
-                    {
-                        $li.text(eventName);
-                        return false;
-                    }    
-                })
-             }    ,
-
-            '_addGroup_': function ()
-            {
-                if ('_changeAdmin_' in this.modals)
-                {
-                    this.modals._changeAdmin_.reload = true;
-                }    
-            }   , 
-
-            '_removeGroup_': function ()
-            {
-                if ('_add_' in this.modals)
-                {
-                    this.modals._add_.reload = true;
-                }    
-
-                if ('_changeAdmin_' in this.modals)
-                {
-                    this.modals._changeAdmin_.reload = true;
-                }    
-            }, 
-            
-            '_deleteAccount_': function ($active)
-            {
-                if (!('_changeAdmin_' in this.modals)) return;
-                var
-                    $body = this.modals._changeAdmin_.$body;
-                
-                $body.find('option').each(function () {
-                    var
-                        $option = $(this);
-                    
-                    if ($option.data('aid') == accountId)
-                    {
-                        $option.remove();
-                        return false;
-                    }    
-                })
-            }   , 
 
             'watch': function () {
                 this.$panel.find('table').click(function (event) {
@@ -144,6 +147,7 @@
                     _module_.modals.add();
                 });
             },
+
             'modals': {
                 'add': function () {
                     if ('_add_' in this)
@@ -174,7 +178,10 @@
 
                             this.$body.find('.event-mount').click(function (event) {
                                 if (event.target.tagName == 'LI') {
-                                    $(event.target).toggleClass('select');
+                                    var
+                                        $target = $(event.target);
+
+                                    !$target.hasClass('empty') && $target.toggleClass('select');
                                 } else if (event.target.tagName == 'SPAN') {
                                     $(event.target).parent().click();
                                 }
@@ -188,8 +195,8 @@
                                 $body = this.$body;
                             
                             $rs.ajax('group/get-create-data').done(function (response) {
-                                response.content.account.length > 0 && self.renderAdmin(response.content.account);
-                                response.content.event.length > 0 && self.renderEvent(response.content.event);
+                                self.renderAdmin(response.content.account);
+                                self.renderEvent(response.content.event);
                             }).fail(function (response) {
                                 $rs.alert().error('数据获取失败 <br/>' + response.describe);
                             });
@@ -203,6 +210,7 @@
                     };
 
                     extend = {
+                        'reload' : true,
                         'renderAdmin': function (data)
                         {
                             var
@@ -220,16 +228,25 @@
                         },
                         'renderEvent': function (data)
                         {
-
                             var
                                 $body = this.$body;
                             
                             $rs.render({
-                                '$temp': $('#t-event-content', $body),
+                                '$temp': $('.t-content', $body),
                                 'data': data,
                                 'after': function (el) {
                                     $.data(el[1], 'eid', this.event_id);
                                     return el;
+                                },
+                                'before' : function()
+                                {
+                                    if(this.data.length < 1)
+                                    {
+                                        this.temp = this['$mount'].find('.t-empty')[0].innerHTML;
+                                        this.data = null;
+                                    }else{
+                                        this.$mount.find('li').remove();
+                                    }
                                 }
                             });
                         },
@@ -258,49 +275,22 @@
                                 'groupAdmin': $option.data('aid'),
                                 'events': events.join(',')
                             }).done(function (response) {
-                                var
-                                    data = {
-                                        'group_name': groupName,
-                                        'group_id': response.content[0],
-                                        'group_admin': $option.text()
-                                    };
-
-                                $events.remove();
-                                $option.remove();
-
-                                $rs.render({
-                                    '$temp': $('#t-content', _module_.$panel),
-                                    'data': data,
-                                    'after': function (el) {
-                                        $.data(el[1], 'gid', this.group_id);
-                                        return el;
-                                    },
-                                    'before': function () {
-                                        _module_.watcher().plus('groups', this.$mount);
-                                    }
+                                _module_.render({
+                                    'group_name': groupName,
+                                    'group_id': response.content[0],
+                                    'group_admin': $option.text()
                                 });
+                                
+                                _module_.trigger('add', groupName,response.content[0],$option.data('aid'));
+
+                                $option.data('aid') && $option.remove();
+                                $events.remove();
 
                                 $rs.alert().success('添加成功', 400);
-                                _module_.trigger('addGroup', data);
-
-                                _module_.trigger('syncEventList', $eventMount.clone(true));
-
                             }).fail(function (response) {
                                 $rs.alert().error('添加失败 <br/>' + response.describe);
                             });
-                        }, 
-                        'watch': function ()
-                        {
-                            this.$body.find('.event-mount').click(function (event) {
-                                var
-                                    $target = $(event.target);
-                                
-                                if ($target[0].tagName == 'LI')
-                                {
-                                    $target.toggleClass('select');
-                                }    
-                            })
-                        }    
+                        }
                     };
 
                     this._add_ = new $rs.modal('#group-add-modal', init, extend);
@@ -325,11 +315,7 @@
                             $rs.validate($form);
                             $form.submit(function (event) {
                                 event.preventDefault();
-
-                                if ($(this).valid())
-                                {
-                                    self.post($(this));
-                                }    
+                                $(this).valid() && self.post($(this));
                             })
                         },
                         'close': function ()
@@ -358,24 +344,22 @@
                             }).done(function () {
                                 $active.find('.group-name').text(groupName);
 
-                                // Todo
-                                _module_.trigger('renameGroup', oldName, groupName);
+                                _module_.trigger('rename', groupId, groupName);
 
                                 $rs.alert().success('重命名成功', 400);
                             }).fail(function (response) {
                                 $rs.alert().error('重命名失败 <br/>' + response.describe);
                             });
-                            
                         }    
                     };
 
                     this._rename_ = new $rs.modal('#group-rename-modal', init, extend);
                     this._rename_.extend({ '$active': $active }).show();
                 },
-                'delete': function ($active) {
-                    if ('_delete_' in this)
+                'remove': function ($active) {
+                    if ('_remove_' in this)
                     {
-                        return this._delete_.extend({ '$active': $active }).show();
+                        return this._remove_.extend({ '$active': $active }).show();
                     }    
 
                     var
@@ -407,9 +391,8 @@
                             $rs.ajax('group/delete', {
                                 'groupId': $active.data('gid')
                             }).done(function () {
-                                _module_.trigger('removeGroup', $active.find('.group-name').text());
-                                _module_.watcher().sub('groups');
-
+                                _module_.trigger('remove', $active.data('gid'));
+                                _module_.watcher().sub('groups', $('.mount',_module_.$panel));
                                 $active.remove();
                                 $rs.alert().success('删除成功', 400);
                             }).fail(function (response) {
@@ -418,8 +401,8 @@
                         }    
                     };
 
-                    this._delete_ = new $rs.modal('#group-delete-modal', init, extend);
-                    this._delete_.extend({ '$active': $active }).show();
+                    this._remove_ = new $rs.modal('#group-delete-modal', init, extend);
+                    this._remove_.extend({ '$active': $active }).show();
                 },
                 'changeAdmin': function ($active) {
                     if ('_changeAdmin_' in this)
@@ -442,52 +425,51 @@
                         },
                         'show': function ()
                         {
+                            var
+                                groupId = this.$active.data('gid'),
+                                self = this;
+
+                            if(this.last == groupId)
+                            {
+                                return;
+                            }
+
                             this.setTitle('更改 [' + this.$active.find('.group-name').text() + '] 组管理员');
 
-                            if (this.reload)
-                            {
-                                var
-                                    groupId = this.$active.data('gid'),
-                                    self = this;
-                                
-                                $rs.ajax('account/get-admin-list', {
-                                    'groupId': groupId
-                                }).done(function (response) {
-                                    self.render(response.content);
-                                }).fail(function (response) {
-                                    $rs.alert().error('数据获取失败 <br/>' + response.describe);
-                                });
-                                
-                                this.reload = false;
-                            }    
+                            $rs.ajax('account/get-admin-list', {
+                                'groupId': groupId
+                            }).done(function (response) {
+                                self.render(response.content);
+                            }).fail(function (response) {
+                                $rs.alert().error('数据获取失败 <br/>' + response.describe);
+                            });
+
+                            this.last = groupId;
                         }    
                     };
 
                     extend = {
-                        'reload': true,
+                        'last' : null,
                         'render': function (data)
                         {
                             var
-                                $mount = this.$body.find('.account-mount'),
-                                $select = $mount.find('select').detach(),
-                                template = $rs.template,
-                                option;
-                            
-                            $select.html('');
+                                $body = this.$body;
 
-                            option = '<option value="">{text}</option>';
-
-                            for (var i = 0, len = data.length; i < len; i++)
-                            {
-                                var
-                                    $option = $(template(option, { 'text': data[i]['account_name'] }));
-                                
-                                $option.data('aid', data[i]['account_id']);
-
-                                $select.append($option);
-                            }    
-
-                            $mount.append($select);
+                            $rs.render({
+                                'temp': '<option>{account_name}</option>',
+                                '$mount': $('select', $body),
+                                'data' : data,
+                                'after' : function(el)
+                                {
+                                    $.data(el[0],'aid',this.account_id);
+                                    return el;
+                                },
+                                'before' : function()
+                                {
+                                    this.$mount.children().remove();
+                                },
+                                'attrs' : ['account_name']
+                            });
                         },
                         'post': function ()
                         {
@@ -503,7 +485,10 @@
                                 'groupId': groupId,
                                 'adminId': $option.data('aid')
                             }).done(function () {
-                                _module_.trigger('changeAdmin', $groupAdmin.text(), $option.text(),$active.find('.group-name').text());
+                                _module_.trigger('change-admin',$option.data('aid'),$active.data('aid'),$active.find('.group-name').text());
+
+                                $active.data('aid', $option.data('aid'));
+
                                 $groupAdmin.text($option.text());
                                 $option.remove();
                                 $rs.alert().success('更换管理员成功', 400);
@@ -581,7 +566,8 @@
                                 'after': function (el) {
                                     $.data(el[1], 'eid', this.event_id);
                                     return el;
-                                }
+                                },
+                                'attrs' : ['event_name']
                             });
                         },
                         'watch': function ()

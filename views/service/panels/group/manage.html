@@ -5,7 +5,7 @@
 <div class="content">
     <button type="" class="btn btn-default btn-block add">创建部门</button>
 
-    <table class="table text-center table-hover">
+    <table class="table text-center table-hover mount">
         <thead>
             <tr>
                 <td>组名</td>
@@ -14,20 +14,20 @@
             </tr>
         </thead>
         <tbody>
-            <template id="t-empty">
+            <template class="t-empty">
                 <tr class="empty">
                     <td colspan="4">暂无部门</td>
                 </tr>
             </template>
 
-            <template id="t-content">
+            <template class="t-content">
                 <tr>
                     <td class="group-name">{group_name}</td>
                     <td class="group-admin">{group_admin}</td>
                     <td>
                         <span class="actions">
                             <span class="glyphicon glyphicon-pencil" action="rename"></span>
-                            <span class="glyphicon glyphicon-trash" action="delete"></span>
+                            <span class="glyphicon glyphicon-trash" action="remove"></span>
                             <span class="glyphicon glyphicon-user" action="changeAdmin"></span>
                             <span class="glyphicon glyphicon-th-list" action="event"></span>
                         </span>
@@ -69,11 +69,12 @@
 
                     <div class="event-mount">
                         <ul>
-                            <template id="t-event-empty">
-                                <li class="empty">全部事件已经绑定</li>
+
+                            <template class="t-empty">
+                                <li class="empty list-group-item list-group-item-danger">全部事件已经绑定</li>
                             </template>
 
-                            <template id="t-event-content">
+                            <template class="t-content">
                                 <li class="list-group-item">{event_name}
                                     <span class="glyphicon glyphicon-ok"></span>
                                 </li>

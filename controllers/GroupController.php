@@ -9,35 +9,40 @@
 namespace app\controllers;
 
 use app\filters\CustomResponseFilter;
-use app\filters\LoginFilter;
-use app\filters\RoleFilters;
 use app\formatter\Status;
 use app\models\Account;
 use app\models\Allocation;
 use app\models\Event;
 use app\models\Group;
-use yii\base\Exception;
 use yii\web\Controller;
 use app\controllers\RoleController as Role;
+use app\filters\RoleFilters;
 
 class GroupController extends Controller
 {
-	const EVENT_DELETE = 'delete';
-
-
 	public function behaviors()
 	{
 		return [
 			'response' => [
 				'class' => CustomResponseFilter::className(),
 			],
-//			'role' => [
-//				'class' => RoleFilters::className(),
-//				'rules' => [
-//					'get-all' => Role::SYSTEM_ADMIN,
-//					'add' => Role::SYSTEM_ADMIN,
-//				]
-//			],
+			'role' => [
+				'class' => RoleFilters::className(),
+				'rules' => [
+					'get-all' => Role::SYSTEM_ADMIN,
+					'add' => Role::SYSTEM_ADMIN,
+					'rename' => Role::SYSTEM_ADMIN,
+					'delete' => Role::SYSTEM_ADMIN,
+					'change-task-mode' => Role::GROUP_ADMIN,
+					'get-setting' => Role::GROUP_ADMIN,
+					'change-admin' => Role::SYSTEM_ADMIN,
+					'add-member' => Role::GROUP_ADMIN,
+					'delete-member' => Role::GROUP_ADMIN,
+					'get-event' => Role::SYSTEM_ADMIN,
+					'get-create-rule-info' => Role::GROUP_ADMIN,
+					'get-create-data' => Role::SYSTEM_ADMIN
+				]
+			],
 //			'login' => [
 //				'class' => LoginFilter::className()
 //			]
@@ -76,11 +81,6 @@ class GroupController extends Controller
 		return Group::changeTaskMode(static::getGroup(),$mode);
 	}
 
-	public function actionGetTaskMode()
-	{
-		return [Status::SUCCESS,Group::getTaskMode(static::getGroup())];
-	}
-
 	public static function getGroup()
 	{
 		return \Yii::$app->getSession()->get('group');
@@ -98,7 +98,7 @@ class GroupController extends Controller
 		$assignsMap = [];
 
 		$setting['mode'] = Group::getTaskMode($group);
-		$setting['member'] = Account::getMember($group,false);
+		$setting['member'] = Account::getMember($group);
 		$setting['noAssign'] = Account::getNoAssign();
 
 		if($setting['mode'] == '2' || $setting['mode'] == '4')
@@ -135,32 +135,24 @@ class GroupController extends Controller
 
 	public function actionRemoveEvent($groupId,$eventId)
 	{
-		return (string) Group::removeEvent($groupId,$eventId);
+		return (string) Group::removeGroupEvent($groupId,$eventId);
 	}
 
 	public function actionAddEvent($groupId,$eventId)
 	{
-		return Group::addEvent($groupId,$eventId);
+		return Group::addGroupEvent($groupId,$eventId);
 	}
 
-	public function actionAddMember($aid,$group = NULL)
+	public function actionAddMember($accountId)
 	{
-		if(!Account::checkAid($aid) || !Account::isNoAssign($aid)) return Status::INVALID_ARGS;
-		if(Role::is(Role::GROUP_ADMIN))
-		{
-			$group = \Yii::$app->getSession()->get('group');
-		}else{
-			if(!Group::checkGid($group) || !Group::isExist($group)) return Status::INVALID_ARGS;
-		}
-		Account::changeGroup($aid,$group);
-		return Status::SUCCESS;
+		if(!Account::checkAid($accountId) || !Account::isNoAssign($accountId)) return Status::INVALID_ARGS;
+		return Account::changeGroup($accountId,GroupController::getGroup());
 	}
 
 	public function actionDeleteMember($aid)
 	{
 		if(!Account::checkAid($aid) || !Account::isExist($aid)) return Status::INVALID_ARGS;
-		Account::changeGroup($aid,'g_noAssign');
-		return Status::SUCCESS;
+		return Account::changeGroup($aid,'g_noAssign');
 	}
 
 	public function actionGetEvent($groupId)
@@ -199,7 +191,7 @@ class GroupController extends Controller
 			}
 		}
 
-		foreach (Account::getMember($group,true) as $account)
+		foreach (Account::getMember($group) as $account)
 		{
 			if(!in_array($account['account_id'],$bindMember))
 			{

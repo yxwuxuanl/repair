@@ -2,32 +2,69 @@
  * Created by 2m on 2016/11/17.
  */
 
-$(function (global) {
+(function (global) {
     defines['validate'] = 'script/jquery.validate.min.js';
+
     var    
         $rs = {
-            'eventHanlders': {},
+            'eventHandle': {},
 
             'on': function (m, name, actions, func) {
-                if (!(m in this.eventHanlders)) {
-                    this.eventHanlders[m] = {};
+                if (!(m in this.eventHandle)) {
+                    this.eventHandle[m] = {};
                 }
 
-                if (!(name in this.eventHanlders[m])) {
-                    this.eventHanlders[m][name] = [];
+                if (!(name in this.eventHandle[m])) {
+                    this.eventHandle[m][name] = [];
                 }
 
                 if (func) {
-                    this.eventHanlders[m][name].push([actions, func]);
+                    // 事件处理器为 [Object,Method]
+                    this.eventHandle[m][name].push([actions, func]);
                 } else {
-                    this.eventHanlders[m][name].push(actions);
+                    // 事件处理器为 Object:Method
+                    this.eventHandle[m][name].push(actions);
                 }
             },
 
-            'trigger': function (m, name, params) {
-                if (!(m in this.eventHanlders) || !(name in this.eventHanlders[m])) return;
+            'bind': function (m, handle)
+            {
+                for(var i = 0 ; i < handle.length ; i++)
+                {
+                    var
+                        moduleName,events;
+
+                    if(handle[i].length > 1)
+                    {
+                        moduleName = handle[i][0],
+                        events = handle[i][1];
+                    }else{
+                        moduleName = m._module_name_;
+                        events = handle[i][0]
+                    }
+
+                    for(var eventName in events)
+                    {
+                        var
+                            chuck = events[eventName];
+
+                        if(typeof chuck == 'function')
+                        {
+                            $rs.on(moduleName,eventName,m,chuck);
+                        }else{
+                            for(var j = 0 ; j < chuck.length ; j++)
+                            {
+                                $rs.on(moduleName, eventName, m, chuck[j]);
+                            }
+                        }
+                    }
+                }
+            },
+
+            'trigger': function (m, name) {
+                if (!(m in this.eventHandle) || !(name in this.eventHandle[m])) return;
                 var
-                    defines = $rs.eventHanlders[m][name];
+                    defines = $rs.eventHandle[m][name];
 
                 for (var i = 0, len = defines.length; i < len; i++) {
 
@@ -53,10 +90,13 @@ $(function (global) {
                     
                     if (!(m_['_module_name_'] in $rs.contain.$contains)) continue;
 
+                    var
+                        params = [].slice.call(arguments,2);
+
                     if (typeof handle == 'string') {
-                        m_[handle].apply(m_, params);
+                        m_[handle].apply(m_, params[0]);
                     } else {
-                        handle.apply(m_, params);
+                        handle.apply(m_, params[0]);
                     }
                 }
             },
@@ -176,24 +216,28 @@ $(function (global) {
         }
     
     $rs.alert = function () {
-        
         var
             classs = ['error-alert', 'success-alert'],
             args, modal, $modal;
         
-        if (arguments.length == 0) {
+        if (!arguments.length) {
             return {
                 'success': function () {
-                    $rs.alert.apply(null, [1, '操作成功'].concat($rs.toArray(arguments)));
+                    $rs.alert.apply(null, [1, '操作成功'].concat([].slice.call(arguments,0)));
                 },
                 'error': function () {
-                    $rs.alert.apply(null, [0, '操作失败'].concat($rs.toArray(arguments)));
+                    $rs.alert.apply(null, [0, '操作失败'].concat([].slice.call(arguments,0)));
                 },
             }
         }
 
         if (!('_alert_' in $rs)) {
-            $rs['_alert_'] = modal = new $rs.modal('#alert')
+            $rs['_alert_'] = modal = new $rs.modal('#alert',{
+                'close' : function()
+                {
+                    this.$modal.removeClass('error-alert success-alert');
+                }
+            })
         }
             
         modal = modal || $rs._alert_;
@@ -222,28 +266,18 @@ $(function (global) {
             }
         })
 
+        args.level !== null && $modal.addClass(classs[args.level]);
 
-        if (args.level !== null) {
-            $modal.addClass(classs[args.level]);
-        }
+        args.callback && modal.bind('closen', args.callback, true);
 
-        if (args.callback) {
-            modal.bind('closen', args.callback, true);
-        }
+        args.autoClose && modal.close(args.autoClose);
 
         modal.setTitle(args.title).setContent(args.content);
 
-
-        if (args.autoClose) {
-            modal.close(args.autoClose);
-        }
-
         modal.show();
-
     };
 
     $rs.modal = function (modal, init, extend) {
-
         if (typeof modal == 'string') {
             modal = $(modal);
         } else if (modal instanceof jQuery) {
@@ -255,23 +289,13 @@ $(function (global) {
         this.$modal = modal;
         this.$title = modal.find('.modal-title');
         this.$body = modal.find('.modal-body');
-        var
-            _this = this;
 
-        if (typeof extend == 'object') {
-            for (var key in extend) {
-                this[key] = extend[key];
-            }
-        }
+        extend && this.extend(extend);
 
         if (typeof init == 'function') {
-
             init.call(this);
-
         } else if (typeof init == 'object') {
-
             for (var eventName in init) {
-
                 if (eventName == 'init') {
                     init[eventName].call(this);
                 } else {
@@ -282,7 +306,6 @@ $(function (global) {
     };
 
     $rs.modal.prototype = {
-
         'eventMap': {
             'shown': 'shown.bs.modal',
             'show': 'show.bs.modal',
@@ -291,7 +314,6 @@ $(function (global) {
         },
 
         'extend': function (name, content) {
-            
             if (typeof name == 'object') {
                 for (var i in name) {
                     this.extend(i, name[i]);
@@ -304,10 +326,8 @@ $(function (global) {
         },
 
         'show': function () {
-
-            if (arguments.length == 0) {
-                this.$modal.modal('show');
-                return;
+            if (!arguments.length) {
+                return this.$modal.modal('show');
             }
 
             var
@@ -332,24 +352,14 @@ $(function (global) {
             )
 
             this.setTitle(args.title).setContent(args.content);
-
-            if (args.autoClose) {
-
-                this.close(args.autoClose);
-
-            }
-
+            args.autoClose && this.close(args.autoClose);
             this.$modal.modal('show');
-
             return this;
         },
 
         'close': function (timeout) {
-
             if (timeout) {
-
                 this.bind('shown', function () {
-
                     var
                         $modal = this.$modal;
 
@@ -358,28 +368,23 @@ $(function (global) {
                     }, timeout)
 
                 }, true);
-
             } else {
-
                 this.$modal.modal('hide');
-
             }
-
             return this;
         },
 
         'bind': function (eventName, handler, one) {
-            
             var
-                _this = this;
+                self = this;
 
             if (one) {
                 this.$modal.one(this.eventMap[eventName], function () {
-                    handler.call(_this);
+                    handler.call(self);
                 });
             } else {
                 this.$modal.on(this.eventMap[eventName], function () {
-                    handler.call(_this);
+                    handler.call(self);
                 });
             }
 
@@ -471,118 +476,6 @@ $(function (global) {
         })
     };
 
-    $rs.toArray = function (args) {
-        return Array.prototype.slice.call(args, 0);
-    };
-
-    $rs.template = function (text, params) {
-
-        for (var key in params) {
-            text = text.replace(new RegExp('{' + key + '}', 'g'), params[key]);
-        }
-
-        return text;
-    };
-
-    $rs.tag = function () {
-        var
-            tag_template = '<{tag} {attributes}>{content}</{tag}>',
-            attr_template = '{attr}="{value}"',
-            t = $rs.template,
-            attrs = [],
-            contents = [],
-            attr_func,
-            args,
-            tag;
-        
-        args = $rs.args(arguments, {
-            'tagName': function (value) {
-                return typeof value == 'string';
-            },
-            'options': [
-                function (value) {
-                    if (typeof value == 'string') {
-                        return value.slice(0, 1) == '.' || value.slice(0, 1) == '#';
-                    }
-                    return typeof value == 'object';
-                }, {}
-            ],
-            'content': [
-                function (value) {
-                    return typeof value == 'string' || $.isArray(value);
-                }, null
-            ],
-            'encap': function (value) {
-                return typeof value == 'boolean';
-            }
-        })
-
-        attr_func = function (attr) {
-            if ($.isArray(attr)) {
-
-                for (var i = 0, len = attr.length; i < len; i++) {
-                    attr_func(attr[i]);
-                }
-
-            } else if (typeof attr == 'object') {
-
-                for (var key in attr) {
-                    attrs.push(t(attr_template, { 'attr': key, 'value': attr[key] }));
-                }
-
-            } else if (typeof attr == 'string') {
-                if (attr.slice(0, 1) == '.') {
-
-                    attrs.push(t(attr_template, { 'attr': 'class', 'value': attr.slice(1) }));
-
-                } else if (attr.slice(0, 1) == '#') {
-
-                    attrs.push(t(attr_template, { 'attr': 'id', 'value': attr.slice(1) }));
-
-                } else {
-                    attrs.push(attr);
-                }
-            }
-        }
-
-        attr_func(args.options);
-
-        if (args.content) {
-            if (typeof args.content == 'string') {
-
-                contents.push(args.content);
-
-            } else {
-
-                for (var i = 0, len = args.content.length; i < len; i++) {
-                    
-                    if (typeof args.content[i] == 'string') {
-
-                        contents.push(args.content[i]);
-
-                    } else if ($.isArray(args.content[i])) {
-
-                        contents.push($rs.tag.apply(null, args.content[i]));
-
-                    }
-
-                }
-            }
-        }
-
-        tag = t(tag_template, {
-            'tag': args.tagName,
-            'attributes': attrs.join(' '),
-            'content': contents.join('')
-        });
-
-        if (args.encap) {
-            return $(tag.join(''));
-        }
-
-        return tag;
-    };
-
     $rs.args = function (arguments_, params) {
         var
             args = {}, defaultValue, func;
@@ -598,7 +491,7 @@ $(function (global) {
 
             if (arguments_.length) {
                 if (func.call(null, arguments_[0])) {
-                    args[name] = Array.prototype.shift.call(arguments_);
+                    args[name] = [].shift.call(arguments_);
                 } else {
                     args[name] = defaultValue;
                 }
@@ -658,7 +551,6 @@ $(function (global) {
     });
     
     $rs.$bootstraps.push(function () {
-
         $('button.submit').click(function () {
             $(this).parent().parent().submit();
         });
@@ -678,19 +570,28 @@ $(function (global) {
     $rs.render = function (_config_) {
         var
             frag = document.createDocumentFragment(),
-            config = {
-                '$temp': _config_['$temp'],
-                'clear': ('clear' in _config_) ? _config_.clear : false,
-                'after': ('after' in _config_) ? _config_.after : null,
-                'before': ('before' in _config_) ? _config_.before : null,
-                'filter': ('filter' in _config_) ? _config_.filter : null,
-                'data': ('data' in _config_) ? _config_.data : null
-            };
-        
+            config;
+
+        config = {
+            '$temp': _config_['$temp'],
+            'clear': ('clear' in _config_) ? _config_.clear : false,
+            'after': ('after' in _config_) ? _config_.after : null,
+            'before': ('before' in _config_) ? _config_.before : null,
+            'filter': ('filter' in _config_) ? _config_.filter : null,
+            'data': ('data' in _config_) ? _config_.data : null,
+            'attrs' : ('attrs' in _config_) ? _config_.attrs : null
+        };
+            
         config.temp = _config_.temp || config.$temp[0].innerHTML;
         config.$mount = _config_['$mount'] || config.$temp.parent();
-
-        config.before && config.before.call(config);
+        
+        if(config.before)
+        {
+            if(config.before.call(config) === false)
+            {
+                return null;
+            }
+        }
 
         // 是否清空节点
         config.clear && config.$mount.html('');
@@ -707,19 +608,27 @@ $(function (global) {
 
         for (var i = 0, len = config.data.length; i < len; i++) {
             var
-                chunk = config.data[i],
+                chuck = config.data[i],
                 el = config.temp;
 
-            config.filter && config.filter.call(chunk);
+            config.filter && config.filter.call(chuck);
 
-            for (var key in chunk) {
-                el = el.replace(new RegExp('{' + key + '}', 'g'), chunk[key]);
+            if(config.attrs)
+            {
+                for (var index in config.attrs)
+                {
+                    el = el.replace(new RegExp('{' + config.attrs[index] + '}', 'g'), chuck[config.attrs[index]]);
+                }
+            }else{
+                for (var key in chuck) {
+                    el = el.replace(new RegExp('{' + key + '}', 'g'), chuck[key]);
+                }
             }
 
             el = $.parseHTML(el);
 
             if (config.after) {
-                el = config.after.call(chunk, el);
+                el = config.after.call(chuck, el);
             }
 
             for (var j = 0, ellen = el.length; j < ellen; j++) {
@@ -732,7 +641,6 @@ $(function (global) {
     
     $rs.watcher = {
         'define': function (key, value, changeHandle) {
-
             if (typeof value == 'function') {
                 changeHandle = value;
                 value = null;
@@ -774,13 +682,13 @@ $(function (global) {
             var
                 oldValue = this.get(key);
 
-            this.change(key, oldValue + 1, Array.prototype.slice.call(arguments, 1));
+            this.change(key, oldValue + 1, [].slice.call(arguments, 1));
         },
         'sub': function (key) {
             var
                 oldValue = this.get(key);
 
-            this.change(key, oldValue - 1, Array.prototype.slice.call(arguments, 1));
+            this.change(key, oldValue - 1, [].slice.call(arguments, 1));
         }
     };
 
@@ -798,15 +706,18 @@ $(function (global) {
         },
         'trigger': function (event)
         {
-            $rs.trigger(this._module_name_, event, Array.prototype.slice.call(arguments, 1));
+            $rs.trigger(this._module_name_, event, [].slice.call(arguments, 1));
         }   , 
-
+        'bind' : function(events)
+        {
+            $rs.bind(this,events);
+        }
     };    
     
     $rs.bootstrap();
     global.$rs = $rs;
 
-}(window));
+})(window);
 
 function C()
 {

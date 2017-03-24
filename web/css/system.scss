@@ -48,20 +48,30 @@
   {
     ul
     {
-      padding-left: 0px;
+      padding-left: 0;
       height: 200px;
       overflow: scroll;
     }
 
-    .list-group-item
+    li
     {
       display: inline-block;
-      width: 50%;
+      width: 30%;
 
       &:hover .glyphicon
       {
         display: inline;
       }
+    }
+
+    .empty
+    {
+      width: 80%;
+      font-size:1.2em;
+      line-height: 1.5em;
+      text-align: center;
+      display: block;
+      margin: 10px auto;
     }
 
     .glyphicon

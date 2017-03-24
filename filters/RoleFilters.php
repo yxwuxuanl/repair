@@ -10,7 +10,6 @@ namespace app\filters;
 
 use yii\base\ActionFilter;
 use app\controllers\RoleController as Role;
-use yii\helpers\ArrayHelper;
 
 class RoleFilters extends ActionFilter
 {
