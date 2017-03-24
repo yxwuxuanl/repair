@@ -16,15 +16,25 @@
                     }
                 });
 
-                $rs.ajax('account/get-all').done(function (response) {
-                    accountManage.render(response.content);
-                }).fail(function (response) {
-                    $rs.alert().error('数据获取失败');
-                });
-                
                 this.watch();
                 this.bind(this.events);
             },
+
+            '_run_' : function()
+            {
+                if(this.reload)
+                {
+                    $rs.ajax('account/get-all').done(function (response) {
+                        accountManage.render(response.content);
+                    }).fail(function (response) {
+                        $rs.alert().error('数据获取失败');
+                    });
+
+                    this.reload = false;
+                }
+            },
+
+            'reload' : true,
 
             'render' : function(data)
             {
@@ -38,6 +48,9 @@
                                 accountManage.watcher().change('accounts', 0, this.$mount);
                                 return false;
                             }
+
+                            this.$mount.find('tr').remove();
+
                             accountManage.watcher().change('accounts', this.data.length, this.$mount);
                         }else{
                             accountManage.watcher().plus('accounts',this.$mount);
@@ -69,116 +82,34 @@
 
             'events' : [
                 ['group-manage',{
-                    'remove' : [
-                        function(groupId){
-                            this.$panel.find('tr').each(function(){
-                                if($.data(this,'gid') == groupId)
-                                {
-                                    $(this).find('.group-name').text('未分配');
+                    'remove': function () {
+                        this.reload = true;
 
-                                    if ($.data(this, 'role') != 'normal') {
-                                        $(this).find('.role').text('普通账户');
-                                    }
-                                }
-                            });
-                        },
-                        function(groupId)
-                        {
-                            if('_add_' in this.modals)
-                            {
-                                var
-                                    $select = this.modals._add_.$body.find('select');
-
-                                $select.find('option').each(function(){
-                                    if($.data(this,'gid') == groupId)
-                                    {
-                                        $(this).remove();
-                                        return false;
-                                    }
-                                })
-                            }
+                        if ('_add_' in this.modals) {
+                            this.modals._add_.reload = true;
                         }
-                    ],
-                    'rename' : [
-                        function(groupId,groupName)
-                        {
-                            this.$panel.find('tr').each(function(){
-                                if($.data(this,'gid') == groupId)
-                                {
-                                    $(this).find('.group-name').text(groupName);
-                                }
-                            });
+                    },
+                    'rename': function () {
+                        this.reload = true;
 
-                            if('_add_' in this.modals)
-                            {
-                                var
-                                    $select = this.modals._add_.$body.find('select');
-
-                                $select.find('option').each(function(){
-                                    if ($.data(this, 'gid') == groupId) {
-                                        $(this).text(groupName);
-                                        return false;
-                                    }
-                                });
-                            }
+                        if ('_add_' in this.modals) {
+                            this.modals._add_.reload = true;
                         }
-                    ],
-                    'change-admin' : [
-                        function($new,old,groupName)
-                        {
-                            if(old)
-                            {
-                                accountManage.$panel.find('tr').each(function(){
-                                    if($.data(this,'aid') == old)
-                                    {
-                                        $(this).find('.role').text('普通账户');
-                                        return false;
-                                    }
-                                });
-                            }
-                        },
-                        function($new,old,groupName)
-                        {
-                            accountManage.$panel.find('tr').each(function () {
-                                if($.data(this,'aid') == $new)
-                                {  
-                                    $(this).find('.role').text('部门管理员').end().find('.group-name').text(groupName);
-                                    return false;
-                                }
-                            })
-                        }
-                    ],
-                    'add' : [
-                        function(groupName,groupId,accountId)
-                        {
-                            if('_add_' in this.modals)
-                            {
-                                this.modals._add_.renderGroup({
-                                    'group_id' : groupId,
-                                    'group_name' : groupName
-                                });
-                            }
-                        },
+                    },
+                    'change-admin': function () {
+                        this.reload = true;
 
-                        function(groupName,groupId,accountId)
-                        {
-                            if(accountId)
-                            {
-                                accountManage.$panel.find('tr').each(function(){
-                                    if($.data(this,'aid') == accountId)
-                                    {
-                                        $(this)
-                                            .find('.group-name').text(groupName).end()
-                                            .find('.role').text('部门管理员').end()
-                                            .data('gid',groupId).end()
-                                            .data('role','group_admin');
-
-                                        return false;
-                                    }
-                                })
-                            }
+                        if ('_add_' in this.modals) {
+                            this.modals._add_.reload = true;
                         }
-                    ]
+                    },
+                    'add': function () {
+                        this.reload = true;
+
+                        if ('_add_' in this.modals) {
+                            this.modals._add_.reload = true;
+                        }
+                    }
                 }]
             ],
 
@@ -259,14 +190,24 @@
                                 event.preventDefault();
                                 $(this).valid() && self.post($(this));
                             });
+                        },
+                        'show' : function()
+                        {
+                            if(this.reload)
+                            {
+                                var
+                                    self = this;
 
-                            $rs.ajax('group/get-all', {
-                                'includeAdmin': 0
-                            }).done(function (response) {
-                                self.renderGroup(response.content);
-                            }).fail(function (response) {
-                                $rs.alert().error('数据获取失败 <br/>' + response.describe);
-                            });
+                                $rs.ajax('group/get-all', {
+                                    'includeAdmin': 0
+                                }).done(function (response) {
+                                    self.renderGroup(response.content);
+                                }).fail(function (response) {
+                                    $rs.alert().error('数据获取失败 <br/>' + response.describe);
+                                });
+
+                                this.reload = false;
+                            }
                         },
                         'close': function ()
                         {
@@ -276,6 +217,7 @@
                     };
 
                     extend = {
+                        'reload' : true,
                         'post': function ($form)
                         {
                             var
@@ -318,11 +260,16 @@
                                 $body = this.$body;    
 
                             $rs.render({
-                                '$temp': $('.option', $body),
+                                'temp': '<option>{group_name}</option>',
+                                '$mount' : $body.find('select'),
                                 'data': data,
                                 'after': function (el) {
-                                    $.data(el[1], 'gid', this.group_id);
+                                    $.data(el[0], 'gid', this.group_id);
                                     return el;
+                                },
+                                'before' : function()
+                                {
+                                    this.$mount.html('<option>不分配</option>');
                                 }
                             });
                         }

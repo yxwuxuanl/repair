@@ -14,36 +14,26 @@
                 $rs.alert().error('数据获取失败 <br/>' + response.describe);
             });
 
-            report.validateForm();
+            this.validateForm();
         },
 
         'watch': function ()
         {
             this.$panel.find('#parent-zone').change(function () {
                 var
-                    $option = $(this).find('option:selected');
+                    $option = $(this).find('option:selected'),
+                    zid = $option.data('zid');
                 
-                if ($option.val() == '')
+                if(!zid)
                 {
-                    var
-                        $children = $('#children-zone'),
-                        $event = $('#event');
-                    
-                    $children.val('');
-                    $children.find('option:gt(0)').remove();
-
-                    $event.val('');
-                    $event.find('option:gt(0)').remove();
-
-                    report.renderCustom({});
-
+                    report.resetChildren();
                     return;
-                }    
+                }
 
                 $rs.ajax('report/get-info', {
-                    'zoneId': $option.data('zid')
+                    'zoneId': zid
                 }).done(function (response) {
-                    report.renderZone(response.content.childZone,'children-zone');
+                    report.renderZone(response.content.childZone,'children-zone',true);
                     report.renderEvent(response.content.events);
                     report.renderCustom(response.content.custom || {});
                 });
@@ -62,6 +52,23 @@
                 }    
             })
         }   ,
+
+        'resetChildren' : function()
+        {
+            $('#children-zone',report.$panel).html('<option value="">请选择区域</option>');
+            report.resetEvent();
+            report.resetCustom();
+        },
+
+        'resetEvent' : function()
+        {
+            $('#event', report.$panel).html('<option value="">请选择事件</option>');
+        },
+
+        'resetCustom' : function()
+        {
+            $('#custom-label',report.$panel).hide();
+        },
 
         'post': function ($form)
         {
@@ -185,87 +192,64 @@
             $rs.ajax('report/get-row', {
                 'stuNumber' : stuNumber
             }).done(function (response) {
-                if (response.content.length < 1)
+                if (!response.content.length)
                 {
-                    return $rs.alert().error('暂无报修记录');
+                    return $rs.alert().error('无报修记录');
                 }    
 
-                var
-                    status = {
-                        '0': '已提交',
-                        '1': '正在处理',
-                        '2': '已完成'
-                    },
-                    template = $rs.template,
-                    data = response.content,
-                    $mount = report.$panel.find('#my-report'),
-                    $ul = $mount.find('ul'),
-                    li;
-                    
-                li = $ul.html();
-                $ul.detach().html('');
+                $rs.render({
+                    '$temp': $('.t-content',report.$panel),
+                    'data' : response.content,
+                    'filter' : function()
+                    {
+                        if(this.status === null)
+                        {
+                            this.status = '已提交';
+                        }else if(this.status == 1)
+                        {
+                            this.status = '正在处理';
+                        }else{
+                            this.status = '已完成';
+                        }
 
-                for (var i = 0, len = data.length; i < len; i++)
-                {
-                    var
-                        $li = $(template(li, {
-                            'time': data[i]['post_time'],
-                            'zone': data[i]['zone'] + ' ' + data[i]['custom'],
-                            'event': data[i]['event'],
-                            'status': data[i]['status'] ? status[data[i]['status']] : '已提交',
-                        }));
-                     
-                    $ul.append($li);
-                }    
+                        if(this.custom === null)
+                        {
+                            this.custom = '';
+                        }
+                    }
+                });
 
-                $mount.find('.login').hide();
-                $mount.append($ul);
-                $mount.find('.report-row').show();
+                $('#my-report',report.$panel).find('.login').hide().end().find('.report-row').show();
             })
         }   , 
 
         'renderZone': function (data,mount,clear)
         {
-            var
-                $mount = this.$panel.find('.' + mount + '-mount'),
-                $select = $mount.find('select').detach(),
-                template = $rs.template,
-                option = '<option value="1">{text}</option>';
-            
-            $select.find('option:gt(0)').remove();
-
-            for (var i = 0, len = data.length; i < len; i++)
-            {
-                var
-                    $option = $(template(option, { 'text': data[i]['zone_name'] }));
-                
-                $option.data('zid', data[i]['zone_id']);
-                $select.append($option);
-            }    
-
-            $mount.append($select);
+            $rs.render({
+                'temp' : '<option value="1">{zone_name}</option>',
+                '$mount' : $('#' + mount,report.$panel),
+                'data' : data,
+                'clear' : clear,
+                'after' : function(el)
+                {
+                    $.data(el[0],'zid',this.zone_id);
+                    return el;
+                }
+            })
         },
 
         'renderEvent': function (data)
         {
-            var
-                $mount = this.$panel.find('.event-mount'),
-                $select = $mount.find('select').detach(),
-                template = $rs.template,
-                option = '<option value="1">{text}</option>';
-            
-            $select.find('option:gt(0)').remove();
-
-            for (var i = 0, len = data.length; i < len; i++)
-            {
-                var
-                    $option = $(template(option, { 'text': data[i]['event_name'] }));
-                
-                $option.data('eid', data[i]['event_id']);
-                $select.append($option);
-            }    
-
-            $mount.append($select);
+            $rs.render({
+                'temp': '<option value="1">{event_name}</option>',
+                '$mount': $('#event', report.$panel),
+                'data': data,
+                'clear' : true,
+                'after': function (el) {
+                    $.data(el[0], 'eid', this.event_id);
+                    return el;
+                }
+            })
         },
 
         'renderCustom': function (data)

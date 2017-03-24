@@ -5,20 +5,21 @@
             {
                 this.watcher().define('parent', 0,
                     function (old, value, $mount) {
-                        if (value >= 1) {
-                            if (old == 0) {
+                        if (value) {
+                            if (!old) {
                                 $mount.find('.empty').remove();
                             }
                         } else {
                             $rs.render({
-                                '$temp': $('#t-empty', zone.$panel)
+                                '$temp': $('.t-parent-empty', $mount),
+                                '$mount' : $mount
                             });
                         }
                     }
                 );
 
                 this.watcher().define('subszone', {}, function (old, _new_, $mount) { 
-                    if (_new_ >= 1)
+                    if (_new_)
                     {
                         if (!old)
                         {
@@ -26,55 +27,65 @@
                         }    
                     } else {
                         $rs.render({
-                            '$temp': $('#t-children-empty', zone.$panel),
+                            '$temp': $('.t-children-empty', zone.$panel),
                             '$mount': $mount
                         });
                     }
                 });
 
-                $rs.ajax('zone/get-parent').done(function (response) {
-                    var
-                        data = response.content;
-                    
-                    if (data.length > 0)
-                    {
-                        $rs.render({
-                            '$temp': $('#t-parent', zone.$panel),
-                            'data': data,
-                            'before': function () {
-                                zone.watcher().change('parent', this.data.length, this.$mount);
-                            },
-                            'after': function (el) {
-                                $.data(el[1], 'zid', this.zone_id);
-                                return el;
-                            }
-                        });
-                    } else {
-                        zone.watcher().change('parent', 0);
-                    }
-
+                $rs.ajax('zone/get-parent').done(function (response) {                    
+                    zone.render(response.content);
                     zone.watch();
+                    zone.bind(zone.events);
                 });
-                this.on('system-event', 'deleteEvent', '_deleteEvent_');
+                
             },
 
-            '_deleteEvent_': function (eventId)
+            'render' : function(data)
             {
-                if (!('_event_' in this.modals)) return;
-
-                var
-                    $mount = this.modals._event_.$body;
-                
-                $mount.find('li').each(function () {
-                    var
-                        $li = $(this);
-                    
-                    if ($li.data('eid') == eventId) {
-                        $li.remove();
-                        return false;
+                $rs.render({
+                    '$temp': $('.t-parent-content',zone.$panel),
+                    'data' : data,
+                    'before' : function()
+                    {
+                        if($.isArray(this.data))
+                        {
+                            if(this.data.length)
+                            {
+                                zone.watcher().change('parent',this.data.length,this.$mount);
+                            }else{
+                                zone.watcher().change('parent',0,this.$mount);
+                                return false;
+                            }
+                        }else{
+                            zone.watcher().plus('parent',this.$mount);
+                        }
+                    },
+                    'after' : function(el)
+                    {
+                        $.data(el[1],'zid',this.zone_id);
+                        return el;
                     }
                 })
-            }   ,
+            },
+
+            events : [
+                ['system-event',{
+                    'add' : function()
+                    {
+                        if('_event_' in this.modals)
+                        {
+                            this.modals._event_.last = null;
+                        }
+                    },
+                    'remove' : function()
+                    {
+                        if ('_event_' in this.modals) {
+                            this.modals._event_.last = null;
+                        }
+                    }
+                }]
+            ],
 
             'watch': function ()
             {
@@ -100,14 +111,12 @@
                 var
                     $mount = $target.next();
 
-                // 如果已经展开则缩回
                 if ($mount.hasClass('expand'))
                 {
                     return $mount.removeClass('expand').css({ 'display': 'none' });
                 }
 
                 if (!$mount.data('IS_LOAD')) {
-                    // 如果没有装载数据
                     var
                         zoneId = $target.data('zid');
 
@@ -119,23 +128,7 @@
 
                         $mount.data('IS_LOAD', true);
                         
-                        if (data.length > 0)
-                        {
-                            $rs.render({
-                                '$temp': $('#t-children', zone.$panel),
-                                '$mount': $mount.find('ul'),
-                                'data': data,
-                                'before': function () {
-                                    zone.watcher().change('subszone.' + (zoneId + '').slice(0, 2), this.data.length, this.$mount);
-                                },
-                                'after': function (el) {
-                                    $.data(el[1], 'zid', this.zone_id);
-                                    return el;
-                                }
-                            });
-                        } else {
-                            zone.watcher().change('subszone.' + (zoneId + '').slice(0, 2), 0, $mount.find('ul'));
-                        }
+                        zone.renderChild(data,$mount,zoneId);
 
                         zone.showChildren($target);
                     });
@@ -143,6 +136,41 @@
                     $mount.addClass('expand').css({ 'display': 'block' });
                 }
             }, 
+
+            'renderChild':function(data,$mount,zid)
+            {
+                var
+                    watcherKey = 'subszone.' + String(zid).slice(0,2),
+                    $ul = $mount.find('ul');
+
+                $rs.render({
+                    '$temp': $('.t-children-content',zone.$panel),
+                    '$mount': $ul,
+                    'data' : data,
+                    'attrs' : ['zone_name'],
+                    'before' : function()
+                    {
+                        if($.isArray(this.data))
+                        {
+                            if(this.data.length)
+                            {
+                                zone.watcher().change(watcherKey,this.data.length,this.$mount);
+                            }else{
+                                zone.watcher().change(watcherKey,0,this.$mount);
+                                return false;
+                            }
+                        }else{
+                            zone.watcher().plus(watcherKey,this.$mount);
+                        }
+                    },
+                    'after' : function(el)
+                    {
+                        $.data(el[1],'zid',this.zone_id);
+                        return el;
+                    }
+                })
+            },
+
             'modals':
             {
                 'input': function (extend)
@@ -223,32 +251,11 @@
                                         
                                         if ($mount.data('IS_LOAD'))
                                         {
-                                            $rs.render({
-                                                '$temp': $('#t-children', zone.$panel),
-                                                'data': [{ 'zone_id': zoneId, 'zone_name': zoneName }],
-                                                '$mount': $mount.find('ul'),
-                                                'after': function (el) {
-                                                    $.data(el[1], 'zid', this.zone_id);
-                                                    return el;
-                                                },
-                                                'before': function () {
-                                                    zone.watcher().plus('subszone.' + (parent + '').slice(0, 2), this.$mount);
-                                                }
-                                            });
+                                            zone.renderChild({ 'zone_id': zoneId, 'zone_name': zoneName },$mount,parent);
                                         }    
 
                                     } else {
-                                        $rs.render({
-                                            '$temp': $('#t-parent', zone.$panel),
-                                            'data': [{ 'zone_id': zoneId, 'zone_name': zoneName }],
-                                            'before': function () {
-                                                zone.watcher().plus('parent', this.$mount);
-                                            },
-                                            'after': function (el) {
-                                                $.data(el[1], 'zid', this.zone_id);
-                                                return el;
-                                            }
-                                        });
+                                        zone.render({ 'zone_id': zoneId, 'zone_name': zoneName });
                                     }
                                         
                                     $rs.alert().success('添加成功', 400);
@@ -439,8 +446,20 @@
                                 },
                                 'before' : function()
                                 {
-                                    this.$mount.find('li').remove();
-                                    zone.watcher().change('events.' + type,this.data.length,this.$mount);
+                                    if($.isArray(this.data))
+                                    {
+                                        if(this.data.length)
+                                        {
+                                            this.$mount.find('li').remove();
+                                            zone.watcher().change('events.' + type, this.data.length, this.$mount);
+                                        }else{
+                                            zone.watcher().change('events.' + type, 0, this.$mount);
+                                            return false;
+                                        }
+                                    }else{
+                                        zone.watcher().plus('events.' + type,$mount);
+                                    }
+
                                 }
                             });
                         },
@@ -556,6 +575,7 @@
                             this.last = $active.data('zid');
 
                             this.setTitle('设置 [' + $active.find('.zone-name').text() + '] 自定义区域');
+
                             $rs.ajax('zone/get-custom', {
                                 'zoneId': $active.data('zid')
                             }).done(function (response) {
@@ -600,7 +620,7 @@
                                 'test': test,
                                 'zoneId': zoneId
                             }).done(function (response) {
-                                $rs.alert().success(response.content, 400);
+                                $rs.alert().success(response.content[0], 400);
                             }).fail(function (response) {
                                 $rs.alert().error(response.describe);
                             });

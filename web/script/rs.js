@@ -196,21 +196,28 @@
                         $rs.runModule(name, init);
                     });
                 } else {
-                    if (!this.contain.has(name)) {
-                        var
-                            module_ = this.$modules[name];
-                            
-                        module_._module_name_ = name;   
+                    var
+                        $module;
 
-                        for (var key in $rs.plugin)
+                    if(this.contain.has(name))
+                    {
+                        $module = this.contain.get(name);
+                    }else{
+                        $module = this.$modules[name];
+
+                        for(var key in $rs.plugin)
                         {
-                            module_[key] = $rs.plugin[key];
-                        }    
+                            $module[key] = $rs.plugin[key];
+                        }
 
-                        this.contain.set(name, module_);
-                        init && init.call(module_);
+                        $module._module_name_ = name;
+
+                        this.contain.set(name,$module);
+                        init && init.call($module);
                         this.contain.init(name);
                     }
+
+                    '_run_' in $module && $module._run_();
                 }
             }
         }

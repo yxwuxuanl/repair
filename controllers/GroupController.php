@@ -98,31 +98,12 @@ class GroupController extends Controller
 		$assignsMap = [];
 
 		$setting['mode'] = Group::getTaskMode($group);
-		$setting['member'] = Account::getMember($group);
+		$setting['member'] = Account::getMember($group,true);
 		$setting['noAssign'] = Account::getNoAssign();
 
 		if($setting['mode'] == '2' || $setting['mode'] == '4')
 		{
 			$setting['rule'] = Allocation::getGroupRule($group);
-
-			foreach($setting['rule'] as $item)
-			{
-				$events[] = $item['event'];
-				$assigns = array_merge($assigns,$item['assign']);
-			}
-
-			foreach (Event::find()->where(['in','event_id',$events])->each() as $item)
-			{
-				$eventMap[$item['event_id']] = $item['event_name'];
-			}
-
-			foreach (Account::find()->where(['in','account_id',$assigns])->each() as $item)
-			{
-				$assignsMap[$item['account_id']] = $item['account_name'];
-			}
-
-			$setting['eventMap'] = $eventMap;
-			$setting['assignsMap'] = $assignsMap;
 		}
 
 		return $setting;
