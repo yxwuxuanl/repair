@@ -6,10 +6,27 @@
                 var
                     self = this;    
                 
+                this.watcher().define('member',{},function(old,$new,$mount){
+                    if($new)
+                    {
+                        if(!old)
+                        {
+                            $mount.find('.empty').remove();
+                        }
+                    }else{
+                        $rs.render({
+                            '$temp' : $('.t-empty',$mount)
+                        });
+                    }
+                });
+
                 $rs.ajax('group/get-setting').done(function (response) {
+
                     self.renderMember(response.content.member, 'in');
                     self.renderMember(response.content.noAssign, 'no-assign');
-                    self.$panel.find('.mode select').val(response.content.mode).data('value', response.content.mode);
+
+                    self.$panel.find('.mode select').val(response.content.mode).data('value', 
+                    response.content.mode);
 
                     if ('rule' in response.content)
                     {
@@ -27,6 +44,8 @@
                         this.modals._addRule_.reload = true; 
                     }
                 });
+
+
             },
 
             '_changeMode_': function (mode)
@@ -38,39 +57,36 @@
                     this.$panel.find('.rule').show();
                 }
             }   , 
-            'renderMember': function (data,mount,insert)
+            'renderMember': function (data,mount)
             {
                 var
-                    $mount = this.$panel.find('.' + mount),
-                    $ul = $mount.find('ul'),
-                    template = $rs.template,
-                    li, icon;
-                
-                if (mount == 'in')
-                {
-                    icon = '<span class="glyphicon glyphicon-trash" action="removeMember"></span>';
-                } else {
-                    icon = '<span class="glyphicon glyphicon-plus" action="addMember"></span>';
-                }
+                    $mount = $('.member .' + mount,groupSetting.$panel).find('ul');
 
-                li = '<li class="list-group-item">{text}' + icon + '</li>';
-                
-                if (!insert)
-                {
-                    $ul = $ul.detach();
-                }    
-                
-                for (var i = 0, len = data.length; i < len; i++)
-                {
-                    var
-                        $li = $(template(li, { 'text': data[i]['account_name'] }));
-                    
-                    $li.data('aid', data[i]['account_id']);
-                    $ul.append($li);
-                }    
-
-                !insert && $mount.append($ul);
-
+                $rs.render({
+                    '$temp' : $('.t-content',$mount),
+                    '$mount' : $mount,
+                    'data' : data,
+                    'after' : function(el)
+                    {
+                        $.data(el[1],'aid',this.account_id);
+                        return el;
+                    },
+                    'before' : function()
+                    {
+                        if($.isArray(this.data))
+                        {
+                            if(this.data.length)
+                            {
+                                groupSetting.watcher().change('member.' + mount,this.data.length,this.$mount);
+                            }else{
+                                groupSetting.watcher().change('member.' + mount,0,this.$mount);
+                                return false;
+                            }
+                        }else{
+                            groupSetting.watcher().plus('member.' + mount,$mount);
+                        }
+                    }
+                });
             },
 
             'modals': {
@@ -166,7 +182,7 @@
                             $rs.ajax('group/add-member', {
                                 'accountId': accountId
                             }).done(function () {
-                                groupSetting.renderMember([{ 'account_id': accountId, 'account_name': $active.text() }], 'in', true);
+                                groupSetting.renderMember({ 'account_id': accountId, 'account_name': $active.text() }, 'in');
                                 $active.remove(); 
                                 $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {
@@ -194,7 +210,7 @@
                             $rs.ajax('account/change-group', {
                                 'accountId': accountId
                             }).done(function () {
-                                groupSetting.renderMember([{ 'account_id': accountId, 'account_name': $active.text() }], 'no-assign', true);
+                                groupSetting.renderMember({ 'account_id': accountId, 'account_name': $active.text() }, 'no-assign');
                                 $active.remove();
                                 self.close();
                                 $rs.alert().success('删除成功', 400);
@@ -278,44 +294,33 @@
                         'renderEvent': function (data)
                         {
                             var
-                                $mount = this.$body.find('.event-mount'),
-                                $select = $mount.find('select').detach(),
-                                template = $rs.template,
-                                option = '<option value="">{text}</option>';
-                            
-                            $select.html('');
-                            
-                            for (var i = 0, len = data.length; i < len; i++)
-                            {
-                                var
-                                    $option = $(template(option, { 'text': data[i]['event_name'] }));
-                                
-                                $option.data('eid', data[i]['event_id']);
-                                $select.append($option);
-                            }    
+                                $select = this.$body.find('select');
 
-                            $mount.append($select);
+                            $rs.render({
+                                'temp' : '<option>{event_name}</option>',
+                                '$mount' : $select,
+                                'data' : data,
+                                'after' : function(el)
+                                {
+                                    $.data(el[0],'eid',this.event_id);
+                                    return el;
+                                }
+                            });
                         },
                         'renderMember': function (data)
                         {
                             var
-                                $mount = this.$body.find('.member-mount'),
-                                $ul = $mount.find('ul').detach(),
-                                template = $rs.template,
-                                li = '<li class="list-group-item">{text} <span class="glyphicon glyphicon-ok"></span> </li>';
-                            
-                            $ul.html('');
-                            
-                            for (var i = 0, len = data.length; i < len; i++)
-                            {
-                                var
-                                    $li = $(template(li, { 'text': data[i]['account_name'] }));
-                                
-                                $li.data('aid', data[i]['account_id']);
-                                $ul.append($li);
-                            }    
+                                $mount = this.$body.find('.member-mount');
 
-                            $mount.append($ul);
+                            $rs.render({
+                                '$temp':$('template',$mount),
+                                'data' : data,
+                                'after' : function(el)
+                                {
+                                    $.data(el[1],'aid',this.account_id);
+                                    return el;
+                                }
+                            });
                         },
                         'watch': function ()
                         {
@@ -331,7 +336,6 @@
                                     $(event.target).toggleClass('select');
                                 }
                             });
-
                         },
                         'post': function ()
                         {
@@ -413,57 +417,26 @@
                    }     
                 });
             },
-            'renderRule': function (data,assignMap,eventMap)
+            'renderRule': function (data)
             {
-                var
-                    $mount = this.$panel.find('.rule table'),
-                    $tbody = $mount.find('tbody').detach(),
-                    template = $rs.template,
-                    tr, map = false;
-                
-                if (typeof assignMap == 'object')
-                {
-                    map = true;
-                }    
-
-                tr = '<tr>' +
-                    '<td class="event-name">{event}</td>' +
-                    '<td class="assign">{assign}</td>' +
-                    '<td>{type}</td>' +
-                    '<td class="remove"><span class="glyphicon glyphicon-trash"></span></td>' +
-                    '</tr>';
-
-                for (var i = 0, len = data.length; i < len; i++)
-                {
-                    var
-                        $tr, assign = '', event, event_id;
-                    
-                    if (map)
+                $rs.render({
+                    '$temp': $('.rule .t-content',groupSetting.$panel),
+                    'data' : data,
+                    'after' : function(el)
                     {
-                        for (var m = 0, mlen = data[i]['assign'].length; m < mlen; m++)
+                        $.data(el[1], 'alid', this.allocation_id);
+                        return el;
+                    },
+                    'filter' : function()
+                    {
+                        if(this.level == 1)
                         {
-                            assign += assignMap[data[i]['assign'][m]] + '<br/>';
-                        }    
-
-                        event = eventMap[data[i]['event']];
-                        event_id = data[i]['event'];
-                    } else {
-                        event = data[i].event;
-                        assign = data[i].assign;
-                        event_id = data[i]['event_id'];
+                            this.level = '普通分配';
+                        }else{
+                            this.level = '固定分配';
+                        }
                     }
-
-                    $tr = $(template(tr, {
-                        'event': event,
-                        'assign': assign,
-                        'type': data[i]['level'] == 1 ? '普通分配' : '固定分配'
-                    }));
-
-                    $tr.data('eid', event_id);
-                    $tbody.append($tr);
-                }    
-
-                $mount.append($tbody); 
+                });
             }    
         };
     

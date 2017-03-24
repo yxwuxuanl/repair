@@ -14,15 +14,24 @@
                     }
                 });
 
-                $rs.ajax('group/get-all').done(function (response) {
-                    _module_.render(response.content);
-                    _module_.watch();
-                }).fail(function (response) {
-                    $rs.alert().error('数据获取失败请刷新后重试');
-                });
-
                 this.bind(this.events);
             },
+
+            '_run_' : function()
+            {
+                if(this.reload)
+                {
+                    $rs.ajax('group/get-all').done(function (response) {
+                        _module_.render(response.content);
+                        _module_.watch();
+                    }).fail(function (response) {
+                        $rs.alert().error('数据获取失败请刷新后重试');
+                    });
+
+                    this.reload = false;
+                }
+            },
+            'reload' : true,
 
             'events' : [
                 [{
@@ -41,57 +50,31 @@
                     ],
                     'change-admin' : function(accountId){
                         if ('_add_' in this.modals) {
-                            var
-                                $select = this.modals._add_.$body.find('select');
-
-                            $select.find('option').each(function(){
-                                if($.data(this,'aid') == accountId)
-                                {
-                                    $(this).remove();
-                                    return false;
-                                }
-                            })
+                            this.modals._add_.reload = true;
+                        }
+                    }
+                }],
+                ['system-event',{
+                    'remove' : function()
+                    {
+                        if ('_add_' in this.modals) {
+                            this.modals._add_.reload = true;
+                        }
+                    },
+                    'add' : function()
+                    {
+                        if ('_add_' in this.modals) {
+                            this.modals._add_.reload = true;
                         }
                     }
                 }],
                 ['account-manage',{
-                    'remove' : function(accountId)
+                    'remove' : function()
                     {
-                        this.$panel.find('tr').each(function(){
-                            if ($.data(this,'aid') == accountId)
-                            {
-                                $.data(this,'aid',null);
-                                $(this).find('.group-admin').text('未指派');
-                                return false;
-                            }
-                        });
+                        this.reload = true;
 
-                        if('_add_' in this.modals)
-                        {
-                            var
-                                $select = this.modals._add_.$body.find('select');
-
-                            $select.find('option').each(function(){
-                                if($.data(this,'aid') == accountId)
-                                {
-                                    $(this).remove();
-                                    return false;
-                                }
-                            });
-                        }
-
-                        if('_changeAdmin_' in this.modals)
-                        {
-                            var
-                                $select = this.modals._changeAdmin_.$body.find('select');
-
-                            $select.find('option').each(function(){
-                                if($.data(this,'aid') == accountId)
-                                {
-                                    $(this).remove();
-                                    return false;
-                                }
-                            })
+                        if ('_add_' in this.modals) {
+                            this.modals._add_.reload = true;
                         }
                     }
                 }]
@@ -106,11 +89,12 @@
                     {
                         if($.isArray(this.data))
                         {
-                            if(this.data.length < 1)
+                            if(!this.data.length)
                             {
                                 _module_.watcher().change('groups',0,this.$mount);
                                 return false;
                             }
+                            this.$mount.find('tr').remove();
                             _module_.watcher().change('groups',this.data.length,this.$mount);
                         }else{
                             _module_.watcher().plus('groups',this.$mount);

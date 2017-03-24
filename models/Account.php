@@ -53,11 +53,12 @@ class Account extends ActiveRecord
             ->asArray()->all();
 	}
 
-	public static function findUser($un)
+	public static function findUser($un,$pwd)
 	{
 		return parent::find()
-		    ->where('`account_name` = :an')
-		    ->params([':an' => $un])
+		    ->where('`account_name`=:an')
+            ->andWhere('password = PASSWORD(:pwd)')
+		    ->params([':an' => $un,':pwd' => $pwd])
             ->asArray()
             ->one();
 	}
@@ -80,7 +81,7 @@ class Account extends ActiveRecord
             ->where('`account_id` = :aid')
             ->andWhere('`account_group` = :noAssign or `account_group`=:gid')
             ->params([':aid' => $accountId,':gid' => $groupId,':noAssign' => Group::G_NO_ASSIGN])
-            ->asArray()->one();
+            ->one();
 
 		if($ar->account_group == $groupId)
 		{
@@ -92,17 +93,23 @@ class Account extends ActiveRecord
 		return $ar->update();
 	}
 
-	public static function getMember($group)
+	public static function getMember($group,$onlyNormal = false)
 	{
 		if(!Group::checkGid($group)) return Status::INVALID_ARGS;
 
-		return parent::find()
+		$ar = parent::find()
 		    ->where('`account_group` = :gid')
             ->params([':gid' => $group])
 		    ->orderBy(['role' => 'desc'])
-		    ->select('`account_id`,`account_name`')
-		    ->asArray()->all();
-	}
+		    ->select('`account_id`,`account_name`');
+
+		if($onlyNormal)
+        {
+            $ar->andWhere('role != :ga',[':ga' => Role::GROUP_ADMIN]);
+        }
+
+        return $ar->asArray()->all();
+    }
 
 	public static function getAdminList($groupId)
 	{
@@ -207,9 +214,7 @@ class Account extends ActiveRecord
 
         $model->role = Role::NORMAL;
 
-		$password = \Yii::$app->params['defaultPassword'];
-
-		$model->password = \Yii::$app->getSecurity()->generatePasswordHash($password);
+        $model->password = \Yii::$app->params['defaultPassword'];
 
 		$model->account_id = 'a_' . substr(uniqid(),-8);
 		try

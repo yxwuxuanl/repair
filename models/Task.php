@@ -145,7 +145,7 @@ class Task extends ActiveRecord
 			{
 				$eventRule = $rule;
 				break;
-			}else if($rule['event'] == '*')
+			}else if($rule['event'] === NULL)
 			{
 				$defaultRule = $rule;
 			}

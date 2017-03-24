@@ -2,7 +2,7 @@
     <h4 class="add-row">添加区域</h4>
     <div class="mount">
         <ul>
-            <template id="t-parent">
+            <template class="t-parent-content">
                 <li class="list-group-item parent">
                     <span class="zone-name">{zone_name}</span>
                     <span class="action-icons">
@@ -19,22 +19,22 @@
                 </li>
             </template>
 
-            <template id="t-empty">
-                <li class="list-group-item empty">暂无区域</li>
-            </template>
-
-            <template id="t-children-empty">
-                <li class="list-group-item empty">无子区域</li>
-            </template>
-
-            <template id="t-children">
+            <template class="t-children-content">
                 <li class="list-group-item">
                     <span class="zone-name">{zone_name}</span>
                     <span class="action-icons">
-                        <span class="glyphicon glyphicon-pencil" action="rename"></span>
-                        <span class="glyphicon glyphicon-trash" action="delete"></span>
+                    <span class="glyphicon glyphicon-pencil" action="rename"></span>
+                    <span class="glyphicon glyphicon-trash" action="delete"></span>
                     </span>
                 </li>
+            </template>
+
+            <template class="t-children-empty">
+                <li class="list-group-item empty">无子区域</li>
+            </template>
+
+            <template class="t-parent-empty">
+                <li class="list-group-item empty">暂无区域</li>
             </template>
         </ul>
     </div>

@@ -7,12 +7,32 @@
     <div class="row">
         <div class="in col-md-6">
             <h5>组成员</h5>
-            <ul></ul>
+            <ul>
+                <template class="t-content">
+                    <li class="list-group-item">{account_name}
+                        <span class="glyphicon glyphicon-trash" action="removeMember"></span>
+                    </li>
+                </template>
+
+                <template class="t-empty">
+                    <li class="empty">组内无成员</li>
+                </template>
+            </ul>
         </div>
 
         <div class="no-assign col-md-6">
             <h5>无组织状态</h5>
-            <ul></ul>
+            <ul>
+                <template class="t-content">
+                    <li class="list-group-item">{account_name}
+                        <span class="glyphicon glyphicon-plus" action="addMember"></span>
+                    </li>
+                </template>
+
+                <template class="t-empty">
+                    <li class="empty">无未分配成员</li>
+                </template>
+            </ul>
         </div>
     </div>
 </div>
@@ -42,7 +62,17 @@
             </tr>
         </thead>
 
-        <tbody>            
+        <tbody>          
+
+            <template class="t-content">
+                <tr>
+                    <td>{event}</td>
+                    <td>{assign}</td>
+                    <td>{level}</td>
+                    <td class="remove"><span class="glyphicon glyphicon-trash"></span></td>
+                </tr>
+            </template>
+
         </tbody>
     </table>
 </div>
@@ -91,7 +121,13 @@
                 <div class="form-group">
                     <label for="">分配给:</label>
                     <div class="member-mount">
-                        <ul></ul>
+                        <ul>
+                            <template>
+                                <li class="list-group-item">{account_name}
+                                    <span class="glyphicon glyphicon-ok"></span>
+                                </li>
+                            </template>
+                        </ul>
                     </div>
                 </div>
 

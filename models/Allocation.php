@@ -22,6 +22,7 @@ class Allocation extends ActiveRecord
 
 	public function rules()
 	{
+	    return [];
 		return [
 			[['event','assign','group_id','level'],'required'],
 
@@ -32,7 +33,7 @@ class Allocation extends ActiveRecord
 				{
 					$this->addError($attr);
 				}
-			},'on' => static::CREATE],
+			}],
 
 			['event',function($attr){
 				$event = $this->$attr;
@@ -42,7 +43,7 @@ class Allocation extends ActiveRecord
 				{
 					$this->addError($attr);
 				}
-			},'on' => static::CREATE],
+			}],
 
 			['assign',function($attr){
 				$member = explode(',',$this->$attr);
@@ -52,7 +53,7 @@ class Allocation extends ActiveRecord
 				{
 					$this->addError($attr);
 				}
-			},'on' => static::CREATE],
+			}],
 
 		];
 	}
@@ -64,8 +65,8 @@ class Allocation extends ActiveRecord
 
 	public static function create($group,$event,$assign,$level)
 	{
-		$model = new self();
-		$model->scenario = static::CREATE;
+		$model = new static();
+
 		$model->group_id = $group;
 		$model->event = $event;
 		$model->assign = $assign;
@@ -87,7 +88,8 @@ class Allocation extends ActiveRecord
 
 	public static function getGroupRule($group,$defaultRule = false)
 	{
-		$ar = parent::find()->where('`group_id`=:gid',[':gid' => $group]);
+		$ar = parent::find()
+            ->where('`group_id`=:gid',[':gid' => $group]);
 
 		if(!$defaultRule)
 		{
@@ -99,7 +101,14 @@ class Allocation extends ActiveRecord
 		foreach($rules as &$item)
 		{
 			if($item['level'] == 0) continue;
-			$item['assign'] = explode(',',$item['assign']);
+
+            $explode = explode(',',$item['assign']);
+            $item['assign'] = Account::find()
+                ->where(['in','account_id',$explode])
+                ->select('group_concat(`account_name`)')
+                ->scalar();
+
+            $item['event'] = Event::getEventName($item['event']);
 		}
 
 		return $rules;
@@ -107,11 +116,14 @@ class Allocation extends ActiveRecord
 
 	public static function generateDefaultRule($group)
 	{
-		$model = new self();
+		$model = new static();
+
 		$model->group_id = $group;
 		$model->event = NULL;
 		$model->assign = NULL;
 		$model->level = 0;
+        $model->allocation_id = 'al_' . substr(uniqid(),-7);
+
 		$model->insert();
 	}
 

@@ -1,12 +1,10 @@
 <?php
 
 return [
-	'defaultPassword' => '123456', // 初始化密码,
-
-    /**
-     * 注意!!!!!
-     * `secretKey` 用于数据库密码验证,请务必保持其完整性
+    /*
+     * 默认密码 : 123456
+     * 该密码由MySQL PASSWORD函数生成,会与MySQL进行直接验证,请不要使用明文密码或者其他加密方式的密码
+     * 在MySQL中执行 `SELECT PASSWORD('新密码')` 生成新的密码串
      */
-
-    'secretKey' => 'EZNJW_BttKMH7Lz8Ryxputu5vBSHR3eK'
+	'defaultPassword' => '*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9',
 ];

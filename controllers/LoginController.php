@@ -17,9 +17,9 @@ class LoginController extends Controller
 
 		    if($un === NULL || $pwd === NULL) return Status::INVALID_LOGIN_INFO;
 
-			$row = Account::findUser($un);
+			$row = Account::findUser($un,$pwd);
 
-			if($row === NULL || !\Yii::$app->getSecurity()->validatePassword($pwd,$row['password'])) return Status::INVALID_LOGIN_INFO;
+			if($row === NULL) return Status::INVALID_LOGIN_INFO;
 
 			$this->login($row);
 			return Status::SUCCESS;

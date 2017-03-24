@@ -84,12 +84,14 @@
 
             <div class="report-row">
                 <ul>
-                    <li class="list-group-item">
-                        <p><span class="task-attr">提交日期 : </span>{time}</p>
-                        <p><span class="task-attr">故障区域 : </span>{zone}</p>
-                        <p><span class="task-attr">故障 : </span>{event}</p>
-                        <p><span class="task-attr">状态 : </span>{status}</p>
-                    </li>
+                    <template class="t-content">
+                        <li class="list-group-item">
+                            <p><span class="task-attr">提交日期 : </span>{post_time}</p>
+                            <p><span class="task-attr">故障区域 : </span>{zone}&nbsp;{custom}</p>
+                            <p><span class="task-attr">故障 : </span>{event}</p>
+                            <p><span class="task-attr">状态 : </span>{status}</p>
+                        </li>
+                    </template>
                 </ul>
             </div>
         </div>

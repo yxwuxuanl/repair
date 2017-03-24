@@ -273,13 +273,13 @@ class Group extends ActiveRecord
 //			删除所有分配规则
 			if($mode == 1)
 			{
-				Allocation::deleteAll('`group_id`=:gid',[':gid' => $group]);
+				Allocation::deleteAll('`group_id` = :gid',[':gid' => $group]);
 			}
 
 //			删除默认的分配规则
 			if($mode == 2)
 			{
-				Allocation::deleteAll('`group_id`=:gid and `level` = \'0\'',[':gid' => $group]);
+				Allocation::deleteAll('`group_id` = :gid and `level` = \'0\'',[':gid' => $group]);
 			}
 
 //			删除所有自定义规则并且插入默认规则

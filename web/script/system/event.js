@@ -185,6 +185,8 @@
                                     }
                                 });
 
+                                event.trigger('add', eventName,response.content[0]);
+
                                 $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {
                                 $rs.alert().error('删除失败 <br/>' + response.describe);
