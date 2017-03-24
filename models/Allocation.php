@@ -59,7 +59,7 @@ class Allocation extends ActiveRecord
 
 	public function attributes()
 	{
-		return ['group_id','event','assign','level'];
+		return ['group_id','event','assign','level','allocation_id'];
 	}
 
 	public static function create($group,$event,$assign,$level)
@@ -70,8 +70,9 @@ class Allocation extends ActiveRecord
 		$model->event = $event;
 		$model->assign = $assign;
 		$model->level = $level;
+		$model->allocation_id = 'al_' . substr(uniqid(),-7);
 
-		if(!$model->validate()) return [Status::INVALID_ARGS,$model->errors];
+		if(!$model->validate()) return Status::INVALID_ARGS;
 
 		try
 		{

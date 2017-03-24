@@ -16,21 +16,23 @@
         </thead>
 
         <tbody>
-            <template id="t-empty">
+            <template class="t-empty">
                 <tr class="empty">
                     <td colspan="4">无账户</td>
                 </tr>
             </template>    
 
-            <template id="t-content">
+            <template class="t-content">
                 <tr>
                     <td>
-                        <span class="account-name">
-                            {account_name}
-                        </span>
+                        <span class="account-name">{account_name}</span>
                     </td>
-                    <td>{group_name}</td>
-                    <td>{role}</td> 
+                    <td>
+                        <span class="group-name">{group_name}</span>
+                    </td>
+                    <td>
+                        <span class="role">{role}</span>
+                    </td> 
                     <td>
                         <span class="glyphicon glyphicon-trash"></span>
                     </td>
@@ -84,7 +86,7 @@
                                 <select class="form-control">
                                     <option value="0">不分配</option>
 
-                                    <template id="option">
+                                    <template class="option">
                                         <option>{group_name}</option>
                                     </template>
                                     

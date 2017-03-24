@@ -2,7 +2,6 @@
     var
         accountManage = {
             'init': function () {
-
                 this.watcher().define('accounts', function (old, _new_, $mount) {
                     if (_new_ > 0) {
                         if (old == 0) {
@@ -11,177 +10,177 @@
                             
                     } else {
                         $rs.render({
-                            '$temp': $('#t-empty', accountManage.$panel),
+                            '$temp': $('.t-empty', accountManage.$panel),
                             '$mount' : $mount || null
                         });
                     }
                 });
 
                 $rs.ajax('account/get-all').done(function (response) {
-                    var
-                        data = response.content;
-                    
-                    if (data.length > 0)
-                    {
-                        $rs.render({
-                            'data': data,
-                            '$temp': $('#t-content', accountManage.$panel),
-                            'before': function () {
-                                accountManage.watcher().change('accounts', this.data.length, this.$mount);
-                            },
-                            'filter': function () {
-                                var
-                                    role = this.role;
-                                
-                                if (role == 'normal') {
-                                    this.role = '普通账户';
-                                } else {
-                                    this.role = '部门管理员';
-                                }
-                            },
-                            'after': function (el) {
-                                $.data(el[1], 'aid', this.account_id);
-                                return el;
-                            }
-                        });
-                        accountManage.watch();
-                    } else {
-                        accountManage.watcher().change('accounts', 0);
-                    } 
+                    accountManage.render(response.content);
                 }).fail(function (response) {
                     $rs.alert().error('数据获取失败');
                 });
                 
-                this.on('group-manage', 'renameGroup', '_renameGroup_');
-                this.on('group-manage', 'addGroup', '_addGroup_');
-                this.on('group-manage', 'removeGroup', '_removeGroup_');
-                this.on('group-manage', 'changeAdmin', '_changeAdmin_');
+                this.watch();
+                this.bind(this.events);
             },
 
-            '_changeAdmin_': function (oldAdmin, newAdmin,groupName)
+            'render' : function(data)
             {
-                var
-                    $mount = this.$panel.find('table'),
-                    $tbody = $mount.find('tbody').detach();
-                
-                $tbody.find('tr').each(function () {
-                    var
-                        $tr = $(this);
-                    
-                    if ($tr.find('.account-name').text() == oldAdmin)
+                $rs.render({
+                    '$temp': $('.t-content', accountManage.$panel),
+                    'before' : function()
                     {
-                        $tr.find('.role').text('normal');
-                    } else if ($tr.find('.account-name').text() == newAdmin)
-                    {
-                        $tr.find('.group-name').text(groupName);
-                        $tr.find('.role').text('group_admin');
-                    }    
-                });
-
-                $mount.append($tbody);
-            }   , 
-
-            '_removeGroup_': function (groupName)
-            {
-                var
-                    $mount = this.$panel.find('table'),
-                    $tbody = $mount.find('tbody').detach();
-                
-                $tbody.find('tr').each(function () {
-                    var
-                        $tr = $(this);
-                    
-                    if ($tr.find('.group-name').text() == groupName) {
-
-                        if ($tr.find('.role').text() == 'group_admin') {
-                            $tr.find('.role').text('normal');
-                        }
-
-                        $tr.find('.group-name').text('未分配');
-                    }
-                });
-
-                $mount.append($tbody);
-
-                if ('_rename_' in this.modals)
-                {
-                    var
-                        $mount = this.modals._rename_.$body.find('.mount'),
-                        $select = $mount.find('select').detach();
-                    
-                    $select.find('option').each(function () {
-                        var
-                            $option = $(this);
-                        
-                        if ($option.text() == groupName)
+                        if($.isArray(this.data))
                         {
-                            $option.remove();
-                            return false;
-                        }    
-                    });
-                        
-                    $mount.append($select);
-                }    
-            },
-
-            '_renameGroup_': function (oldName, newName) {
-                var
-                    $mount = this.$panel.find('table'),
-                    $tbody = $mount.find('tbody').detach();
-                
-                $tbody.find('tr').each(function () {
-                    var
-                        $groupName = $(this).find('.group-name');
-                    
-                    if ($groupName.text() == oldName) {
-                        $groupName.text(newName);
-                    }
-                });
-
-                $mount.append($tbody);
-
-                if ('_add_' in this.modals) {
-                    var
-                        $mount = this.modals._add_.$body.find('.mount'),
-                        $select = $mount.find('select').detach();
-                    
-                    $select.find('option').each(function () {
-                        var
-                            $this = $(this);
-                        
-                        if ($this.text() == oldName) {
-                            $this.text(newName);
-                            return false;
+                            if (this.data.length < 1) {
+                                accountManage.watcher().change('accounts', 0, this.$mount);
+                                return false;
+                            }
+                            accountManage.watcher().change('accounts', this.data.length, this.$mount);
+                        }else{
+                            accountManage.watcher().plus('accounts',this.$mount);
                         }
-                    });
+                    },
+                    'data' : data,
+                    'after' : function(el)
+                    {
+                        $.data(el[1], 'gid', this.account_group);
+                        $.data(el[1],'aid',this.account_id);
+                        $.data(el[1],'role',this.role);
+                        return el;
+                    }, 
+                    'filter': function () {
+                        if (this.role == 'normal') {
+                            this.role = '普通账户';
+                        } else {
+                            this.role = '部门管理员';
+                        }
 
-                    $mount.append($select);
-                }
-            },
-            
-            '_addGroup_': function (data) {
-                if ('_add_' in this.modals) {
-                    this.modals._add_.render([data], true);
-                }
-                    
-                var
-                    $mount = this.$panel.find('table'),
-                    $tbody = $mount.find('tbody').detach();
-
-                $tbody.find('tr').each(function () {
-                    var
-                        $tr = $(this);
-                        
-                    if ($tr.find('.account-name').text() == data['group_admin']) {
-                        $tr.find('.group-name').text(data['group_name']);
-                        $tr.find('.role').text('group_admin');
-                        return false;
-                    }
+                        if(this.account_group == null)
+                        {
+                            this.group_name = '未分配';
+                        }
+                    },
+                    'attrs': ['account_name','group_name','role']
                 })
+            },
 
-                $mount.append($tbody);
+            'events' : [
+                ['group-manage',{
+                    'remove' : [
+                        function(groupId){
+                            this.$panel.find('tr').each(function(){
+                                if($.data(this,'gid') == groupId)
+                                {
+                                    $(this).find('.group-name').text('未分配');
 
-            }, 
+                                    if ($.data(this, 'role') != 'normal') {
+                                        $(this).find('.role').text('普通账户');
+                                    }
+                                }
+                            });
+                        },
+                        function(groupId)
+                        {
+                            if('_add_' in this.modals)
+                            {
+                                var
+                                    $select = this.modals._add_.$body.find('select');
+
+                                $select.find('option').each(function(){
+                                    if($.data(this,'gid') == groupId)
+                                    {
+                                        $(this).remove();
+                                        return false;
+                                    }
+                                })
+                            }
+                        }
+                    ],
+                    'rename' : [
+                        function(groupId,groupName)
+                        {
+                            this.$panel.find('tr').each(function(){
+                                if($.data(this,'gid') == groupId)
+                                {
+                                    $(this).find('.group-name').text(groupName);
+                                }
+                            });
+
+                            if('_add_' in this.modals)
+                            {
+                                var
+                                    $select = this.modals._add_.$body.find('select');
+
+                                $select.find('option').each(function(){
+                                    if ($.data(this, 'gid') == groupId) {
+                                        $(this).text(groupName);
+                                        return false;
+                                    }
+                                });
+                            }
+                        }
+                    ],
+                    'change-admin' : [
+                        function($new,old,groupName)
+                        {
+                            if(old)
+                            {
+                                accountManage.$panel.find('tr').each(function(){
+                                    if($.data(this,'aid') == old)
+                                    {
+                                        $(this).find('.role').text('普通账户');
+                                        return false;
+                                    }
+                                });
+                            }
+                        },
+                        function($new,old,groupName)
+                        {
+                            accountManage.$panel.find('tr').each(function () {
+                                if($.data(this,'aid') == $new)
+                                {  
+                                    $(this).find('.role').text('部门管理员').end().find('.group-name').text(groupName);
+                                    return false;
+                                }
+                            })
+                        }
+                    ],
+                    'add' : [
+                        function(groupName,groupId,accountId)
+                        {
+                            if('_add_' in this.modals)
+                            {
+                                this.modals._add_.renderGroup({
+                                    'group_id' : groupId,
+                                    'group_name' : groupName
+                                });
+                            }
+                        },
+
+                        function(groupName,groupId,accountId)
+                        {
+                            if(accountId)
+                            {
+                                accountManage.$panel.find('tr').each(function(){
+                                    if($.data(this,'aid') == accountId)
+                                    {
+                                        $(this)
+                                            .find('.group-name').text(groupName).end()
+                                            .find('.role').text('部门管理员').end()
+                                            .data('gid',groupId).end()
+                                            .data('role','group_admin');
+
+                                        return false;
+                                    }
+                                })
+                            }
+                        }
+                    ]
+                }]
+            ],
 
             'modals': {
                 'delete': function ($active) {
@@ -223,7 +222,9 @@
                             $rs.ajax('account/delete', {
                                 'accountId': accountId
                             }).done(function () {
-                                accountManage.trigger('deleteAccount', $active);
+
+                                accountManage.trigger('remove', accountId);
+
                                 accountManage.watcher().sub('accounts');
                                 $active.remove();
                                 $rs.alert().success('删除成功', 400);
@@ -237,7 +238,6 @@
                     return this._delete_.extend('$active', $active).show();
                 },
                 'add': function () {
-
                     if ('_add_' in this)
                     {
                         return this._add_.show();
@@ -257,11 +257,7 @@
 
                             $form.submit(function (event) {
                                 event.preventDefault();
-                                
-                                if ($(this).valid())
-                                {
-                                    self.post($(this));
-                                }    
+                                $(this).valid() && self.post($(this));
                             });
 
                             $rs.ajax('group/get-all', {
@@ -285,7 +281,7 @@
                             var
                                 accountName = $form.find('[type=text]').val(),
                                 $option = $form.find('option:selected'),
-                                groupId = $option.data('gid') || 0;
+                                groupId = $option.data('gid') || undefined;
 
                             this.close();
 
@@ -294,12 +290,12 @@
                                 'groupId': groupId
                             }).done(function (response) {
                                 $rs.render({
-                                    '$temp': $('#t-content', accountManage.$panel),
-                                    'data': [{
+                                    '$temp': $('.t-content', accountManage.$panel),
+                                    'data': {
                                         'account_name': accountName,
-                                        'group_name': groupId == 0 ? '未分配' : $option.text(),
+                                        'group_name': groupId === undefined ? '未分配' : $option.text(),
                                         'role': '普通账户'
-                                    }],
+                                    },
                                     'before': function () {
                                         accountManage.watcher().plus('accounts', this.$mount);
                                     },
@@ -308,6 +304,9 @@
                                         return el;
                                     }
                                 });
+
+                                accountManage.trigger('add',accountName,response.content[0]);
+
                                 $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {
                                 $rs.alert().error('添加失败 <br/>' + response.describe);
@@ -319,7 +318,7 @@
                                 $body = this.$body;    
 
                             $rs.render({
-                                '$temp': $('#option', $body),
+                                '$temp': $('.option', $body),
                                 'data': data,
                                 'after': function (el) {
                                     $.data(el[1], 'gid', this.group_id);
@@ -333,72 +332,6 @@
                     this._add_.show();
                 }
             },
-            'deleteGroup': function (group) {
-                var
-                    $table = this.$panel.find('table'),
-                    $tbody = $table.find('tbody').detach();
-                
-                $tbody.find('tr').each(function () {
-                    var
-                        $tr = $(this);
-
-                    if ($tr.find('td').eq(1).text() == group) {
-                        $tr.find('td').eq(1).text('未分配').end().eq(2).text('normal');
-                    }
-                })
-
-                $table.append($tbody);
-
-                if ('_add_' in this.modals) {
-                    var
-                        $select = this.modals['_add_'].$body.find('select');
-                    
-                    $select.find('option').each(function () {
-                        if ($(this).text() == group) {
-                            $(this).remove();
-                            return false;
-                        }
-                    })
-                }
-            },
-
-            'editGroupName': function (newName, oldName) {
-                var
-                    $table = this.$panel.find('table'),
-                    $tbody = $table.find('tbody').detach();
-                
-                $tbody.find('tr').each(function () {
-                    var
-                        $tr = $(this),
-                        $td = $tr.find('td').eq(1);
-
-                    if ($td.text() == oldName) {
-                        $td.text(newName);
-                    }
-                })
-
-                $table.append($tbody);
-            },
-            
-            'setGroupAdmim': function (newAdmin, oldAdmin) {
-                var
-                    $table = this.$panel.find('table'),
-                    $tbody = $table.find('tbody').detach();
-                
-                $tbody.find('tr').each(function () {
-                    var
-                        $tr = $(this),
-                        $td = $tr.find('td');
-                    
-                    if ($td.eq(0).text() == newAdmin) {
-                        $td.eq(2).text('group_admin');
-                    } else if ($td.eq(0).text() == oldAdmin) {
-                        $td.eq(2).text('normal');
-                    }
-                })
-
-                $table.append($tbody);
-            },
 
             'watch': function () {
                 this.$panel.find('table').click(function (event) {
@@ -411,46 +344,12 @@
                         
                         accountManage.modals.delete($target.parent().parent());
                     }
-                }).end().find('.add').click(function () {
-                    accountManage.modals.add(); 
                 });
-            },
-            'render': function (data,insert) {
-                var
-                    $mount = this.$panel.find('table'),
-                    $tbody = $mount.find('tbody'),
-                    template = $rs.template,
-                    tr;
-                    
-                if (!insert)
-                {
-                    $tbody = $tbody.detach();
-                }    
 
-                tr = '<tr><td class="account-name">{accountName}</td>' +
-                    '<td class="group-name">{groupName}</td>' +
-                    '<td class="role">{role}</td>' +
-                    '<td><span class="glyphicon glyphicon-trash"></span></td></tr>';
-
-                for (var i = 0, len = data.length; i < len; i++)
-                {
-                    var
-                        $tr = $(template(tr, {
-                            'accountName': data[i]['account_name'],
-                            'groupName': data[i]['group_name'],
-                            'role': data[i]['role']
-                        }));
-
-                    $tr.data('aid', data[i]['account_id']);
-                    $tbody.append($tr);
-                }
-
-                if (!insert)
-                {
-                    $mount.append($tbody);
-                }    
-            },
-
+                this.$panel.find('button.add').click(function(){
+                    accountManage.modals.add();
+                });
+            }
         };
     
     $rs.addModule('account-manage', accountManage);

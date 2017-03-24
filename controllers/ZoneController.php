@@ -31,11 +31,10 @@ class ZoneController extends Controller
 					'add-event' => Role::SYSTEM_ADMIN,
 					'change-custom' => Role::SYSTEM_ADMIN
 				]
-
 			],
 			'response' => [
 				'class' => CustomResponseFilter::className()
-			],
+			]
         ];
     }
 
@@ -51,7 +50,6 @@ class ZoneController extends Controller
 		}
 	}
 
-//	isRewrite
     public function actionRename($zoneId,$zoneName)
     {
 		return Zone::rename($zoneId,$zoneName);
@@ -62,13 +60,11 @@ class ZoneController extends Controller
 		return Zone::remove($zoneId);
     }
 
-	// is rewrite
-    public function actionAdd($name,$parent)
+    public function actionAdd($name,$parent = null)
     {
 		return Zone::create($name,$parent);
     }
 
-    // is rewrite
     public function actionGetChildren($parent)
     {
 		$row = Zone::getSubs($parent);
@@ -89,16 +85,14 @@ class ZoneController extends Controller
 		return Zone::getEvent($zoneId,$onlyIn);
     }
 
-//    is rewrite
     public function actionRemoveEvent($zoneId,$eventId)
 	{
-		return Zone::removeEvent($zoneId,$eventId);
+		return zeMap::removeZoneEvent($zoneId,$eventId);
     }
 
-//    is rewrite
     public function actionAddEvent($zoneId,$eventId)
 	{
-		return Zone::addEvent($zoneId,$eventId);
+		return zeMap::addZoneEvent($zoneId,$eventId);
     }
 
     public function actionGetCustom($zoneId)
@@ -111,11 +105,6 @@ class ZoneController extends Controller
 		}else{
 			return $row;
 		}
-	}
-
-	public function actionGetEvent($zoneId)
-	{
-		return zeMap::getEvent($zoneId);
 	}
 
 	public function actionChangeCustom($zoneId,$tips,$test)

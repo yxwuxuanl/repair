@@ -23,24 +23,35 @@ class zeMap extends ActiveRecord
 		return ['zone_id','events'];
 	}
 
-	public static function deleteEvent($zid,$eid)
+	public static function removeEvent($eid)
 	{
-		$ar = parent::find()->where('`zone_id`=:zid',[':zid' => $zid])->one();
-		$ar->events = str_replace(',' . $eid,'',$ar->events);
-		return $ar->update();
+		if(!Event::checkEid($eid)) return Status::INVALID_ARGS;
+
+		$sql = "UPDATE `zone_event_map` SET `events` = REPLACE(`events`,'{$eid},','')";
+		if(\Yii::$app->getDb()->createCommand($sql)->execute())
+		{
+			return 1;
+		}
+		return 0;
 	}
 
-	public static function clearEvent($eid)
+	public static function addZoneEvent($zid,$eid)
 	{
+		if(!Zone::checkZid($zid,true) || !Event::checkEid($eid) || !Event::isExist($eid)) return Status::INVALID_ARGS;
+		$sql = "UPDATE `zone_event_map` SET `events` = CONCAT(`events`,'{$eid},') WHERE `zone_id` = '{$zid}'";
+		return \Yii::$app->getDb()->createCommand($sql)->execute();
 	}
 
-	public static function getEvent($zoneId)
+	public static function removeZoneEvent($zid,$eid)
 	{
-		if(!Zone::checkZid($zoneId,true)) return Status::INVALID_ARGS;
-		$event = parent::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->select('events')->scalar();
-		if($event === FALSE) return Status::INVALID_ARGS;
+		if(!Zone::checkZid($zid,true) || !Event::checkEid($eid)) return Status::INVALID_ARGS;
+		$sql = "UPDATE `zone_event_map` SET `events` = REPLACE(`events`,'{$eid},','') WHERE `zone_id` = '{$zid}'";
 
-		return Event::find()->where(['in','event_id',explode(',',$event)])->all();
+		if(\Yii::$app->getDb()->createCommand($sql)->execute())
+		{
+			return 1;
+		}
+		return 0;
 	}
 
 	public static function remove($zoneId)
@@ -57,6 +68,6 @@ class zeMap extends ActiveRecord
 
 	public static function isZoneHasEvent($zoneId,$eventId)
 	{
-		return parent::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->andWhere(['like','events',$eventId])->count();
+		return parent::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->andWhere(['like','events',$eventId])->one() !== NULL;
 	}
 }

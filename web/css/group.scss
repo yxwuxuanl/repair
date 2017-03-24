@@ -20,7 +20,7 @@
         line-height: 1.8em;
     }
 
-    .empty,thead
+    .mount .empty,thead
     {
         background-color: #696969;
         color:#fff;
@@ -63,6 +63,10 @@
             display: none;
         }
         
+        .empty
+        {
+            line-height: 1.5em;
+        }
     }
 
     #group-event-modal

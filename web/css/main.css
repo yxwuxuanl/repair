@@ -34,14 +34,21 @@ body {
   #system-zone-panel .children .empty {
     line-height: 1.5em; }
 #system-zone-panel .event ul {
-  padding-left: 0px;
+  padding-left: 0;
   height: 200px;
   overflow: scroll; }
-#system-zone-panel .event .list-group-item {
+#system-zone-panel .event li {
   display: inline-block;
-  width: 50%; }
-  #system-zone-panel .event .list-group-item:hover .glyphicon {
+  width: 30%; }
+  #system-zone-panel .event li:hover .glyphicon {
     display: inline; }
+#system-zone-panel .event .empty {
+  width: 80%;
+  font-size: 1.2em;
+  line-height: 1.5em;
+  text-align: center;
+  display: block;
+  margin: 10px auto; }
 #system-zone-panel .event .glyphicon {
   float: right;
   display: none; }
@@ -139,7 +146,7 @@ body {
 #group-manage-panel thead {
   font-size: 1.1em;
   line-height: 1.8em; }
-#group-manage-panel .empty, #group-manage-panel thead {
+#group-manage-panel .mount .empty, #group-manage-panel thead {
   background-color: #696969;
   color: #fff; }
 #group-manage-panel td {
@@ -158,6 +165,8 @@ body {
 #group-manage-panel .event-mount span {
   float: right;
   display: none; }
+#group-manage-panel .event-mount .empty {
+  line-height: 1.5em; }
 #group-manage-panel #group-event-modal li:hover > .glyphicon {
   display: inline; }
 #group-manage-panel #group-event-modal h5 {
@@ -268,9 +277,7 @@ body {
 ul {
   padding-left: 0; }
 
-.empty {
-  text-align: center;
-  font-size: 1.5em;
-  line-height: 4em; }
+.list-group-item:last-child, .list-group-item:first-child {
+  border-radius: 0; }
 
 /*# sourceMappingURL=main.css.map */

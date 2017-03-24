@@ -37,7 +37,7 @@ class AccountController extends Controller
 
     public function actionGetAll()
 	{
-		return Account::getAllAccount();
+		return Account::getAll();
 	}
 
 	public function actionGetAdminList($groupId)
@@ -60,7 +60,7 @@ class AccountController extends Controller
 		return Account::changePwd($pwd,\Yii::$app->getSession()->get('uid'));
 	}
 
-	public function actionAdd($accountName,$groupId)
+	public function actionAdd($accountName,$groupId = null)
 	{
 		return Account::add($accountName,$groupId);
 	}

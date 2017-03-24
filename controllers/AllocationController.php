@@ -29,7 +29,7 @@ class AllocationController extends Controller
 
 	public function actionGetRule()
 	{
-		return Allocation::getRuleByGroup(GroupController::getGroup());
+		return Allocation::getGroupRule(GroupController::getGroup());
 	}
 
 	public function actionRemove($eventId)

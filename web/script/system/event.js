@@ -41,36 +41,8 @@
                 }).fail(function () {
                     $rs.alert().error('数据获取失败');
                 });
-                
-                this.on(this._module_name_, 'deleteEvent', '_remove_');
-                this.on(this._module_name_, 'add', '_insert_');
+
             },
-
-            '_render_': function ($ul)
-            {
-                var
-                    children = this.$panel.find('')
-                
-                if (children < 1)
-                {
-                    $ul.find('.empyt').remove();
-                }    
-
-                $ul.data('children', children + 1);
-            },
-
-            '_remove_': function ()
-            {   
-                var
-                    children = $ul.data('children');
-                
-                if ( (children - 1) < 1)
-                {
-                    $ul.html(this.els.empty);
-                }
-
-                $ul.data('children', children - 1);
-            }, 
             
             'modals': {
                 'input': function ($active,extend)
@@ -147,12 +119,12 @@
                             this.close();
 
                             $rs.ajax('event/remove', { 'eventId': $active.data('eid') }).done(function () {
-
-                                // event.trigger('deleteEvent', $active.data('eid'));
-
                                 event.watcher().sub('events');
-                                $active.remove();
                                 $rs.alert().success('删除成功', 400);
+
+                                event.trigger('remove',$active.data('eid'));
+
+                                $active.remove();
                             }).fail(function (response) {
                                 $rs.alert().error('删除失败<br/>' + response.describe);
                             });
@@ -168,15 +140,18 @@
                         'post': function ($form) {
                             var
                                 eventName = $form.find('[type=text]').val(),
-                                $active = this.$active,
-                                self = this;
+                                $active = this.$active;
+
+                            this.close();
 
                             $rs.ajax('event/rename', {
                                 'eventName': eventName,
                                 'eventId': $active.data('eid')
                             }).done(function () {
                                 $active.find('.event-name').text(eventName);
-                                self.close();
+
+                                event.trigger('rename',$active.data('zid'),eventName);
+
                                 $rs.alert().success('重命名成功', 400);
                             }).fail(function (response) {
                                 $rs.alert().error('重命名失败 <br/>' + response.describe);

@@ -11,8 +11,16 @@ class LoginController extends Controller
 	public function actionAjax()
 	{
 		if(\Yii::$app->request->isAjax){
-			$row = Account::findUser(\Yii::$app->request->post('un',''),\Yii::$app->request->post('pwd',''));
-			if($row === NULL) return Status::INVALID_LOGIN_INFO;
+
+		    $un = \Yii::$app->getRequest()->post('un',NULL);
+		    $pwd = \Yii::$app->getRequest()->post('pwd',NULL);
+
+		    if($un === NULL || $pwd === NULL) return Status::INVALID_LOGIN_INFO;
+
+			$row = Account::findUser($un);
+
+			if($row === NULL || !\Yii::$app->getSecurity()->validatePassword($pwd,$row['password'])) return Status::INVALID_LOGIN_INFO;
+
 			$this->login($row);
 			return Status::SUCCESS;
 		}else{

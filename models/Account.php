@@ -9,26 +9,6 @@ use app\controllers\RoleController as Role;
 
 class Account extends ActiveRecord
 {
-	const LOGIN = 'login';
-	const CREATE = 'create';
-	const CHANGE_PWD = 'change_pwd';
-	const DELETE = 'delete';
-	const CHANGE_GROUP = 'change_group';
-	const FIND_BY_GROUP = 'find_by_group';
-
-	public function scenarios()
-	{
-		return [
-			'login' => ['account_name','password'],
-			'create' => ['account_name','account_id','account_group','role','password'],
-			'changePwd' => ['account_name','password'],
-			'delete' => ['account_id'],
-			'change_group' => ['account_name','account_group'],
-			'find_by_group' => ['account_group'],
-			'default' => []
-		];
-	}
-
 	public static function tableName()
 	{
 		return 'account';
@@ -61,26 +41,25 @@ class Account extends ActiveRecord
 
 	public function findGroupUsers(){}
 
-	public static function getAllAccount()
+	public static function getAll()
 	{
-		$query = parent::find();
-
-		$query->select(['account_id','account_name','role','group_name']);
-		$query->where('`account_group` != \'system\'');
-		$query->innerJoin('group','`account_group`=`group_id`');
-		$query->orderBy(['role' => 'desc']);
-		
-		return $query->asArray()->all();
+		return parent::find()
+		    ->select(['account_id','account_name','role','group_name','account_group'])
+		    ->where('`role` = :normal')
+            ->orWhere('`role` = :ga')
+            ->params([':normal' => Role::NORMAL,':ga' => Role::GROUP_ADMIN])
+		    ->leftJoin('group','`account_group` = `group_id`')
+            ->groupBy(['account_id','account_name','role','group_name','account_group'])
+            ->asArray()->all();
 	}
 
-	public static function findUser($un,$pwd)
+	public static function findUser($un)
 	{
-		$query = parent::find();
-
-		$query->where('`account_name`=:an AND `password`=PASSWORD(:pwd)');
-		$query->params([':an' => $un,':pwd' => $pwd]);
-
-		return $query->asArray()->one();
+		return parent::find()
+		    ->where('`account_name` = :an')
+		    ->params([':an' => $un])
+            ->asArray()
+            ->one();
 	}
 
 	public static function checkAid($aid)
@@ -96,12 +75,16 @@ class Account extends ActiveRecord
 	public static function changeGroup($accountId,$groupId)
 	{
 		if(!static::checkAid($accountId) || !Group::checkGid($groupId)) return Status::INVALID_ARGS;
-		$ar = parent::find()->where('`account_id`=:aid and (`account_group`=\'g_noAssign\' or `account_group`=:gid)',[':aid' => $accountId,':gid' => $groupId])->one();
-		if($ar === NULL) return Status::INVALID_ARGS;
+
+		$ar = parent::find()
+            ->where('`account_id` = :aid')
+            ->andWhere('`account_group` = :noAssign or `account_group`=:gid')
+            ->params([':aid' => $accountId,':gid' => $groupId,':noAssign' => Group::G_NO_ASSIGN])
+            ->asArray()->one();
 
 		if($ar->account_group == $groupId)
 		{
-			$ar->account_group = 'g_noAssign';
+			$ar->account_group = Group::G_NO_ASSIGN;
 		}else{
 			$ar->account_group = $groupId;
 		}
@@ -109,90 +92,94 @@ class Account extends ActiveRecord
 		return $ar->update();
 	}
 
-	public static function getNoMembers($gid,$includeAdmin = true)
-	{
-	}
-
-	public static function getMember($group,$admin)
+	public static function getMember($group)
 	{
 		if(!Group::checkGid($group)) return Status::INVALID_ARGS;
 
-		$query = parent::find();
-
-		$query->where('`account_group`=:gid',[':gid' => $group]);
-
-		if(!$admin)
-		{
-			$query->andWhere('`role` != \'group_admin\'');
-		}
-
-		$query->orderBy(['role' => 'desc']);
-		$query->select('`account_id`,`account_name`');
-
-		$row = $query->asArray()->all();
-
-		if($row === NULL)
-		{
-			return Status::INVALID_ARGS;
-		}else{
-			return $row;
-		}
+		return parent::find()
+		    ->where('`account_group` = :gid')
+            ->params([':gid' => $group])
+		    ->orderBy(['role' => 'desc'])
+		    ->select('`account_id`,`account_name`')
+		    ->asArray()->all();
 	}
 
 	public static function getAdminList($groupId)
 	{
 		if(!Group::checkGid($groupId)) return Status::INVALID_ARGS;
 
-		$ar = parent::find();
-		$ar->select(['account_id','account_name']);
-		$ar->where('(`account_group`=:gid and `role` != :role)',[':gid' => $groupId,':role' => Role::GROUP_ADMIN]);
-		$ar->orWhere('`account_group`=\'g_noAssign\'');
-
-		return $ar->asArray()->all();
+		return parent::find()
+		    ->select(['account_id','account_name'])
+		    ->where('`account_group` = :gid and `role` = :normal')
+		    ->orWhere('`account_group` = :noAssign')
+		    ->params([':gid' => $groupId,':normal' => Role::NORMAL,':noAssign' => Group::G_NO_ASSIGN])
+            ->asArray()->all();
 	}
 
 	public static function getNoAssign()
 	{
-		$query = parent::find();
-		$query->where('`account_group`=\'g_noAssign\'');
-		$query->select('`account_id`,`account_name`');
-
-		$row = $query->asArray()->all();
-
-		if($row === NULL)
-		{
-			return [];
-		}else{
-			return $row;
-		}
+        return parent::find()
+		    ->where('`account_group` = :noAssign')
+            ->params([':noAssign' => Group::G_NO_ASSIGN])
+		    ->select('`account_id`,`account_name`')
+            ->asArray()->all();
 	}
 
 	public static function isNoAssign($aid)
 	{
-		$ar = parent::find()->where('`account_id`=:aid and `account_group`=\'g_noAssign\'',[':aid' => $aid])->count();
-		return !!$ar;
-	}
-
-	public static function changeRole($aid,$role)
-	{
-		$ar = parent::find()->where('`account_id`=:aid',[':aid' => $aid])->one();
-		$ar->role = $role;
-		$ar->update();
+		return parent::find()
+                ->where('`account_id`=:aid')
+                ->params([':aid' => $aid])
+                ->select('account_group')
+                ->scalar() == Group::G_NO_ASSIGN;
 	}
 
 	public static function remove($accountId)
 	{
 		if(!static::checkAid($accountId)) return Status::INVALID_ARGS;
-		$ar = parent::find()->where('`account_id`=:aid',[':aid' => $accountId])->one();
-		if($ar === NULL) return Status::INVALID_ARGS;
+
+		$ar = parent::find()->where('`account_id` = :aid')
+            ->params([':aid' => $accountId])
+            ->one();
+
 		$transaction = \Yii::$app->getDb()->beginTransaction();
 
 		try
 		{
-			if($ar->role == Role::GROUP_ADMIN)
+			if($ar->account_group != Group::G_NO_ASSIGN)
 			{
-				Group::updateAll(['group_admin' => null],'`group_id`=:gid',[':gid' => $ar->account_group]);
+				$allocations = Allocation::find()
+                    ->where('group_id = :gid')
+                    ->params([':gid' => $ar->account_group]);
+
+				$update = 0;
+				$remove = [];
+
+				foreach($allocations->each() as $allocation)
+				{
+					if(strpos($allocation->assign,$accountId) > -1)
+					{
+						if($allocation->assign == $accountId)
+						{
+							$remove[] = $allocation->allocation_id;
+						}else{
+							$update++;
+						}
+					}
+				}
+
+				if($update > 0)
+				{
+					$sql = "UPDATE `allocation` SET `assign` = REPLACE(`assign`,',{$accountId}',''),`assign` = REPLACE(`assign`,'{$accountId},','') WHERE `group_id` = '{$ar->account_group}' LIMIT {$update}";
+					\Yii::$app->getDb()->createCommand($sql)->execute();
+				}
+
+				if(!empty($remove))
+				{
+					Allocation::deleteAll(['in','allocation_id',$remove]);
+				}
 			}
+
 			$ar->delete();
 			$transaction->commit();
 		}catch (Exception $e)
@@ -206,23 +193,25 @@ class Account extends ActiveRecord
 
 	public static function add($accountName,$groupId)
 	{
-		if(!static::checkAccountName($accountName) || ($groupId != '0' && !Group::checkGid($groupId))) return Status::INVALID_ARGS;
+		if(!static::checkAccountName($accountName) || ($groupId !== null && !Group::checkGid($groupId))) return Status::INVALID_ARGS;
 
-		$model = new self();
+		$model = new static();
 		$model->account_name = $accountName;
 
-
-		if($groupId == '0')
+		if($groupId === null)
 		{
-			$model->account_group = 'g_noAssign';
+			$model->account_group = Group::G_NO_ASSIGN;
 		}else{
 			$model->account_group = $groupId;
 		}
 
-		$model->role = Role::NORMAL;
-		$model->password = \Yii::$app->params['defaultPassword'];
-		$model->account_id = 'a_' . substr(uniqid(),-8);
+        $model->role = Role::NORMAL;
 
+		$password = \Yii::$app->params['defaultPassword'];
+
+		$model->password = \Yii::$app->getSecurity()->generatePasswordHash($password);
+
+		$model->account_id = 'a_' . substr(uniqid(),-8);
 		try
 		{
 			$model->insert();
@@ -243,8 +232,8 @@ class Account extends ActiveRecord
 	{
 		if(!is_string($pwd) || strlen($pwd) < 5) return Status::INVALID_ARGS;
 
-		$sql = "UPDATE `account` SET `password` = PASSWORD('$pwd') WHERE `account_id` = '$uid'";
-		return (string) \Yii::$app->getDb()->createCommand($sql)->execute();
-	}
+		$newPwd = \Yii::$app->getSecurity()->generatePasswordHash($pwd);
 
+		return parent::updateAll(['password' => $newPwd],'`account_id` = :aid',[':aid' => $uid]);
+	}
 }

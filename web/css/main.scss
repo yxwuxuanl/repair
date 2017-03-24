@@ -92,10 +92,7 @@ ul
   padding-left: 0;
 }
 
-.empty
+.list-group-item:last-child,.list-group-item:first-child
 {
-    text-align: center;
-    font-size:1.5em;
-    line-height: 4em;
+  border-radius: 0;
 }
-

@@ -1,5 +1,12 @@
 <?php
 
 return [
-	'defaultPassword' => '*6BB4837EB74329105EE4568DDA7DC67ED2CA2AD9' // 123456
+	'defaultPassword' => '123456', // 初始化密码,
+
+    /**
+     * 注意!!!!!
+     * `secretKey` 用于数据库密码验证,请务必保持其完整性
+     */
+
+    'secretKey' => 'EZNJW_BttKMH7Lz8Ryxputu5vBSHR3eK'
 ];

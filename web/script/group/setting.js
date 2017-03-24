@@ -163,7 +163,7 @@
                             
                             this.close();
 
-                            $rs.ajax('account/change-group', {
+                            $rs.ajax('group/add-member', {
                                 'accountId': accountId
                             }).done(function () {
                                 groupSetting.renderMember([{ 'account_id': accountId, 'account_name': $active.text() }], 'in', true);

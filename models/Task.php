@@ -164,7 +164,7 @@ class Task extends ActiveRecord
 			$mode = 2;
 			Allocation::updateAll(['next' => (++$index >= count($assignList) ? 0 : $index)],'`event`=:eid',[':eid' => $event]);
 		}else{
-			$assignList = Account::getMember($group['group_id'],true);
+			$assignList = Account::getMember($group['group_id']);
 			$index = $defaultRule['next'];
 
 			if($group['task_mode'] == 4)

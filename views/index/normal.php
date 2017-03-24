@@ -21,6 +21,7 @@
 
 <h3 class="account-name">
 	<?= $accountName ?>
+
 	<span> [<?= $groupName ?>]</span>
 
     <?php
@@ -47,8 +48,6 @@
     <?php
         endif;
     ?>
-
-
 
 	<p>一共完成了 <span class="number"><?= $complete ?></span> 个任务</p>
 </div>

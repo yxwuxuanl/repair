@@ -14,14 +14,6 @@ $panels = [];
 
 <div class="container">
     <div class="col-md-10 col-md-push-1">
-
-        <div id="spinner">
-            <div class="rect1"></div>
-            <div class="rect2"></div>
-            <div class="rect3"></div>
-            <div class="rect4"></div>
-        </div>
-
         <div id="nav">
             <ul id="tab" class="nav nav-tabs" role="tablist">
                 <?php

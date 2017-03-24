@@ -34,7 +34,7 @@ class Event extends ActiveRecord
 
 	public static function isExist($eid)
 	{
-		$query = parent::find()->asArray();
+		$query = parent::find();
 		$query->where('`event_id`=:eid',[':eid' => $eid]);
 
 		return $query->one() !== NULL;
@@ -104,23 +104,20 @@ class Event extends ActiveRecord
 	{
 		if(!static::checkEid($eventId) || !static::isExist($eventId)) return Status::INVALID_ARGS;
 
-		$transaction = \Yii::$app->getDb()->beginTransaction();
+		$transaction = \Yii::$app->getDb()->beginTransaction(); // 开始事务
 
 		try
 		{
-			// 删除`Event`表记录
-			parent::deleteAll(['event_id' => $eventId]);
+			parent::deleteAll(['event_id' => $eventId]); // 删除 `Event` 表的记录
 
-			// 清除`Group`表
-			\Yii::$app->getDb()->createCommand("UPDATE `group` SET `events` = REPLACE(`events`,',{$eventId}','') LIMIT 1");
+			Group::removeEvent($eventId); // 清除 `Group` 表绑定
 
-			\Yii::$app->getDb()->createCommand("UPDATE `zone_event_map` SET `events` = REPLACE(`events`,',{$eventId}','') LIMIT 1");
+			zeMap::removeEvent($eventId); // 清除 `zone_event_map` 表的映射
 
-			Allocation::deleteAll(['event' => $eventId]);
-			$transaction->commit();
+			$transaction->commit(); // 提交事务
 		}catch(Exception $e)
 		{
-			$transaction->rollBack();
+			$transaction->rollBack(); // 失败(捕获到异常),回滚事务
 			return Status::DATABASE_SAVE_FAIL;
 		}
 

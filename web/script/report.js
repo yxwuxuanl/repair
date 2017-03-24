@@ -214,7 +214,7 @@
                             'event': data[i]['event'],
                             'status': data[i]['status'] ? status[data[i]['status']] : '已提交',
                         }));
-                    
+                     
                     $ul.append($li);
                 }    
 

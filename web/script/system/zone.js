@@ -57,6 +57,7 @@
                 });
                 this.on('system-event', 'deleteEvent', '_deleteEvent_');
             },
+
             '_deleteEvent_': function (eventId)
             {
                 if (!('_event_' in this.modals)) return;
@@ -73,7 +74,8 @@
                         return false;
                     }
                 })
-            }   , 
+            }   ,
+
             'watch': function ()
             {
                 $('.mount', this.$panel).click(function (event) {
@@ -202,7 +204,7 @@
                             {
                                 var
                                     $active = this.$active,
-                                    parent = $active ? $active.data('zid') : 0,
+                                    parent = $active ? $active.data('zid') : undefined,
                                     zoneName = $form.find('[type=text]').val();
 
                                 this.close();
@@ -365,6 +367,20 @@
                     init = {
                         'init': function ()
                         {
+                            zone.watcher().define('events',{},function(old,$new,$mount){
+                                if($new > 0)
+                                {
+                                    if(old == 0)
+                                    {
+                                        $mount.find('.empty').remove();
+                                    }
+                                }else{
+                                    $rs.render({
+                                        '$temp' : $('.t-empty',$mount)
+                                    });
+                                }
+                            });
+
                             this.watch();
                         },
                         'show': function ()
@@ -378,9 +394,11 @@
                             if (this.last == zoneId)
                             {
                                 return;
-                            } else {
-                                this.last = zoneId;
                             }
+
+                            this.last = zoneId;
+
+                            zone.watcher().set('events',{});
 
                             $rs.ajax('zone/get-events', {
                                 'zoneId': zoneId
@@ -407,49 +425,56 @@
                                 }
                             })
                         },
-                        'render': function (data, type, insert) {
+                        'render': function (data, type) {
                             var
-                                template = $rs.template,
-                                $mount = this.$body.find('.' + type),
-                                $ul = $mount.find('ul'),
-                                icon, li;
-                            
-                            if (type == 'in') {
-                                icon = '<span class="glyphicon glyphicon-trash" action="remove"></span>'
-                            } else {
-                                icon = '<span class="glyphicon glyphicon-plus" action="add"></span>'
-                            }
+                                $mount = $('#zone-event-modal .' + type,zone.$panel);
 
-                            li = '<li class="list-group-item">{text}' + icon;
-                            
-                            if (!insert) {
-                                $ul = $ul.detach();
-                                $ul.html('');
-                            }
-
-                            for (var i = 0, len = data.length; i < len; i++) {
-                                var
-                                    $li = $(template(li, { 'text': data[i]['event_name'] }));
-                                
-                                $li.data('eid', data[i]['event_id']);
-                                $ul.append($li);
-                            }
-
-                            if (!insert) {
-                                $mount.append($ul);
-                            }
+                            $rs.render({
+                                '$temp' : $('.t-content',$mount),
+                                'data' : data,
+                                'after' : function(el)
+                                {
+                                    $.data(el[1],'eid',this.event_id);
+                                    return el;
+                                },
+                                'before' : function()
+                                {
+                                    this.$mount.find('li').remove();
+                                    zone.watcher().change('events.' + type,this.data.length,this.$mount);
+                                }
+                            });
                         },
+
                         'removeEvent': function ($target) {
                             var
                                 eventId = $target.data('eid'),
-                                zoneId = this.$active.data('zid'),
-                                self = this;
+                                zoneId = this.$active.data('zid');
 
                             $rs.ajax('zone/remove-event', {
                                 'eventId': eventId,
                                 'zoneId': zoneId
                             }).done(function () {
-                                self.render([{ 'event_id': eventId, 'event_name': $target.text() }], 'not-in', true);
+                                $rs.render({
+                                    '$temp' : $('#zone-event-modal .not-in .t-content',zone.$panel),
+                                    'data' : {'event_id' : eventId,'event_name' : $target.text()},
+                                    'after' : function(el)
+                                    {
+                                        $.data(el[1],'eid',this.event_id);
+                                        return el;
+                                    },
+                                    'before' : function()
+                                    {
+                                        if(zone.watcher().get('events.in') == 1)
+                                        {
+                                            zone.watcher().sub('events.in',$('#zone-event-modal .in',zone.$panel));
+                                        }else{
+                                            zone.watcher().sub('events.in');
+                                        }
+
+                                        zone.watcher().plus('events.not-in',this.$mount);
+                                    }
+                                });
+
                                 $target.remove();
                                 $rs.alert().success('删除成功', 400);
                             }).fail(function (response) {
@@ -459,14 +484,33 @@
                         'addEvent': function ($target) {
                             var
                                 eventId = $target.data('eid'),
-                                zoneId = this.$active.data('zid'),
-                                self = this;
+                                zoneId = this.$active.data('zid');
 
                             $rs.ajax('zone/add-event', {
                                 'eventId': eventId,
                                 'zoneId': zoneId
                             }).done(function () {
-                                self.render([{ 'event_id': eventId, 'event_name': $target.text() }], 'in', true);
+                                $rs.render({
+                                    '$temp' : $('.t-content',zone.$panel.find('#zone-event-modal .in')),
+                                    'data' : { 'event_id': eventId, 'event_name': $target.text() },
+                                    'after' : function(el)
+                                    {
+                                        $.data(el[1],'eid',this.event_id);
+                                        return el;
+                                    },
+                                    'before' : function()
+                                    {
+                                        zone.watcher().plus('events.in',this.$mount);
+
+                                        if(zone.watcher().get('events.not-in') == 1)
+                                        {
+                                            zone.watcher().sub('events.not-in',$('.t-content',zone.$panel.find('#zone-event-modal .not-in')))
+                                        }else{
+                                            zone.watcher().sub('events.not-in');
+                                        }
+                                    }
+                                });
+
                                 $target.remove();
                                 $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {
@@ -567,7 +611,7 @@
                     this._custom_ = new $rs.modal('#zone-custom-modal', init, extend);
                     this._custom_.extend({ '$active': $active }).show();
                 }    
-            },
+            }
         };
     
     $rs.addModule('system-zone', zone);
