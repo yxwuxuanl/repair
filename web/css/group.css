@@ -1,0 +1,81 @@
+#group-manage-panel .actions {
+  visibility: hidden; }
+  #group-manage-panel .actions .glyphicon {
+    margin-right: 15px; }
+#group-manage-panel tr:hover .actions {
+  visibility: visible; }
+#group-manage-panel thead {
+  font-size: 1.1em;
+  line-height: 1.8em; }
+#group-manage-panel .mount .empty, #group-manage-panel thead {
+  background-color: #696969;
+  color: #fff; }
+#group-manage-panel td {
+  width: 33%; }
+#group-manage-panel table {
+  margin-top: 10px; }
+#group-manage-panel .event-mount .select span {
+  display: inline; }
+#group-manage-panel .event-mount ul {
+  height: 200px;
+  overflow: scroll; }
+  @media screen and (max-width: 1130px) {
+    #group-manage-panel .event-mount ul {
+      height: 150px; } }
+#group-manage-panel .event-mount li {
+  display: inline-block;
+  width: 50%;
+  float: left; }
+  @media screen and (max-width: 960px) {
+    #group-manage-panel .event-mount li {
+      width: 100%;
+      margin: 0; } }
+#group-manage-panel .event-mount span {
+  float: right;
+  display: none; }
+#group-manage-panel .event-mount .empty {
+  line-height: 1.5em; }
+#group-manage-panel #group-event-modal li:hover > .glyphicon {
+  display: inline; }
+#group-manage-panel #group-event-modal h5 {
+  text-align: center; }
+
+#group-member-panel .member ul {
+  height: 200px;
+  overflow: scroll; }
+#group-member-panel .member .glyphicon {
+  float: right;
+  display: none; }
+#group-member-panel .member li:hover .glyphicon {
+  display: inline; }
+
+#group-taskmode-panel .rules {
+  margin-top: 20px; }
+#group-taskmode-panel table {
+  text-align: center; }
+  #group-taskmode-panel table .event {
+    width: 40%; }
+  #group-taskmode-panel table .assign {
+    width: 30%; }
+  #group-taskmode-panel table .type {
+    width: 15%; }
+#group-taskmode-panel thead {
+  font-size: 1.1em; }
+#group-taskmode-panel h5, #group-taskmode-panel h6 {
+  text-align: center; }
+#group-taskmode-panel h6:hover {
+  cursor: pointer; }
+#group-taskmode-panel .create-rule-modal .member {
+  height: 200px;
+  overflow: scroll; }
+  #group-taskmode-panel .create-rule-modal .member li {
+    width: 50%;
+    display: inline-block;
+    float: left; }
+  #group-taskmode-panel .create-rule-modal .member .select .glyphicon {
+    display: inline; }
+  #group-taskmode-panel .create-rule-modal .member .glyphicon {
+    display: none;
+    float: right; }
+
+/*# sourceMappingURL=group.css.map */

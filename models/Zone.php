@@ -14,7 +14,7 @@ class Zone extends \yii\db\ActiveRecord
 
     public function attributes()
 	{
-		return ['zone_name','zone_id','events'];
+		return ['zone_name','zone_id'];
 	}
 
     public static function getParent()
@@ -25,7 +25,10 @@ class Zone extends \yii\db\ActiveRecord
 	public static function getSubs($parent)
 	{
 		if(!static::checkZid($parent,true)) return Status::INVALID_ARGS;
-		return parent::find()->where(['between','zone_id',$parent + 1,$parent + 99])->asArray()->all();
+
+		return parent::find()
+            ->where(['between','zone_id',$parent + 1,$parent + 99])
+            ->asArray()->all();
 	}
 
 	public static function checkZid($zone_id,$isParent = false)
@@ -43,7 +46,7 @@ class Zone extends \yii\db\ActiveRecord
 
 	public static function isExist($zid)
 	{
-		return parent::find()->where('`zone_id`=:zid',[':zid' => $zid])->one() !== NULL;
+		return parent::find()->where('`zone_id` = :zid',[':zid' => $zid])->one() !== NULL;
 	}
 
 	public static function checkZoneName($zoneName)
@@ -59,9 +62,12 @@ class Zone extends \yii\db\ActiveRecord
             ->orderBy(['zone_id' => SORT_DESC])
             ->select('zone_id');
 
-		if($parent == null)
+		if($parent === null)
 		{
-			$row = $ar->where('right(`zone_id`,2) = 0')->scalar();
+			$row = $ar
+                ->where('right(`zone_id`,2) = 0')
+                ->scalar();
+
 			if($row === FALSE)
 			{
 				$zoneId = 1000;
@@ -69,8 +75,10 @@ class Zone extends \yii\db\ActiveRecord
 				$zoneId = $row + 100;
 			}
 		}else{
-			$row = $ar->where(['between','zone_id',$parent,$parent + 99])->scalar();
-			if($row === FALSE) return Status::INVALID_ARGS;
+			$row = $ar
+                ->where(['between','zone_id',$parent,$parent + 99])
+                ->scalar();
+
 			$zoneId = $row + 1;
 		}
 
@@ -78,22 +86,13 @@ class Zone extends \yii\db\ActiveRecord
 		$model->zone_id = $zoneId;
 		$model->zone_name = $zoneName;
 
-		$transaction = \Yii::$app->getDb()->beginTransaction();
-
 		try
 		{
+//		    Trigger `zone`.`createZone`
 			$model->insert();
-
-			if($parent == 0)
-			{
-				zeMap::create($zoneId);
-			}
-
-			$transaction->commit();
 		}catch (Exception $e)
 		{
-			$transaction->rollBack();
-			return Status::ZONE_EXIST;
+		    return Status::DATABASE_SAVE_FAIL;
 		}
 
 		return $zoneId;
@@ -125,13 +124,11 @@ class Zone extends \yii\db\ActiveRecord
 			if(static::checkZid($zoneId,true))
 			{
 				parent::deleteAll(['between','zone_id',$zoneId,$zoneId + 99]);
-				zeMap::remove($zoneId);
 			}else{
 				parent::deleteAll('`zone_id`=:zid',[':zid' => $zoneId]);
 			}
 
 			$transaction->commit();
-
 		}catch(Exception $e)
 		{
 			$transaction->rollBack();

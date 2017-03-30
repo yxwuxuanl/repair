@@ -4,40 +4,48 @@
 
 <div>
     <select name="" id="" class="form-control">
-        <option value="1">查看组所有进行的任务</option>
-        <option value="2">查看组所有已完成任务</option>
+        <option value="complete">查看组所有已完成任务</option>
+        <option value="underway">查看组所有进行的任务</option>
     </select>
 </div>
 
 <div class="mount">
     <div class="complete">
         <ul>
-            <li class="list-group-item content">
-                <p class="time">{post_time} ~ {complete_time}</p>
-                <p class="zone">{zone}</p>
-                <p class="event">{event}</p>
-            </li>
+            <template class="t-content">
+                <li class="list-group-item">
+                    <p class="report-time">报告时间 : {post_time}</p>
+                    <p>完成时间 : {complete_time}</p>
+                    <p class="zone">区域 : {zone}</p>
+                    <p class="event">时间 : {event}</p>
+                    <p>任务人员 : {account_name}</p>
+                </li>
+            </template>
 
             <li class="list-group-item empty">
-                暂无完成的任务
+                无完成的任务
             </li>
-
         </ul>
     </div>
 
     <div class="underway">
         <ul>
-            <li class="list-group-item content">
-                <p class="time"><span class="task-attr">提交日期 :</span> {post_time}</p>
-                <p class="zone"><span class="task-attr">故障区域 :</span> {zone}</p>
-                <p class="event"><span class="task-attr">故障 :</span> {event}</p>
-                <p class="assign"><span class="task-attr">任务拥有者 :</span> {account_name}</p>
-                <button type="" class="btn btn-primary btn-block">重新分配</button>
-            </li>
 
-            <li class="list-group-item empty">
-                暂无进行中的任务
-            </li>
+            <template class="t-content">
+                <li class="list-group-item">
+                    <p class="report-time">提交日期 : {post_time}</p>
+                    <p class="zone">故障区域 : {zone}</p>
+                    <p class="event">故障 : {event}</p>
+                    <p class="assign">任务人员 : {account_name}</p>
+                </li>
+
+            </template>
+
+            <template class="t-empty">
+                <li class="list-group-item">
+                    暂无进行中的任务
+                </li>
+            </template>
         </ul>
     </div>
 </div>

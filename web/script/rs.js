@@ -433,7 +433,7 @@
                 ],
                 'data': [
                     function (value) {
-                        return typeof value == 'object';
+                        return typeof value == 'object' || typeof value == 'string';
                     },
                     {}
                 ],
@@ -512,6 +512,17 @@
     $rs.getCsrf = function () {
         return $('meta[name="csrf-token"]').attr('content');
     };
+
+    $rs.setProp = function($object,key,value)
+    {
+        if(key in $object)
+        {
+            for(var i in value)
+            {
+                $object[key][i] = value[i];
+            }
+        }
+    }
 
     $rs.setContent = function ($ele, content) {
         if (!content && content != 0) {
@@ -659,7 +670,6 @@
             if (key.indexOf('.') > -1) {
                 var
                     split = key.split('.');
-
 
                 this.data[split[0]][0][split[1]] = value;
             } else {

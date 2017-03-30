@@ -73,16 +73,15 @@
                 ['system-event',{
                     'add' : function()
                     {
-                        if('_event_' in this.modals)
-                        {
-                            this.modals._event_.last = null;
-                        }
+                        $rs.setProp(this.modals,'_event_',{
+                            'last' : null
+                        });
                     },
                     'remove' : function()
                     {
-                        if ('_event_' in this.modals) {
-                            this.modals._event_.last = null;
-                        }
+                        $rs.setProp(this.modals,'_event_',{
+                            'last' : null
+                        });
                     }
                 }]
             ],
@@ -434,7 +433,7 @@
                         },
                         'render': function (data, type) {
                             var
-                                $mount = $('#zone-event-modal .' + type,zone.$panel);
+                                $mount = $('.' + type,this.$body);
 
                             $rs.render({
                                 '$temp' : $('.t-content',$mount),
@@ -446,20 +445,7 @@
                                 },
                                 'before' : function()
                                 {
-                                    if($.isArray(this.data))
-                                    {
-                                        if(this.data.length)
-                                        {
-                                            this.$mount.find('li').remove();
-                                            zone.watcher().change('events.' + type, this.data.length, this.$mount);
-                                        }else{
-                                            zone.watcher().change('events.' + type, 0, this.$mount);
-                                            return false;
-                                        }
-                                    }else{
-                                        zone.watcher().plus('events.' + type,$mount);
-                                    }
-
+                                    $.isArray(this.data) && this.$mount.find('li').remove();
                                 }
                             });
                         },
@@ -467,33 +453,14 @@
                         'removeEvent': function ($target) {
                             var
                                 eventId = $target.data('eid'),
-                                zoneId = this.$active.data('zid');
+                                zoneId = this.$active.data('zid'),
+                                self = this;
 
                             $rs.ajax('zone/remove-event', {
                                 'eventId': eventId,
                                 'zoneId': zoneId
                             }).done(function () {
-                                $rs.render({
-                                    '$temp' : $('#zone-event-modal .not-in .t-content',zone.$panel),
-                                    'data' : {'event_id' : eventId,'event_name' : $target.text()},
-                                    'after' : function(el)
-                                    {
-                                        $.data(el[1],'eid',this.event_id);
-                                        return el;
-                                    },
-                                    'before' : function()
-                                    {
-                                        if(zone.watcher().get('events.in') == 1)
-                                        {
-                                            zone.watcher().sub('events.in',$('#zone-event-modal .in',zone.$panel));
-                                        }else{
-                                            zone.watcher().sub('events.in');
-                                        }
-
-                                        zone.watcher().plus('events.not-in',this.$mount);
-                                    }
-                                });
-
+                                self.render({'event_id' : eventId,'event_name' : $target.text()},'not-in');
                                 $target.remove();
                                 $rs.alert().success('删除成功', 400);
                             }).fail(function (response) {
@@ -503,33 +470,14 @@
                         'addEvent': function ($target) {
                             var
                                 eventId = $target.data('eid'),
-                                zoneId = this.$active.data('zid');
+                                zoneId = this.$active.data('zid'),
+                                self = this;
 
                             $rs.ajax('zone/add-event', {
                                 'eventId': eventId,
                                 'zoneId': zoneId
                             }).done(function () {
-                                $rs.render({
-                                    '$temp' : $('.t-content',zone.$panel.find('#zone-event-modal .in')),
-                                    'data' : { 'event_id': eventId, 'event_name': $target.text() },
-                                    'after' : function(el)
-                                    {
-                                        $.data(el[1],'eid',this.event_id);
-                                        return el;
-                                    },
-                                    'before' : function()
-                                    {
-                                        zone.watcher().plus('events.in',this.$mount);
-
-                                        if(zone.watcher().get('events.not-in') == 1)
-                                        {
-                                            zone.watcher().sub('events.not-in',$('.t-content',zone.$panel.find('#zone-event-modal .not-in')))
-                                        }else{
-                                            zone.watcher().sub('events.not-in');
-                                        }
-                                    }
-                                });
-
+                                self.render({ 'event_id': eventId, 'event_name': $target.text() },'in');
                                 $target.remove();
                                 $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {

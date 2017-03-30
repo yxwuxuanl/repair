@@ -8,8 +8,11 @@
 
 namespace app\controllers;
 use app\filters\CustomResponseFilter;
+use app\filters\LoginFilter;
+use app\filters\RoleFilters;
 use app\models\Task;
 use yii\web\Controller;
+use app\controllers\RoleController as Role;
 
 class TaskController extends Controller
 {
@@ -18,11 +21,26 @@ class TaskController extends Controller
 		return [
 			'response' => [
 				'class' => CustomResponseFilter::className()
-			]
+			],
+            'role' => [
+                'class' => RoleFilters::className(),
+                'rules' => [
+                    'get-complete-by-account' => [Role::NORMAL,Role::GROUP_ADMIN]
+                ]
+            ],
+            'login' => [
+                'class' => LoginFilter::className(),
+                'only' => ['get-complete-by-account']
+            ]
 		];
 	}
 
-	public function actionGetAssignTask()
+    public function actionGetCompleteByAccount()
+    {
+        return Task::getCompleteByAccount(AccountController::getAccountId());
+    }
+
+	public function actionGetUnderwayTask()
 	{
 		return Task::getAssignTask(AccountController::getAccountId());
 	}
@@ -31,6 +49,7 @@ class TaskController extends Controller
 	{
 		return Task::getTaskPool(\Yii::$app->getSession()->get('group'));
 	}
+
 
 	public function actionGetDetail($taskId)
 	{
@@ -42,8 +61,16 @@ class TaskController extends Controller
 		return Task::finish($taskId);
 	}
 
-	public function actionGetGroupUnderway()
+	public function actionGetGroupTask($complete = 0,$underway = 0)
 	{
-		return Task::getGroupUnderway(GroupController::getGroup());
+        if($complete)
+        {
+            return Task::getByGroup(GroupController::getGroup(),2);
+        }
+
+        if($underway)
+        {
+            return Task::getByGroup(GroupController::getGroup(),1);
+        }
 	}
 }

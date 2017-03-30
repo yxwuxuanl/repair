@@ -24,5 +24,18 @@
   margin-top: 10px; }
   #task-all-panel .mount > div {
     display: none; }
+#task-all-panel .report-time {
+  text-align: center;
+  font-size: 1.1em;
+  border-bottom: 2px solid #696969; }
+
+#task-complete-panel .empty {
+  text-align: center;
+  font-size: 1.5em;
+  line-height: 4em; }
+#task-complete-panel .report-time {
+  text-align: center;
+  font-size: 1.1em;
+  border-bottom: 2px solid #696969; }
 
 /*# sourceMappingURL=task.css.map */

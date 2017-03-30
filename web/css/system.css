@@ -1,0 +1,43 @@
+#system-zone-panel .add-row, #system-event-panel .add-row {
+  text-align: center;
+  font-size: 1.2em; }
+#system-zone-panel .action-icons, #system-event-panel .action-icons {
+  display: none;
+  float: right; }
+  #system-zone-panel .action-icons span, #system-event-panel .action-icons span {
+    margin: 0 6px; }
+#system-zone-panel .list-group-item:hover > .action-icons, #system-event-panel .list-group-item:hover > .action-icons {
+  display: inline; }
+
+#system-zone-panel .parent {
+  font-size: 1.1em; }
+#system-zone-panel .children {
+  display: none; }
+  #system-zone-panel .children ul {
+    padding-left: 0; }
+  #system-zone-panel .children .empty {
+    line-height: 1.5em; }
+#system-zone-panel .event ul {
+  padding-left: 0;
+  height: 200px;
+  overflow: scroll; }
+#system-zone-panel .event li {
+  display: inline-block;
+  width: 30%; }
+  @media screen and (max-width: 960px) {
+    #system-zone-panel .event li {
+      width: 100%; } }
+  #system-zone-panel .event li:hover .glyphicon {
+    display: inline; }
+#system-zone-panel .event .empty {
+  width: 80%;
+  font-size: 1.2em;
+  line-height: 1.5em;
+  text-align: center;
+  display: block;
+  margin: 10px auto; }
+#system-zone-panel .event .glyphicon {
+  float: right;
+  display: none; }
+
+/*# sourceMappingURL=system.css.map */

@@ -11,11 +11,15 @@
 	window.onload = function()
 	{
         var
-        $panel = $('#index-panel');
+            $panel = $('#index-panel');
 
 		$panel.find('.underway').click(function(){
 			$('#task-assign-tab').click();
 		});
+
+        $panel.find('.week-done,.all-done').click(function(){
+            $('#task-complete-tab').click();
+        });
 	}
 </script>
 
@@ -25,7 +29,7 @@
 	<span> [<?= $groupName ?>]</span>
 
     <?php
-        if($isGm):
+        if($isGa):
     ?>
 
     <span> [部门管理员] </span>
@@ -37,17 +41,13 @@
 </h3>
 
 <div>
-	<p class="underway">还有 <span class="number"><?= $underway  ?></span> 个进行中的任务</p>
+    <div class="part">
+        <h5>个人任务概况</h5>
 
-    <?php
-        if($taskMode <= 2):
-    ?>
+        <p class="underway">还有 <?= $underway ?> 个进行中的任务</p>
+        <p class="week-done">本周完成了 <?= $weekDone ?> 个任务<br/><span>平均 <?= $weekEfficient ?>小时 / 个任务</span></p>
+        <p class="all-done">总共完成了 <?= $allDone ?> 个任务 <br/><span>平均<?= $efficient ?>小时 / 个任务</span></p>
 
-	<p>组任务池还有 <span class="number"><?= $groupPool ?></span> 个任务</p>
-    
-    <?php
-        endif;
-    ?>
+    </div>
 
-	<p>一共完成了 <span class="number"><?= $complete ?></span> 个任务</p>
 </div>

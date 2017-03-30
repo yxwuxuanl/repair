@@ -45,7 +45,7 @@
                 <button type="button" class="close" data-dismiss="modal">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title"> 添加组</h4>
+                <h4 class="modal-title">创建组</h4>
             </div>
 
             <div class="modal-body">
@@ -68,8 +68,8 @@
                     </div>
 
                     <div class="event-mount">
+                        <h5>将以下事件分配给新组</h5>
                         <ul>
-
                             <template class="t-empty">
                                 <li class="empty list-group-item list-group-item-danger">全部事件已经绑定</li>
                             </template>
@@ -83,7 +83,7 @@
                     </div>
                 
                     <div class="form-group">
-                        <button class="submit btn btn-primary">添加</button>
+                        <button class="submit btn btn-primary">创建</button>
                     </div>
                 </form>
             </div>
@@ -175,10 +175,10 @@
 
             <div class="modal-body">
                 <div class="event-mount">
-                    <h5>该组响应以下事件</h5>
+                    <h5>该组负责以下事件</h5>
                     <div class="has">
                         <ul>
-                            <template>
+                            <template class="t-content">
                                 <li class="list-group-item">{event_name}
                                     <span class="glyphicon glyphicon-trash" action="remove"></span>
                                 </li>
@@ -188,7 +188,7 @@
                     <h5>以下事件可以指派给该组</h5>
                     <div class="not-has">
                         <ul>
-                            <template>
+                            <template class="t-content">
                                 <li class="list-group-item">{event_name}
                                     <span class="glyphicon glyphicon-plus" action="add"></span>
                                 </li>

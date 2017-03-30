@@ -294,7 +294,7 @@
                         'renderEvent': function (data)
                         {
                             var
-                                $select = this.$body.find('select');
+                                $select = this.$body.find('.event-mount select');
 
                             $rs.render({
                                 'temp' : '<option>{event_name}</option>',

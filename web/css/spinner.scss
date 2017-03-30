@@ -25,11 +25,11 @@
   $time : -1.1;
 
 
-  @for $i from 2 to 6 
+  @for $i from 2 to 6
   {
       .rect#{$i}
       {
-          -webkit-animation-delay:#{$time}s;  
+          -webkit-animation-delay:#{$time}s;
           animation-delay:#{$time}s;
       }
       $time : $time + 0.1;
@@ -46,10 +46,10 @@
 
 
 @-webkit-keyframes stretchdelay {
-  0%, 40%, 100% { -webkit-transform: scaleY(0.4) } 
+  0%, 40%, 100% { -webkit-transform: scaleY(0.4) }
   20% { -webkit-transform: scaleY(1.0) }
 }
- 
+
 @keyframes stretchdelay {
   0%, 40%, 100% {
     transform: scaleY(0.4);

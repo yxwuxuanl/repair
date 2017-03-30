@@ -8,6 +8,7 @@
 
 namespace app\models;
 
+use app\controllers\GroupController;
 use app\formatter\Status;
 use yii\base\Exception;
 use yii\db\ActiveRecord;
@@ -21,13 +22,14 @@ class Task extends ActiveRecord
 		return 'task';
 	}
 
+	public $enableClientValidation = false;
+
 	public function rules()
 	{
 		return [
-			[['reporter_name','reporter_id','reporter_tel'],'required'],
+			[['reporter_name','reporter_id','reporter_tel','event','zone'],'required'],
 
-			['reporter_name','string','min' => 2],
-
+			['reporter_name','string','min' => 2,'max' => 8],
 			['reporter_id','checkStuNumber'],
 
 			['reporter_tel',function($attr){
@@ -37,20 +39,26 @@ class Task extends ActiveRecord
 				}
 			}],
 
+            ['event',function($attr){
+                if(!Event::checkEid($this->$attr) || !zeMap::isZoneHasEvent($this->parent_zone,$this->$attr))
+                {
+                    $this->addError($attr);
+                }
+            }],
 
-			['custom',function($attr){
-				$test = CustomLabel::get(substr($this->zone_id,0,2) . '00');
-
-				if(is_array($test) && $test['test'] != '')
-				{
-					if(!preg_match('/'. $test['test'] .'/',$this->$attr))
-					{
-						$this->addError($attr);
-					}
-				}
-			}]
+            ['zone',function($attr){
+                if(!Zone::checkZid($this->$attr) || substr($this->$attr,0,2) != substr($this->parent_zone,0,2) || !Zone::isExist($this->$attr))
+                {
+                    $this->addError($attr);
+                }
+            }],
 		];
 	}
+
+    public function attributes()
+    {
+        return ['task_id','reporter_name','reporter_id','status','reporter_tel','event','zone'];
+    }
 
 	public static function checkStuNumber($value)
 	{
@@ -61,7 +69,7 @@ class Task extends ActiveRecord
 		return true;
 	}
 
-	public static function getRow($stuNumber)
+	public static function getReportResult($taskId, $stuNumber)
 	{
 		if(!static::checkStuNumber($stuNumber)) return Status::INVALID_ARGS;
 		$ar = parent::find()->where('`reporter_id`=:rid',[':rid' => $stuNumber]);
@@ -76,47 +84,53 @@ class Task extends ActiveRecord
 		}
 	}
 
-	public static function add($data)
+	public static function create($data)
 	{
-		$model = new self();
+		if(!array_key_exists('custom',$data))
+        {
+            $data['custom'] = '';
+        }
+
+        if(!array_key_exists('parent_zone',$data)) return Status::INVALID_ARGS;
+
+        $model = new self();
 
 		foreach($data as $attr => $value)
 		{
 			$model->$attr = $value;
 		}
-
 		if(!empty($model->errors) || !$model->validate()) return [Status::INVALID_ARGS,$model->errors];
 
-		$event = $model->event_id;
-		$group = Group::findByEvent($event);
+		$eventId = $model->event;
+		$zoneId = $model->zone;
+        $taskId = 't_' . \Yii::$app->getSecurity()->generateRandomString(8);
+        $group = Group::findByEvent($eventId);
 
-		$task_id = 't_' . substr(uniqid(),-8);
-
-		$model->event = Event::getEventName($event);
-		$model->zone = Zone::getZoneName($model->zone_id);
-		$model->task_id = $task_id;
-		$model->group_id = $group['group_id'];
-		$model->post_time = date('Y-m-d');
+		$model->event = Event::getEventName($eventId);
+		$model->zone = Zone::getZoneName($zoneId) . ' ' . $model->custom;
+		$model->status = '0';
+		$model->task_id = $taskId;
 
 		$transaction = \Yii::$app->getDb()->beginTransaction();
 
 		try
 		{
-			$model->insert();
+            $model->insert(FALSE);
 
 			if($model->describe != '')
 			{
-				Describe::add($task_id,$model->describe);
+				Describe::add($taskId,$model->describe);
 			}
 
 			if($group['task_mode'] != 1)
 			{
-				static::assign($task_id,$event,$group);
+				static::assign($taskId,$eventId,$group);
 			}
 
 			$transaction->commit();
-		}catch (Exception $e)
+		}catch (\yii\db\Exception $e)
 		{
+		    print_r($e);
 			$transaction->rollBack();
 			return Status::DATABASE_SAVE_FAIL;
 		}
@@ -124,9 +138,29 @@ class Task extends ActiveRecord
 		return Status::SUCCESS;
 	}
 
+	public function setcustom($value)
+    {
+        if(!CustomLabel::valid($this->parent_zone,(string) $value))
+        {
+            $this->addError('custom');
+        }else{
+            $this->custom = $value;
+        }
+    }
+
+    public function setparent_zone($value)
+    {
+        if(!Zone::checkZid($value,true) || !Zone::isExist($value))
+        {
+            $this->addError('parent_zone');
+        }else{
+            $this->parent_zone = $value;
+        }
+    }
+
 	public static function assign($taskId,$event,$group)
 	{
-		$rules = Allocation::getGroupRule($group['group_id'],true);
+		$rules = Allocation::getGroupRule($group['group_id'],true,false);
 
 		$eventRule = NULL;
 		$defaultRule = NULL;
@@ -138,7 +172,7 @@ class Task extends ActiveRecord
 		{
 			if($rule['level'] == 2)
 			{
-				$bind = array_merge($bind,$rule['assign']);
+				$bind = array_merge($bind,explode(',',$rule['assign']));
 			}
 
 			if($rule['event'] == $event)
@@ -158,11 +192,12 @@ class Task extends ActiveRecord
 
 		if($eventRule)
 		{
-			$assignList = $eventRule['assign'];
+			$assignList = explode(',',$eventRule['assign']);
 			$index = $eventRule['next'];
 			$assign = $assignList[$index];
-			$mode = 2;
-			Allocation::updateAll(['next' => (++$index >= count($assignList) ? 0 : $index)],'`event`=:eid',[':eid' => $event]);
+			$mode = 1;
+			Allocation::updateAll(['next' => (++$index >= count($assignList) ? 0 : $index)],'`allocation_id` = :aid',[':aid' => $eventRule['allocation_id' .
+            '']]);
 		}else{
 			$assignList = Account::getMember($group['group_id']);
 			$index = $defaultRule['next'];
@@ -173,7 +208,7 @@ class Task extends ActiveRecord
 				{
 					if($index == count($assignList))
 					{
-						$index = 0;
+						$index = -1;
 						continue;
 					}
 
@@ -193,32 +228,12 @@ class Task extends ActiveRecord
 				}
 			}
 
-			$mode = 1;
-			Allocation::updateAll(['next' => $index],'`group_id`=:gid and `level` = \'0\'',[':gid' => $group['group_id']]);
+			$mode = 0;
+			Allocation::updateAll(['next' => $index],'`allocation_id` = :aid',[':aid' => 'def_' . substr($group['group_id'],-8)]);
 		}
 
-		TaskTrace::add($taskId,$assign,$mode);
+		TaskTrace::Trace($taskId,$assign,$mode);
 		return true;
-	}
-
-	public function setzone_id($value)
-	{
-		if(!Zone::checkZid($value))
-		{
-			$this->addError('zone');
-		}else{
-			$this->zone_id = $value;
-		}
-	}
-
-	public function setevent_id($value)
-	{
-		if(!Event::checkEid($value) || !zeMap::isZoneHasEvent(substr($this->zone_id,0,2) . '00',$value))
-		{
-			$this->addError('event');
-		}else{
-			$this->event_id = $value;
-		}
 	}
 
 	public static function getGroup($event)
@@ -226,34 +241,29 @@ class Task extends ActiveRecord
 		return Group::find()->where(['like','events',$event])->one();
 	}
 
-	public function attributes()
-	{
-		return ['task_id','reporter_name','reporter_id','status','reporter_tel','event','zone','custom','group_id','post_time'];
-	}
-
 	public static function getAssignTask($accountId)
 	{
-		$ar = TaskTrace::find()->where('`assign`=:aid and `status` != \'2\'',[':aid' => $accountId]);
-		$ar->innerJoin('task','task_trace.task_id = task.task_id');
-		$ar->select(['task.task_id as task_id','event','concat(`zone`,\' \',`custom`) as zone','post_time']);
-		$ar->orderBy(['post_time' => 'desc']);
-		return $ar->asArray()->all();
+        return TaskTrace::find()
+            ->where('assign = :aid')
+            ->andWhere('status != \'2\'')
+            ->params([':aid' => $accountId])
+            ->innerJoin('task','task_trace.task_id = task.task_id')
+            ->select(['task.task_id as task_id','event','zone','post_time'])
+            ->orderBy(['post_time' => 'desc'])
+            ->asArray()->all();
 	}
 
 	public static function getDetail($taskId)
 	{
 		if(!static::checkTaskId($taskId)) return Status::INVALID_ARGS;
 
-		$ar = parent::find()->where('`task_id`=:tid',[':tid' => $taskId]);
-		$ar->select(['reporter_name','reporter_id','reporter_tel']);
+		$ar = parent::find()
+            ->where('task.`task_id` = :tid',[':tid' => $taskId])
+            ->innerJoin('task_trace','task.task_id = task_trace.task_id')
+		    ->select(['reporter_name','reporter_id','reporter_tel','trace_mode'])
+            ->asArray()->one();
 
-		$row = $ar->asArray()->one();
-
-		if($row === NULL) return Status::INVALID_ARGS;
-
-		$row['describe'] = Describe::get($taskId);
-
-		return $row;
+		return $ar;
 	}
 
 	public static function getGroupTaskPool($groupId)
@@ -269,20 +279,7 @@ class Task extends ActiveRecord
 	public static function finish($taskId)
 	{
 		if(!static::checkTaskId($taskId)) return Status::INVALID_ARGS;
-		$transaction= \Yii::$app->getDb()->beginTransaction();
-
-		try
-		{
-			parent::updateAll(['status' => '2'],'`task_id`=:tid',[':tid' => $taskId]);
-			TaskTrace::updateAll(['complete_time' => date('Y-m-d')],'`task_id`=:tid',[':tid' => $taskId]);
-			$transaction->commit();
-		}catch(Exception $e)
-		{
-			$transaction->rollBack();
-			return Status::DATABASE_SAVE_FAIL;
-		}
-
-		return Status::SUCCESS;
+		return parent::updateAll(['status' => '2'],'`task_id` = :tid',[':tid' => $taskId]);
 	}
 
 	public static function getTaskNumber($accountId,$group)
@@ -320,4 +317,44 @@ class Task extends ActiveRecord
 	{
 		return parent::find()->where('`group_id`=:gid',[':gid' => $group])->andWhere(['status' => NULL])->asArray()->select(['task_id','event','zone','custom','post_time'])->all();
 	}
+
+	public static function getCompleteByAccount($aid)
+    {
+        return parent::find()
+            ->where('assign = :aid')
+            ->andWhere('status = \'2\'')
+            ->innerJoin('task_trace','task.task_id = task_trace.task_id')
+            ->select(['post_time','complete_time','trace_mode','zone','event'])
+            ->params([':aid' => $aid])
+            ->asArray()->all();
+    }
+
+
+    public static function getByGroup($gid,$status)
+    {
+        $member = [];
+
+        foreach(Account::getMember($gid) as $m)
+        {
+            $member[] = $m['account_id'];
+        }
+
+        return parent::find()
+            ->where(['in','assign',$member])
+            ->andWhere('status = :status')
+            ->innerJoin('task_trace','task.task_id = task_trace.task_id')
+            ->innerJoin('account','account_id = assign')
+            ->select(['post_time','complete_time','zone','event','account_name'])
+            ->params([':status' => (string) $status])
+            ->asArray()->all();
+    }
+
+    public static function queryReportRow($stuId)
+    {
+        return parent::find()
+            ->where('reporter_id = :rid')
+            ->select(['post_time','zone','event','status'])
+            ->params([':rid' => $stuId])
+            ->asArray()->all();
+    }
 }

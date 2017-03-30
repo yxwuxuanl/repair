@@ -76,9 +76,9 @@ class GroupController extends Controller
 		return Group::remove($groupId);
 	}
 
-	public function actionChangeTaskMode($mode)
+	public function actionChangeTaskMode($taskMode)
 	{
-		return Group::changeTaskMode(static::getGroup(),$mode);
+		return Group::changeTaskMode(static::getGroup(),$taskMode);
 	}
 
 	public static function getGroup()
@@ -86,27 +86,27 @@ class GroupController extends Controller
 		return \Yii::$app->getSession()->get('group');
 	}
 
-	public function actionGetSetting()
+	public function actionGetSetting($member = 0 , $taskMode = 0 , $rules = 0)
 	{
 		$group = static::getGroup();
-		$setting = [];
 
-		$events = [];
-		$assigns = [];
+		if($member)
+        {
+            return [
+                'in' => Account::getMember($group,true),
+                'not-in' => Account::getNoAssign()
+            ];
+        }
 
-		$eventMap = [];
-		$assignsMap = [];
-
-		$setting['mode'] = Group::getTaskMode($group);
-		$setting['member'] = Account::getMember($group,true);
-		$setting['noAssign'] = Account::getNoAssign();
-
-		if($setting['mode'] == '2' || $setting['mode'] == '4')
-		{
-			$setting['rule'] = Allocation::getGroupRule($group);
-		}
-
-		return $setting;
+        if($taskMode)
+        {
+            return ['mode' => Group::getTaskMode($group)];
+        }
+        
+        if($rules)
+        {
+            return Allocation::getGroupRule($group);
+        }
 	}
 
 	public function actionChangeAdmin($groupId,$adminId)
@@ -126,14 +126,12 @@ class GroupController extends Controller
 
 	public function actionAddMember($accountId)
 	{
-		if(!Account::checkAid($accountId) || !Account::isNoAssign($accountId)) return Status::INVALID_ARGS;
 		return Account::changeGroup($accountId,GroupController::getGroup());
 	}
 
-	public function actionDeleteMember($aid)
+	public function actionDeleteMember($accountId)
 	{
-		if(!Account::checkAid($aid) || !Account::isExist($aid)) return Status::INVALID_ARGS;
-		return Account::changeGroup($aid,'g_noAssign');
+		return Account::changeGroup($accountId,NULL);
 	}
 
 	public function actionGetEvent($groupId)
@@ -148,7 +146,7 @@ class GroupController extends Controller
 		$bindEvents = [];
 		$bindMember = [];
 
-		foreach(Allocation::find()->where('`group_id`=:gid',[':gid' => $group])->each() as $rule)
+		foreach(Allocation::find()->where('`group_id` = :gid',[':gid' => $group])->each() as $rule)
 		{
 			if($rule['level'] >= 1)
 			{
@@ -183,11 +181,16 @@ class GroupController extends Controller
 		return ['events' => $events,'members' => $members];
 	}
 
-	public function actionGetCreateData()
+	public function actionGetCreateData($event = 0,$member = 0)
 	{
-		return [
-			'account' => Account::getNoAssign(),
-			'event' => Event::getNoAssign()
-		];
+	    if($event)
+        {
+            return Event::getNoAssign();
+        }
+
+        if($member)
+        {
+            return Account::getNoAssign();
+        }
 	}
 }

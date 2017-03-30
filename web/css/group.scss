@@ -48,13 +48,21 @@
         {
             height: 200px;
             overflow:scroll;
+
+            @media screen and (max-width:1130px){
+                height: 150px;
+            }
         }
 
         li
         {
+            @media screen and (max-width:960px){
+                width: 100%;
+                margin: 0;
+            }
             display: inline-block;
-            width: 30%;
-            margin: 2px 4px;
+            width: 50%;
+            float: left;
         }
 
         span
@@ -83,57 +91,106 @@
     }
 }
 
-#group-setting-panel
+#group-member-panel
 {
-    .mode
+    .member
     {
-        select
+        div
         {
-            width: 80%;
-            display: inline-block;
+            // width: 40%;
+            // float: left;
         }
 
-        height: 100px;
+        // .in
+        // {
+            // margin-right: 20%;
+        // }
+
+        ul
+        {
+            height: 200px;
+            overflow: scroll;
+        }
+
+        .glyphicon
+        {
+            float: right;
+            display: none;
+        }
+
+        li:hover .glyphicon
+        {
+            display: inline;
+        }
+    }
+}
+
+#group-taskmode-panel
+{
+    .rules
+    {
+        margin-top: 20px;
     }
 
-    .rule
+    table
     {
-        display: none;
+        text-align: center;
 
-        tr:hover .glyphicon
+        .event
         {
-            visibility:visible;
+            width: 40%;
+        }
+
+        .assign
+        {
+            width: 30%;
+        }
+
+        .type
+        {
+            width: 15%;
         }
     }
 
-    .glyphicon
+    thead
     {
-        visibility:hidden;
-        float: right;
+        font-size: 1.1em;
     }
 
-    h4,h5
+    h5,h6
     {
         text-align: center;
     }
 
-    ul
+    h6:hover
     {
-        padding-left: 0;
-        height: 200px;
-        overflow: scroll;
+        cursor: pointer;
     }
 
-    .select > .glyphicon
+    .create-rule-modal
     {
-        visibility:visible;
-    }
-
-    .member
-    {
-        li:hover > .glyphicon
+        .member
         {
-            visibility:visible;
+            height: 200px;
+            overflow: scroll;
+
+            li
+            {
+                width: 50%;
+                display: inline-block;
+                float: left;
+            }
+
+            .select .glyphicon
+            {
+                display: inline;
+            }
+
+            .glyphicon
+            {
+                display: none;
+                float:right;
+            }
         }
     }
 }

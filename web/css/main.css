@@ -40,6 +40,9 @@ body {
 #system-zone-panel .event li {
   display: inline-block;
   width: 30%; }
+  @media screen and (max-width: 960px) {
+    #system-zone-panel .event li {
+      width: 100%; } }
   #system-zone-panel .event li:hover .glyphicon {
     display: inline; }
 #system-zone-panel .event .empty {
@@ -158,10 +161,17 @@ body {
 #group-manage-panel .event-mount ul {
   height: 200px;
   overflow: scroll; }
+  @media screen and (max-width: 1130px) {
+    #group-manage-panel .event-mount ul {
+      height: 150px; } }
 #group-manage-panel .event-mount li {
   display: inline-block;
-  width: 30%;
-  margin: 2px 4px; }
+  width: 50%;
+  float: left; }
+  @media screen and (max-width: 960px) {
+    #group-manage-panel .event-mount li {
+      width: 100%;
+      margin: 0; } }
 #group-manage-panel .event-mount span {
   float: right;
   display: none; }
@@ -172,28 +182,43 @@ body {
 #group-manage-panel #group-event-modal h5 {
   text-align: center; }
 
-#group-setting-panel .mode {
-  height: 100px; }
-  #group-setting-panel .mode select {
-    width: 80%;
-    display: inline-block; }
-#group-setting-panel .rule {
-  display: none; }
-  #group-setting-panel .rule tr:hover .glyphicon {
-    visibility: visible; }
-#group-setting-panel .glyphicon {
-  visibility: hidden;
-  float: right; }
-#group-setting-panel h4, #group-setting-panel h5 {
-  text-align: center; }
-#group-setting-panel ul {
-  padding-left: 0;
+#group-member-panel .member ul {
   height: 200px;
   overflow: scroll; }
-#group-setting-panel .select > .glyphicon {
-  visibility: visible; }
-#group-setting-panel .member li:hover > .glyphicon {
-  visibility: visible; }
+#group-member-panel .member .glyphicon {
+  float: right;
+  display: none; }
+#group-member-panel .member li:hover .glyphicon {
+  display: inline; }
+
+#group-taskmode-panel .rules {
+  margin-top: 20px; }
+#group-taskmode-panel table {
+  text-align: center; }
+  #group-taskmode-panel table .event {
+    width: 40%; }
+  #group-taskmode-panel table .assign {
+    width: 30%; }
+  #group-taskmode-panel table .type {
+    width: 15%; }
+#group-taskmode-panel thead {
+  font-size: 1.1em; }
+#group-taskmode-panel h5, #group-taskmode-panel h6 {
+  text-align: center; }
+#group-taskmode-panel h6:hover {
+  cursor: pointer; }
+#group-taskmode-panel .create-rule-modal .member {
+  height: 200px;
+  overflow: scroll; }
+  #group-taskmode-panel .create-rule-modal .member li {
+    width: 50%;
+    display: inline-block;
+    float: left; }
+  #group-taskmode-panel .create-rule-modal .member .select .glyphicon {
+    display: inline; }
+  #group-taskmode-panel .create-rule-modal .member .glyphicon {
+    display: none;
+    float: right; }
 
 #task-assign-panel .time {
   text-align: center;
@@ -221,20 +246,33 @@ body {
   margin-top: 10px; }
   #task-all-panel .mount > div {
     display: none; }
+#task-all-panel .report-time {
+  text-align: center;
+  font-size: 1.1em;
+  border-bottom: 2px solid #696969; }
 
-#index-panel {
-  padding-top: 20px; }
-  #index-panel h3 {
-    text-align: center;
-    margin-bottom: 40px; }
-    #index-panel h3 span {
-      font-size: 0.8em; }
-  #index-panel p {
-    font-size: 1.2em;
-    border-bottom: 2px solid #696969;
-    margin-bottom: 40px; }
-  #index-panel .number {
-    font-size: 1.2em; }
+#task-complete-panel .empty {
+  text-align: center;
+  font-size: 1.5em;
+  line-height: 4em; }
+#task-complete-panel .report-time {
+  text-align: center;
+  font-size: 1.1em;
+  border-bottom: 2px solid #696969; }
+
+#index-panel h3 {
+  text-align: center;
+  margin-bottom: 20px; }
+#index-panel span {
+  font-size: 0.8em; }
+#index-panel p {
+  font-size: 1.2em;
+  border-bottom: 2px solid #696969;
+  margin-bottom: 40px; }
+#index-panel .number {
+  font-size: 1.2em; }
+#index-panel h5 {
+  text-align: center; }
 
 .container {
   margin-top: 20px; }

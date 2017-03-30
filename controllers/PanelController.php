@@ -36,7 +36,8 @@ class PanelController
 				['管理组','manage']
 			],
 			'2' => [
-				['组设置','setting'],
+			    ['组成员设置','member'],
+                ['任务分配规则','taskmode']
 			],
 		],
 		'task' => [
@@ -44,7 +45,7 @@ class PanelController
 			'1' => [
 				['进行中','assign'],
 				['已完成','complete'],
-				['任务池','pool']
+//				['任务池','pool']
 			],
 			'2' => [
 				['查看组任务','all']

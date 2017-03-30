@@ -1,0 +1,15 @@
+#index-panel h3 {
+  text-align: center;
+  margin-bottom: 20px; }
+#index-panel span {
+  font-size: 0.8em; }
+#index-panel p {
+  font-size: 1.2em;
+  border-bottom: 2px solid #696969;
+  margin-bottom: 40px; }
+#index-panel .number {
+  font-size: 1.2em; }
+#index-panel h5 {
+  text-align: center; }
+
+/*# sourceMappingURL=index.css.map */

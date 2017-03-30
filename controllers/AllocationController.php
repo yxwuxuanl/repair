@@ -22,7 +22,7 @@ class AllocationController extends Controller
 		];
 	}
 
-	public function actionAdd($event,$assign,$level)
+	public function actionCreate($event,$assign,$level)
 	{
 		return Allocation::create(GroupController::getGroup(),$event,$assign,$level);
 	}
@@ -32,8 +32,9 @@ class AllocationController extends Controller
 		return Allocation::getGroupRule(GroupController::getGroup());
 	}
 
-	public function actionRemove($eventId)
-	{
-		return (string) Allocation::remove($eventId);
-	}
+	public function actionRemove($allocationId)
+    {
+        return Allocation::deleteAll(['allocation_id' => $allocationId]);
+    }
+
 }
