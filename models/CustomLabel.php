@@ -21,14 +21,11 @@ class CustomLabel extends ActiveRecord
 
 	public static function get($zoneId)
 	{
-		if(!Zone::checkZid($zoneId,true))
-		{
-			return Status::INVALID_ARGS;
-		}
+		if(!Zone::checkZid($zoneId,true)) return Status::INVALID_ARGS;
 
-		$row = parent::find()->where('`zone_id`=:zid',[':zid' => $zoneId])->asArray()->one();
+		$row = parent::find()->where('`zone_id` = :zid',[':zid' => $zoneId])->asArray()->one();
 
-		return $row;
+		return empty($row) ? NULL : $row;
 	}
 
 	public function attributes()
@@ -81,4 +78,19 @@ class CustomLabel extends ActiveRecord
 
 		return Status::SUCCESS;
 	}
+
+	public static function valid($zone,$value)
+    {
+        $regExp = parent::find()->where('zone_id = :zid')
+            ->params([':zid' => $zone])
+            ->select('test')
+            ->scalar();
+
+        if($regExp)
+        {
+            return preg_match('/'. $regExp .'/',$value);
+        }else{
+            return true;
+        }
+    }
 }

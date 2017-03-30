@@ -85,30 +85,27 @@
                     'remove': function () {
                         this.reload = true;
 
-                        if ('_add_' in this.modals) {
-                            this.modals._add_.reload = true;
-                        }
+                        $rs.setProp(this.modals,'_add_',{
+                            'reload' : true
+                        });
+
                     },
                     'rename': function () {
                         this.reload = true;
 
-                        if ('_add_' in this.modals) {
-                            this.modals._add_.reload = true;
-                        }
+                        $rs.setProp(this.modals,'_add_',{
+                            'reload' : true
+                        });
                     },
                     'change-admin': function () {
                         this.reload = true;
-
-                        if ('_add_' in this.modals) {
-                            this.modals._add_.reload = true;
-                        }
                     },
                     'add': function () {
                         this.reload = true;
 
-                        if ('_add_' in this.modals) {
-                            this.modals._add_.reload = true;
-                        }
+                        $rs.setProp(this.modals,'_add_',{
+                            'reload' : true
+                        });
                     }
                 }]
             ],

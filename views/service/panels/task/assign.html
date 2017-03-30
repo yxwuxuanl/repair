@@ -4,7 +4,7 @@
 
 <div class="mount">
     <ul>
-        <template id="t-content">
+        <template class="t-content">
             <li class="list-group-item content">
                 <p class="time"><span class="task-attr">报告时间 : </span>{post_time}</p>
                 <p class="zone"><span class="task-attr">故障区域 : </span>{zone}</p>
@@ -13,7 +13,7 @@
             </li>
         </template>
 
-        <template id="t-empty">
+        <template class="t-empty">
             <li class="list-group-item empty">
                 暂无进行中的任务
             </li>
@@ -32,22 +32,28 @@
             </div>
 
             <div class="modal-body">
-                <div>
-                    <p><span class="task-attr">学生学号 : </span><span class="reporter-id"></span></p>
-                </div>
+                <template class="t-details">
 
-                <div>
-                    <p><span class="task-attr">学生姓名 : </span><span class="reporter_name"></span></p>
-                </div>
+                    <div class="details">
+                        <div>
+                            <p><span class="task-attr">任务类型 : </span><span class="task-type">{trace_mode}</span></p>
+                        </div>
 
-                <div>
-                    <p><span class="task-attr">联系方式 : </span><span class="reporter_tel"></span></p>
-                </div>
+                        <div>
+                            <p><span class="task-attr">学生学号 : </span><span class="reporter-id">{reporter_id}</span></p>
+                        </div>
 
-                <div class="describe">
-                    <p>其他描述</p>
-                    <p class="content"></p>
-                </div>
+                        <div>
+                            <p><span class="task-attr">学生姓名 : </span><span class="reporter_name">{reporter_name}</span></p>
+                        </div>
+
+                        <div>
+                            <p><span class="task-attr">联系方式 : </span><span class="reporter_tel">{reporter_tel}</span></p>
+                        </div>
+                    </div>
+
+
+                </template>
             </div>
         </div>
     </div>

@@ -122,7 +122,7 @@
                                 event.watcher().sub('events');
                                 $rs.alert().success('删除成功', 400);
 
-                                event.trigger('remove',$active.data('eid'));
+                                event.trigger('remove');
 
                                 $active.remove();
                             }).fail(function (response) {
@@ -185,7 +185,7 @@
                                     }
                                 });
 
-                                event.trigger('add', eventName,response.content[0]);
+                                event.trigger('add');
 
                                 $rs.alert().success('添加成功', 400);
                             }).fail(function (response) {

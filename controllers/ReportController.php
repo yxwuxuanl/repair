@@ -38,24 +38,12 @@ class ReportController extends Controller
 
 	public function actionPost()
 	{
-		$request = \Yii::$app->getRequest();
-
-		$data = [
-			'reporter_id' => $request->post('reporter_id',null),
-			'reporter_name' => $request->post('reporter_name',null),
-			'reporter_tel' => $request->post('reporter_tel',null),
-			'zone_id' => $request->post('zone_id',null),
-			'event_id' => $request->post('event_id',null),
-			'custom' => $request->post('custom',null),
-			'describe' => $request->post('describe',null)
- 		];
-
-		return Task::add($data);
+		return Task::create(\Yii::$app->getRequest()->get());
 	}
 
-	public function actionGetRow($stuNumber)
+	public function actionGetResult($stuNumber)
 	{
-		return Task::getRow($stuNumber);
+		return Task::queryReportRow($stuNumber);
 	}
 
     public function behaviors()
@@ -63,7 +51,7 @@ class ReportController extends Controller
 		return [
 			'response' => [
 				'class' => CustomResponseFilter::className(),
-				'only' => ['post','get-info','get-row']
+				'only' => ['post','get-info','get-row','get-result']
 			],
 			NoCsrf::className()
 		];

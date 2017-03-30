@@ -60,7 +60,7 @@ class ZoneController extends Controller
 		return Zone::remove($zoneId);
     }
 
-    public function actionAdd($name,$parent = null)
+    public function actionAdd($name,$parent = NULL)
     {
 		return Zone::create($name,$parent);
     }

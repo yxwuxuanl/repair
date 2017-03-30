@@ -13,8 +13,6 @@ use yii\db\ActiveRecord;
 
 class Allocation extends ActiveRecord
 {
-	const CREATE = 'create';
-
 	public static function tableName()
 	{
 		return 'allocation';
@@ -22,11 +20,10 @@ class Allocation extends ActiveRecord
 
 	public function rules()
 	{
-	    return [];
 		return [
-			[['event','assign','group_id','level'],'required'],
+			[['event','assign','level'],'required'],
 
-			[['event','assign'],'string','min' => 10,'on' => static::CREATE],
+			[['event','assign'],'string','min' => 10],
 
 			['level',function($attr){
 				if(!in_array((int) $this->$attr,[0,1,2]))
@@ -36,23 +33,22 @@ class Allocation extends ActiveRecord
 			}],
 
 			['event',function($attr){
-				$event = $this->$attr;
-
-				// 必须是合法的 Event ID 以及该组必须响应该事件
-				if(!Event::checkEid($event) || !Group::hasEvent($this->group_id,$event))
+				if(!Event::checkEid($this->$attr))
 				{
 					$this->addError($attr);
 				}
 			}],
 
 			['assign',function($attr){
-				$member = explode(',',$this->$attr);
-				$query = Account::find()->where(['in','account_id',$member])->andWhere('`account_group`=:gid',[':gid' => $this->group_id])->count();
+				$members = explode(',',$this->$attr);
 
-				if(count($member) != $query)
-				{
-					$this->addError($attr);
-				}
+				foreach($members as $member)
+                {
+                    if(!Account::checkAid($member))
+                    {
+                        return $this->addError($attr);
+                    }
+                }
 			}],
 
 		];
@@ -65,31 +61,76 @@ class Allocation extends ActiveRecord
 
 	public static function create($group,$event,$assign,$level)
 	{
-		$model = new static();
+		$model = new self();
 
 		$model->group_id = $group;
 		$model->event = $event;
 		$model->assign = $assign;
 		$model->level = $level;
-		$model->allocation_id = 'al_' . substr(uniqid(),-7);
+		$model->allocation_id = 'al_' . \Yii::$app->getSecurity()->generateRandomString(7);
 
 		if(!$model->validate()) return Status::INVALID_ARGS;
 
+		$transaction = \Yii::$app->getDb()->beginTransaction();
+
 		try
 		{
+		    if($level == '2')
+            {
+                $arrAssign = explode(',',$assign);
+
+                $action = [
+                    'remove' => [],
+                    'edit' => []
+                ];
+
+                foreach(parent::find()->where(['like','assign',$arrAssign])->each() as $item)
+                {
+                    foreach($arrAssign as $assign_)
+                    {
+                        if(strpos($item['assign'],$assign_) > -1)
+                        {
+                            if($item['assign'] == $assign_)
+                            {
+                                $action['remove'] = $item['allocation_id'];
+                            }else{
+                                $action['edit'][] = [$item['allocation_id'],$assign_];
+                            }
+                        }
+                    }
+                }
+
+                if(!empty($action['remove']))
+                {
+                    parent::deleteAll(['in','allocation_id',$action['remove']]);
+                }
+
+                if(!empty($action['edit']))
+                {
+                    foreach($action['edit'] as $def)
+                    {
+                        $sql = "UPDATE `allocation` SET `assign` = REPLACE(`assign`,'{$def[1]},','') WHERE `allocation_id` = '{$def[0]}'";
+                        \Yii::$app->getDb()->createCommand($sql)->execute();
+                    }
+                }
+            }
+
 			$model->insert();
+		    $transaction->commit();
 		}catch(Exception $e)
 		{
+		    $transaction->rollBack();
 			return Status::DATABASE_SAVE_FAIL;
 		}
 
 		return Status::SUCCESS;
 	}
 
-	public static function getGroupRule($group,$defaultRule = false)
+	public static function getGroupRule($group,$defaultRule = false,$getMap = true)
 	{
 		$ar = parent::find()
-            ->where('`group_id`=:gid',[':gid' => $group]);
+            ->where('`group_id` = :gid')
+            ->params([':gid' => $group]);
 
 		if(!$defaultRule)
 		{
@@ -100,36 +141,16 @@ class Allocation extends ActiveRecord
 
 		foreach($rules as &$item)
 		{
-			if($item['level'] == 0) continue;
-
-            $explode = explode(',',$item['assign']);
-            $item['assign'] = Account::find()
-                ->where(['in','account_id',$explode])
-                ->select('group_concat(`account_name`)')
-                ->scalar();
-
-            $item['event'] = Event::getEventName($item['event']);
+			if($getMap) {
+                $explode = explode(',',$item['assign']);
+                $item['assign'] = Account::find()
+                    ->where(['in', 'account_id', $explode])
+                    ->select('`account_name`')
+                    ->all();
+                $item['event'] = Event::getEventName($item['event']);
+            }
 		}
 
 		return $rules;
-	}
-
-	public static function generateDefaultRule($group)
-	{
-		$model = new static();
-
-		$model->group_id = $group;
-		$model->event = NULL;
-		$model->assign = NULL;
-		$model->level = 0;
-        $model->allocation_id = 'al_' . substr(uniqid(),-7);
-
-		$model->insert();
-	}
-
-	public static function remove($eventId)
-	{
-		if(!Event::checkEid($eventId)) return Status::INVALID_ARGS;
-		return parent::deleteAll('`event`=:eid',[':eid' => $eventId]);
 	}
 }

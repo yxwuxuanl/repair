@@ -1,72 +1,114 @@
 (function ($rs) {
     var
-        allTask = {
-            'init': function () {
-                var
-                    $select = this.$panel.find('select');
+        $module;
 
-                this.watch($select);
-                $select.change();
-            },
-            'watch': function ($select)
-            {
-                $select.change(function () {
-                    allTask.render($(this));
-                })
-            },
-            'render': function ($select)
-            {
-                var
-                    type = $select.val(),
-                    $mount, url, $ul, li;
-                
-                if (type == 2)
-                {
-                    $mount = this.$panel.find('.complete');
-                    url = 'task/get-group-complete';
-                } else {
-                    $mount = this.$panel.find('.underway');
-                    url = 'task/get-group-underway';
-                }
+    $module = {
+        'init' : function(){
+            this.watch();
+            $('select', this.$panel).change();
+        },
+        'watch' : function(){
+            $('select',this.$panel).change(function(){
+                $module['load' + this.value]();
+            });
+        },
+        'loadcomplete' : function()
+        {
+            var
+                $mount = $('.complete',this.$panel);
 
-                $rs.ajax(url).done(function (response) {
-                    var
-                        $ul = $mount.find('ul'),
-                        data = response.content,
-                        len = data.length,
-                        li;
-                    
-                    if (len < 1)
+            $mount.show().siblings().hide();
+
+            $rs.ajax('task/get-group-task',{
+                'complete' : 1
+            }).done(function(response){
+                $rs.render({
+                    '$temp' : $('ul .t-content',$mount),
+                    'data' : response.content,
+                    'before' : function()
                     {
-                        $ul.find('.content').remove();
-                        return $mount.show();
-                    }    
+                        if(!this.data.length)
+                        {
+                            $rs.render({
+                                '$temp' : $('.t-empty',$mount),
+                                '$mount' : $mount
+                            });
+                            return false;
+                        }
 
-                    $ul.find('.empty').remove();
-                    li = $ul.html();
-                    $ul.html('');
+                        this.$mount.find('li').remove();
+                    },
+                    'filter' : function()
+                    {               
+                        switch (this.trace_mode) {
+                            case '0':
+                                this.trace_mode = '默认规则分配';
+                                break;
 
-                    for (var i = 0; i < len; i++)
-                    {
-                        var
-                            current = data[i],
-                            li_ = li, $li;
-                        
-                        for (key in current)
-                        {   
-                            li_ = li_.replace('{' + key + '}', current[key], li_);
-                        }    
+                            case '1':
+                                this.trace_mode = '定向规则分配';
+                                break;
 
-                        $li = $(li_);
-                        $li.data('tid', current[key]['task_id']);
-                        $ul.append($li);
+                            case '2':
+                                this.trace_mode = '手动领取';
+                                break;
+
+                            case '3':
+                                this.trace_mode = '组管理员分配';
+                                break
+                        }
                     }
+                })
+            });
+        },
+        'loadunderway' : function()
+        {
+            var
+                $mount = $('.underway', this.$panel);
 
-                    $mount.append($ul);
-                    $mount.show();
-                });
-            }    
-        };
-    
-    $rs.addModule('task-all', allTask);
+            $mount.show().siblings().hide();
+
+            $rs.ajax('task/get-group-task', {
+                'underway': 1
+            }).done(function (response) {
+                $rs.render({
+                    '$temp': $('ul .t-content', $mount),
+                    'data': response.content,
+                    'before': function () {
+                        if (!this.data.length) {
+                            $rs.render({
+                                '$temp': $('.t-empty', $mount),
+                                '$mount': $mount
+                            });
+                            return false;
+                        }
+
+                        this.$mount.find('li').remove();
+                    },
+                    'filter': function () {
+                        switch (this.trace_mode) {
+                            case '0':
+                                this.trace_mode = '默认规则分配';
+                                break;
+
+                            case '1':
+                                this.trace_mode = '定向规则分配';
+                                break;
+
+                            case '2':
+                                this.trace_mode = '手动领取';
+                                break;
+
+                            case '3':
+                                this.trace_mode = '组管理员分配';
+                                break
+                        }
+                    }
+                })
+            });
+        },
+        '_run_' : function(){},
+    };
+
+    $rs.addModule('task-all', $module);
 })($rs);

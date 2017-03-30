@@ -21,30 +21,22 @@ class TaskTrace extends ActiveRecord
 
 	public function attributes()
 	{
-		return ['task_id','assign','trace_mode','complete_time'];
+		return ['task_id','assign','trace_mode','complete_time','trace_time'];
 	}
 
-	public static function add($task_id,$assign,$trace_mode)
+	public static function Trace($task_id, $assign, $trace_mode)
 	{
+	    if($trace_mode == '3')
+        {
+            return parent::updateAll(['assign' => $assign],'task_id = :tid',[':tid' => $task_id]);
+        }
+
 		$model = new self();
 
 		$model->task_id = $task_id;
 		$model->assign = $assign;
 		$model->trace_mode = $trace_mode;
 
-		$transaction = \Yii::$app->getDb()->beginTransaction();
-
-		try
-		{
-			$model->insert();
-			Task::updateAll(['status' => 1],'`task_id`=:tid',[':tid' => $task_id]);
-			$transaction->commit();
-		}catch(Exception $e)
-		{
-			$transaction->rollBack();
-			return Status::DATABASE_SAVE_FAIL;
-		}
-
-		return Status::SUCCESS;
+        $model->insert();
 	}
 }

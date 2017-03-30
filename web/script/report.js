@@ -1,6 +1,5 @@
 (function () {
     var report = {
-
         'init': function () {
             var
                 self = this, $panel;
@@ -21,37 +20,32 @@
         {
             this.$panel.find('#parent-zone').change(function () {
                 var
-                    $option = $(this).find('option:selected'),
-                    zid = $option.data('zid');
-                
-                if(!zid)
-                {
-                    report.resetChildren();
-                    return;
-                }
+                    zid = $(this).val();
 
-                $rs.ajax('report/get-info', {
-                    'zoneId': zid
-                }).done(function (response) {
-                    report.renderZone(response.content.childZone,'children-zone',true);
-                    report.renderEvent(response.content.events);
-                    report.renderCustom(response.content.custom || {});
-                });
+                report.resetChildren();
+
+                if(zid)
+                {
+                    $rs.ajax('report/get-info', {
+                        'zoneId': zid
+                    }).done(function (response) {
+                        report.renderZone(response.content.childZone,'children-zone');
+                        report.renderEvent(response.content.events);
+                        response.content.custom && report.renderCustom(response.content.custom);
+                    });
+                }
             });
 
-            this.$panel.find('form').submit(function (event) {
+            this.$panel.find('#report-form').submit(function (event) {
                 event.preventDefault();
                 $(this).valid() && report.post($(this));
             });
 
             this.$panel.find('#my-report form').submit(function (event) {
                 event.preventDefault();
-                if ($(this).valid())
-                {
-                    report.renderRow($(this).find('[type=text]').val());
-                }    
-            })
-        }   ,
+                $(this).valid() && report.renderRow($(this).find('[type=text]').val());
+            });
+        },
 
         'resetChildren' : function()
         {
@@ -67,28 +61,24 @@
 
         'resetCustom' : function()
         {
-            $('#custom-label',report.$panel).hide();
+            var
+                $custom = $('#custom-label', report.$panel);
+
+            report.customValidateTest = null;
+            $custom.find('label').html('');
+            $custom.hide();
         },
 
         'post': function ($form)
         {
             var
-                data = {
-                    reporter_id: $form.find('#reporter-id').val(),
-                    reporter_name: $form.find('#reporter-name').val(),
-                    reporter_tel: $form.find('#tel').val(),
-                    zone_id: $form.find('#children-zone option:selected').data('zid'),
-                    event_id: $form.find('#event option:selected').data('eid'),
-                    custom: $form.find('#custom-input').val(),
-                    describe: $form.find('#other-describe').val(),
-                    _csrf : $rs.getCsrf()
-                };
-            
-            $rs.ajax('report/post', 'POST', data).done(function (response) {
+                stuNumber = $form.find('#reporter-id').val();
+
+            $rs.ajax('report/post', $form.serialize()).done(function (response) {
                 $rs.alert().success('报修成功,你可以在 `报障记录` 页面追踪该任务', function () {
                     $('[href="#my-report"]').tab('show');
                     report.$panel.find('form')[0].reset();
-                    report.renderRow(data['reporter_id']);
+                    report.renderRow(stuNumber);
                 });
             });
         },
@@ -178,19 +168,20 @@
                 }, $.validator.format('电话号码格式错误'));
 
                 $.validator.addMethod('custom', function (value) {
-                    if (report.customValidateTest === null) {
-                        return true;
-                    } else {
+                    if(report.customValidateTest)
+                    {
                         return (new RegExp(report.customValidateTest)).test(value);
                     }
+
+                    return true;
                 }, $.validator.format('请输入正确的参数'));
             });
         },
 
-        'renderRow': function (stuNumber)
+        'renderRow': function (info)
         {
-            $rs.ajax('report/get-row', {
-                'stuNumber' : stuNumber
+            $rs.ajax('report/get-result',{
+                'stuNumber' : info
             }).done(function (response) {
                 if (!response.content.length)
                 {
@@ -226,29 +217,18 @@
         'renderZone': function (data,mount,clear)
         {
             $rs.render({
-                'temp' : '<option value="1">{zone_name}</option>',
+                'temp': '<option value="{zone_id}">{zone_name}</option>',
                 '$mount' : $('#' + mount,report.$panel),
                 'data' : data,
-                'clear' : clear,
-                'after' : function(el)
-                {
-                    $.data(el[0],'zid',this.zone_id);
-                    return el;
-                }
-            })
+            });
         },
 
         'renderEvent': function (data)
         {
             $rs.render({
-                'temp': '<option value="1">{event_name}</option>',
+                'temp': '<option value="{event_id}">{event_name}</option>',
                 '$mount': $('#event', report.$panel),
-                'data': data,
-                'clear' : true,
-                'after': function (el) {
-                    $.data(el[0], 'eid', this.event_id);
-                    return el;
-                }
+                'data': data
             })
         },
 
@@ -258,16 +238,10 @@
                 $label = this.$panel.find('#custom-label');
 
             $label.find('input').val('');
-
-            if ($.isEmptyObject(data))
-            {
-                report.customValidateTest = null;
-                return $label.hide();
-            }    
             
             $label.find('label').text(data.tips);
 
-            if (data.test == '')
+            if (!data.test)
             {
                 report.customValidateTest = null;
             } else {

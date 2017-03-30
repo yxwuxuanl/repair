@@ -1,0 +1,62 @@
+
+<script>
+    defines['task-complete'] = 'script/task/complete.js';
+</script>
+
+<div class="mount">
+    <ul>
+        <template class="t-content">
+            <li class="list-group-item content">
+                <p class="report-time"><span class="task-attr">报告时间 : {post_time}</span></p>
+                <p><span>任务种类 :{trace_mode}</span></p>
+                <p>完成时间 : <span class="task-attr">{complete_time}</span></p>
+                <p class="zone"><span class="task-attr">故障区域 : </span>{zone}</p>
+                <p class="event"><span class="task-attr">故障 : </span>{event}</p>
+            </li>
+        </template>
+
+        <template class="t-empty">
+            <li class="list-group-item empty">
+                暂无完成的任务
+            </li>
+        </template>
+    </ul>
+</div>
+
+<div class="modal fade" id="task-assign-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">任务详细信息</h4>
+            </div>
+
+            <div class="modal-body">
+                <template class="t-details">
+
+                    <div class="details">
+                        <div>
+                            <p><span class="task-attr">任务类型 : </span><span class="task-type">{trace_mode}</span></p>
+                        </div>
+
+                        <div>
+                            <p><span class="task-attr">学生学号 : </span><span class="reporter-id">{reporter_id}</span></p>
+                        </div>
+
+                        <div>
+                            <p><span class="task-attr">学生姓名 : </span><span class="reporter_name">{reporter_name}</span></p>
+                        </div>
+
+                        <div>
+                            <p><span class="task-attr">联系方式 : </span><span class="reporter_tel">{reporter_tel}</span></p>
+                        </div>
+                    </div>
+
+
+                </template>
+            </div>
+        </div>
+    </div>
+</div>

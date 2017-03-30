@@ -17,18 +17,14 @@ class Account extends ActiveRecord
 	public function rules()
 	{
 		return [
-			[['account_name','password','account_id','role','account_group'],'required'],
+			[['account_name'],'required'],
 			['account_name','string','max' => 20,'min' => 2],
-			['password','string','min' => 5],
-			['account_id',function($attr){
-				if(!static::checkAid($this->$attr)){
-					$this->addError($attr,'INVALID_' . $attr);
-				}
-			}],
+            ['account_name','checkAccountName'],
+			['account_group','default','value' => NULL],
 			['account_group',function($attr){
-				if(!Group::checkGid($this->$attr))
+				if($this->$attr !== NULL && !Group::checkGid($this->$attr))
 				{
-					$this->addError($attr,'INVALID' . $attr);
+					$this->addError($attr);
 				}
 			}]
 		];
@@ -39,15 +35,12 @@ class Account extends ActiveRecord
 		return ['account_name','password','account_id','account_group','role'];
 	}
 
-	public function findGroupUsers(){}
-
 	public static function getAll()
 	{
 		return parent::find()
 		    ->select(['account_id','account_name','role','group_name','account_group'])
-		    ->where('`role` = :normal')
-            ->orWhere('`role` = :ga')
-            ->params([':normal' => Role::NORMAL,':ga' => Role::GROUP_ADMIN])
+		    ->where('`role` != :system')
+            ->params([':system' => Role::SYSTEM_ADMIN])
 		    ->leftJoin('group','`account_group` = `group_id`')
             ->groupBy(['account_id','account_name','role','group_name','account_group'])
             ->asArray()->all();
@@ -59,8 +52,7 @@ class Account extends ActiveRecord
 		    ->where('`account_name`=:an')
             ->andWhere('password = PASSWORD(:pwd)')
 		    ->params([':an' => $un,':pwd' => $pwd])
-            ->asArray()
-            ->one();
+            ->asArray()->one();
 	}
 
 	public static function checkAid($aid)
@@ -75,22 +67,17 @@ class Account extends ActiveRecord
 
 	public static function changeGroup($accountId,$groupId)
 	{
-		if(!static::checkAid($accountId) || !Group::checkGid($groupId)) return Status::INVALID_ARGS;
+		if(!static::checkAid($accountId) || ($groupId && !Group::checkGid($groupId))) return Status::INVALID_ARGS;
 
-		$ar = parent::find()
-            ->where('`account_id` = :aid')
-            ->andWhere('`account_group` = :noAssign or `account_group`=:gid')
-            ->params([':aid' => $accountId,':gid' => $groupId,':noAssign' => Group::G_NO_ASSIGN])
-            ->one();
+        try
+        {
+            parent::updateAll(['account_group' => $groupId],'account_id = :aid',[':aid' => $accountId]);
+        }catch(\yii\db\Exception $e)
+        {
+            return Status::DATABASE_SAVE_FAIL;
+        }
 
-		if($ar->account_group == $groupId)
-		{
-			$ar->account_group = Group::G_NO_ASSIGN;
-		}else{
-			$ar->account_group = $groupId;
-		}
-
-		return $ar->update();
+        return Status::SUCCESS;
 	}
 
 	public static function getMember($group,$onlyNormal = false)
@@ -118,16 +105,15 @@ class Account extends ActiveRecord
 		return parent::find()
 		    ->select(['account_id','account_name'])
 		    ->where('`account_group` = :gid and `role` = :normal')
-		    ->orWhere('`account_group` = :noAssign')
-		    ->params([':gid' => $groupId,':normal' => Role::NORMAL,':noAssign' => Group::G_NO_ASSIGN])
+		    ->orWhere('`account_group` is null')
+		    ->params([':gid' => $groupId,':normal' => Role::NORMAL])
             ->asArray()->all();
 	}
 
 	public static function getNoAssign()
 	{
         return parent::find()
-		    ->where('`account_group` = :noAssign')
-            ->params([':noAssign' => Group::G_NO_ASSIGN])
+		    ->where('`account_group` is null')
 		    ->select('`account_id`,`account_name`')
             ->asArray()->all();
 	}
@@ -135,10 +121,10 @@ class Account extends ActiveRecord
 	public static function isNoAssign($aid)
 	{
 		return parent::find()
-                ->where('`account_id`=:aid')
+                ->where('`account_id` = :aid')
                 ->params([':aid' => $aid])
                 ->select('account_group')
-                ->scalar() == Group::G_NO_ASSIGN;
+                ->scalar() === NULL;
 	}
 
 	public static function remove($accountId)
@@ -149,49 +135,12 @@ class Account extends ActiveRecord
             ->params([':aid' => $accountId])
             ->one();
 
-		$transaction = \Yii::$app->getDb()->beginTransaction();
-
 		try
 		{
-			if($ar->account_group != Group::G_NO_ASSIGN)
-			{
-				$allocations = Allocation::find()
-                    ->where('group_id = :gid')
-                    ->params([':gid' => $ar->account_group]);
-
-				$update = 0;
-				$remove = [];
-
-				foreach($allocations->each() as $allocation)
-				{
-					if(strpos($allocation->assign,$accountId) > -1)
-					{
-						if($allocation->assign == $accountId)
-						{
-							$remove[] = $allocation->allocation_id;
-						}else{
-							$update++;
-						}
-					}
-				}
-
-				if($update > 0)
-				{
-					$sql = "UPDATE `allocation` SET `assign` = REPLACE(`assign`,',{$accountId}',''),`assign` = REPLACE(`assign`,'{$accountId},','') WHERE `group_id` = '{$ar->account_group}' LIMIT {$update}";
-					\Yii::$app->getDb()->createCommand($sql)->execute();
-				}
-
-				if(!empty($remove))
-				{
-					Allocation::deleteAll(['in','allocation_id',$remove]);
-				}
-			}
-
+		    // Trigger `account`.`clearAllocation`
 			$ar->delete();
-			$transaction->commit();
 		}catch (Exception $e)
 		{
-			$transaction->rollBack();
 			return Status::DATABASE_SAVE_FAIL;
 		}
 
@@ -200,25 +149,19 @@ class Account extends ActiveRecord
 
 	public static function add($accountName,$groupId)
 	{
-		if(!static::checkAccountName($accountName) || ($groupId !== null && !Group::checkGid($groupId))) return Status::INVALID_ARGS;
+		$model = new self();
 
-		$model = new static();
 		$model->account_name = $accountName;
-
-		if($groupId === null)
-		{
-			$model->account_group = Group::G_NO_ASSIGN;
-		}else{
-			$model->account_group = $groupId;
-		}
-
+        $model->account_group = $groupId;
         $model->role = Role::NORMAL;
-
         $model->password = \Yii::$app->params['defaultPassword'];
 
-		$model->account_id = 'a_' . substr(uniqid(),-8);
+		$model->account_id = 'a_' . \Yii::$app->getSecurity()->generateRandomString(8);
+		if(!$model->validate()) return Status::INVALID_ARGS;
+
 		try
 		{
+//		    Trigger `account`.`encryptPassword`
 			$model->insert();
 		}catch(Exception $e)
 		{
@@ -237,8 +180,7 @@ class Account extends ActiveRecord
 	{
 		if(!is_string($pwd) || strlen($pwd) < 5) return Status::INVALID_ARGS;
 
-		$newPwd = \Yii::$app->getSecurity()->generatePasswordHash($pwd);
-
-		return parent::updateAll(['password' => $newPwd],'`account_id` = :aid',[':aid' => $uid]);
+//      Trigger `account`.`changePassword`
+		return parent::updateAll(['password' => $pwd],'`account_id` = :aid',[':aid' => $uid]);
 	}
 }

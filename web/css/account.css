@@ -1,0 +1,19 @@
+#account-manage-panel .ga-tips {
+  display: none; }
+#account-manage-panel thead {
+  font-size: 1.1em;
+  line-height: 1.8em; }
+#account-manage-panel .empty, #account-manage-panel thead {
+  background-color: #696969;
+  color: #fff; }
+#account-manage-panel table {
+  margin-top: 10px; }
+#account-manage-panel tr:hover .glyphicon {
+  visibility: visible; }
+#account-manage-panel .glyphicon {
+  visibility: hidden; }
+
+#account-changepwd-panel {
+  margin-top: 20px; }
+
+/*# sourceMappingURL=account.css.map */

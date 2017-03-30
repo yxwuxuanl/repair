@@ -2,15 +2,60 @@
     defines['group-member'] = 'script/group/member.js';
 </script>
 
-<div class="content">
-    <div class="member">
-        <div class="in">
-            <ul></ul>
-        </div>
-        <div class="not-in">
-            <ul></ul>
+<div class="member">
+    <div class="in">
+        <h5>组内成员</h5>
+        <ul>
+            <template class="t-content">
+                <li class="list-group-item">
+                    {account_name}
+                    <span class="glyphicon glyphicon-trash"></span>
+                </li>
+            </template>
+
+            <template class="t-empty">
+                <li class="list-group-item list-group-item-danger empty">
+                    组内无成员
+                </li>
+            </template>
+        </ul>
+    </div>
+    <div class="not-in">
+        <h5>未分配人员</h5>
+        <ul>
+            <template class="t-content">
+                <li class="list-group-item">
+                    {account_name}
+                    <span class="glyphicon glyphicon-plus"></span>
+                </li>
+            </template>
+
+            <template class="t-empty">
+                <li class="list-group-item list-group-item-danger">
+                    所有成员均已分配
+                </li>
+            </template>
+        </ul>
+    </div>
+</div>
+
+
+<div class="modal fade" id="group-confirm-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="tips form-group"></div>
+                <div class="form-group">
+                    <button class="submit btn btn-primary">确认</button>
+                </div>
+            </div>
         </div>
     </div>
-
-    
 </div>

@@ -58,6 +58,10 @@
       display: inline-block;
       width: 30%;
 
+      @media screen and (max-width:960px){
+        width: 100%;
+      }
+
       &:hover .glyphicon
       {
         display: inline;

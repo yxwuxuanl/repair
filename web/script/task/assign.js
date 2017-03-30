@@ -1,43 +1,57 @@
 (function ($rs) {
     var
-        _module_ = {
+        $module = {
             'init': function ()
             {
-                this.watcher().define('tasks', function (old, _new_, $mount) {
-                    if (_new_ > 0) {
-                        if (old == 0) {
-                            $mount.find('.empty').remove();
-                        }
-                    } else {
-                        $rs.render({
-                            '$temp': $('#t-empty', _module_.$panel)
-                        });
-                    }
-                });
-
-                $rs.ajax('task/get-assign-task').done(function (response) {
+                $rs.ajax('task/get-underway-task').done(function (response) {
                     var
                         data = response.content;
-                    
-                    if (data.length > 0) {
-                        $rs.render({
-                            '$temp': $('#t-content', _module_.$panel),
-                            'data': data,
-                            'before': function () {
-                                _module_.watcher().change('tasks', this.data.length, this.$mount);
-                            },
-                            'after': function (el) {
-                                $.data(el[1], 'tid', this.task_id);
-                                return el;
+
+                    $rs.render({
+                        '$temp': $('.mount .t-content', $module.$panel),
+                        'data': data,
+                        'before': function () {
+                            if(!this.data.length)
+                            {
+                                var
+                                    $mount = this.$mount;
+
+                                $rs.render({
+                                    '$temp' : $('.t-empty',$mount),
+                                    '$mount' : $mount
+                                });
+
+                                return false;
                             }
-                        });
-                    } else {
-                        _module_.watcher().change('tasks', 0);
-                    }
+                        },
+                        'after': function (el) {
+                            $.data(el[1], 'tid', this.task_id);
+                            return el;
+                        }
+                    });
                 });
 
                 this.watch();
+                this.bind(this.events);
             },
+
+            'events' : [
+                [{
+                    'completeTask' : function()
+                    {
+                        var
+                            $mount = this.$panel.find('.mount ul');
+
+                        if(!$mount.find('li').length)
+                        {
+                            $rs.render({
+                                '$temp' : $('.t-empty',$mount),
+                                '$mount' : $mount
+                            });
+                        }
+                    }
+                }]
+            ],
             'modals': {
                 'detail': function ($active)
                 {
@@ -56,19 +70,20 @@
                         },
                         'show': function ()
                         {
-                            if (this.last == this.$active.data('tid')) return;                            
-                            var
-                                taskId = this.$active.data('tid'),
-                                self = this;
-                            
-                            this.last = taskId;
-                            
-                            $rs.ajax('task/get-detail', {
-                                'taskId' : taskId
-                            }).done(function (response) {
-                                self.render(response.content);
-                            })
-                            
+                            if (this.last !== this.$active.data('tid'))
+                            {
+                                var
+                                    taskId = this.$active.data('tid'),
+                                    self = this;
+
+                                this.last = taskId;
+
+                                $rs.ajax('task/get-detail', {
+                                    'taskId' : taskId
+                                }).done(function (response) {
+                                    self.render(response.content);
+                                });
+                            }
                         },
                         'close': function ()
                         {
@@ -77,25 +92,45 @@
                     };
 
                     extend = {
+                        'last' : null,
                         'render': function (data)
                         {
                             var
-                                $mount = this.$body;
-                            
-                            $mount.find('.reporter-id').text(data.reporter_id);
-                            $mount.find('.reporter_name').text(data.reporter_name);
-                            $mount.find('.reporter_tel').text(data.reporter_tel);
+                                $body = this.$body;
 
-                            if (data.describe)
-                            {
-                                $mount.find('.describe').find('.content').text(data.describe).end().show();
-                            } else {
-                                $mount.find('.describe').hide();
-                            }
+                            $rs.render({
+                                '$temp' : $('.t-details',$body),
+                                'data' : data,
+                                'before' : function()
+                                {
+                                    this.$mount.find('.details').remove();
+                                },
+                                'filter' : function()
+                                {
+                                    switch (this.trace_mode)
+                                    {
+                                        case '0':
+                                            this.trace_mode = '默认规则分配';
+                                            break;
+
+                                        case '1' :
+                                            this.trace_mode = '定向规则分配';
+                                            break;
+
+                                        case '2' :
+                                            this.trace_mode = '手动领取';
+                                            break;
+
+                                        case '3':
+                                            this.trace_mode = '组管理员分配';
+                                            break
+                                    }
+                                }
+                            })
                         }    
                     };
 
-                    this._main_ = new $rs.modal(_module_.$panel.find('#task-assign-modal'), init, extend);
+                    this._main_ = new $rs.modal($module.$panel.find('#task-assign-modal'), init, extend);
                     this._main_.extend({ '$active': $active }).show();
                 },
                 'complete': function ($active)
@@ -105,11 +140,10 @@
 
                     $rs.ajax('task/finish', {
                         'taskId': taskId
-                    }).done(function (response) {
-                        $rs.alert().success('任务已结束!', 400, function () {
-                            _module_.watcher().sub('tasks');
-                            $active.remove();
-                        });
+                    }).done(function () {
+                        $active.remove();
+                        $module.trigger('completeTask');
+                        $rs.alert().success('任务已结束!', 400);
                     }).fail(function (response) {
                         $rs.alert().error('结束任务失败 <br/>' + response.describe);
                     });
@@ -119,14 +153,17 @@
             {
                 this.$panel.find('ul').click(function (event) {
                     if (event.target.tagName == 'LI') {
-                        _module_.modals.detail($(event.target));
+                        var
+                            $li = $(event.target);
+
+                        !$li.hasClass('empty') && $module.modals.detail($(event.target));
                     } else if (event.target.tagName == 'P') {
                         $(event.target).parent().click();
                     } else if (event.target.tagName == 'BUTTON') {
-                        _module_.modals.complete($(event.target).parent());
+                        $module.modals.complete($(event.target).parent());
                     }
                 });
             }    
         };
-    $rs.addModule('task-assign', _module_);
+    $rs.addModule('task-assign', $module);
 })($rs);
