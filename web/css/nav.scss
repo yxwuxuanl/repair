@@ -1,0 +1,72 @@
+#tab {
+  .dropdown-menu
+  {
+    li:first-child
+    {
+      display: none;
+      font-size: 1.2em;
+      text-align: center;
+      padding-bottom: 0.5em;
+      border-bottom: thin solid #696969;
+      margin-bottom: 2px;
+    }
+  }
+
+  .open {
+    a {
+      border-color: transparent;
+    }
+
+    li:first-child
+    {
+      @media screen and (max-width: 960px) {
+        display: block;
+      }
+    }
+  }
+
+  > li {
+    > a
+    {
+      @media screen and (max-width: 960px) {
+        padding: 0 2px;
+      }
+    }
+  }
+
+  .icon {
+    @media screen and (max-width: 960px) {
+      display: inline-block;
+    }
+    display: none;
+    width: 32px;
+    height: 32px;
+    background-repeat: no-repeat;
+  }
+
+  .index {
+    background-image: url("../icon/index.png");
+  }
+
+  .user {
+    background-image: url("../icon/user.png");
+  }
+
+  .group {
+    background-image: url("../icon/group.png");
+  }
+
+  .setting {
+    background-image: url("../icon/setting.png");
+  }
+
+  .statistic {
+    background-image: url("../icon/statistic.png");
+  }
+
+  .text, .caret {
+    @media screen and (max-width: 960px) {
+      display: none;
+    }
+  }
+}

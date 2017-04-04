@@ -46,7 +46,7 @@ function make()
             info.push(chuck);
         })
     }
-
+    
     for(var i = 0 ,len = name.length ; i < 100 ; i++)
     {
         var
@@ -55,7 +55,7 @@ function make()
             event = chuck.event[rand(0, chuck.event.length - 1)],
             zone = chuck.zone[rand(0, chuck.zone.length - 1)],
             stuId = (new Date).getFullYear() - rand(0, 4) + '' + rand(10, 60) + rand(10, 60),
-            Tel = '1' + rand(3,7) + rand(0,9) + rand(100,999) + rand(100,999) + rand(10,99);
+            Tel = '1' + [3,4,5,7,8][rand(0,5)] + rand(0,9) + rand(100,999) + rand(100,999) + rand(10,99);
 
         (function ($Name, $event, $zone, $stuId, $tel) {
             $.ajax({
@@ -69,8 +69,7 @@ function make()
                     'event_id' : $event
                 }
             }).done(function(response){
-                // C('提交成功');
-                C(response);
+                C('提交成功');
             })
         })($name, event, zone, stuId, Tel);
     }

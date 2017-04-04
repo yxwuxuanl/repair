@@ -2,6 +2,43 @@ html,
 body {
   height: 100%; }
 
+#tab .dropdown-menu li:first-child {
+  display: none;
+  font-size: 1.2em;
+  text-align: center;
+  padding-bottom: 0.5em;
+  border-bottom: thin solid #696969;
+  margin-bottom: 2px; }
+#tab .open a {
+  border-color: transparent; }
+@media screen and (max-width: 960px) {
+  #tab .open li:first-child {
+    display: block; } }
+@media screen and (max-width: 960px) {
+  #tab > li > a {
+    padding: 0 2px; } }
+#tab .icon {
+  display: none;
+  width: 32px;
+  height: 32px;
+  background-repeat: no-repeat; }
+  @media screen and (max-width: 960px) {
+    #tab .icon {
+      display: inline-block; } }
+#tab .index {
+  background-image: url("../icon/index.png"); }
+#tab .user {
+  background-image: url("../icon/user.png"); }
+#tab .group {
+  background-image: url("../icon/group.png"); }
+#tab .setting {
+  background-image: url("../icon/setting.png"); }
+#tab .statistic {
+  background-image: url("../icon/statistic.png"); }
+@media screen and (max-width: 960px) {
+  #tab .text, #tab .caret {
+    display: none; } }
+
 #alert button {
   font-size: 1.1em;
   color: #fff; }
@@ -275,10 +312,17 @@ body {
   text-align: center; }
 
 .container {
-  margin-top: 20px; }
+  margin-top: 5px; }
 
 #login-btn {
   width: 100%; }
+
+.login-icon {
+  background: url("../icon/login-user.png") no-repeat;
+  width: 128px;
+  height: 128px;
+  margin: auto;
+  margin-bottom: 20px; }
 
 .tab-pane {
   display: none; }

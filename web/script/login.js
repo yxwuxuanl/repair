@@ -29,7 +29,6 @@ $(function () {
         },
 
         'login': function ($form) {
-
             var
                 un = $form.find('#login-un-input').val(),
                 pwd = $form.find('#login-pwd-input').val(),

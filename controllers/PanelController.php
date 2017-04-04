@@ -1,6 +1,8 @@
 <?php
+
+
 /**
- * Created by PhpStorm.
+ * reated by PhpStorm.
  * User: 2m
  * Date: 2017/2/1
  * Time: 上午12:23
@@ -12,85 +14,79 @@ use app\controllers\RoleController as Role;
 
 class PanelController
 {
-	public static $panels = [
-		'system' => [
-			'label' => '区域和事件',
-			'1' => [
-				['区域设置','zone'],
-				['事件设置','event']
-			]
-		],
-		'account' => [
-			'label' => '帐号管理',
-			'1' => [
-				['修改密码','changepwd'],
-				['退出登录','loginout'],
-			],
-			'2' => [
-				['管理帐号','manage'],
-			]
-		],
-		'group' => [
-			'label' => '组管理',
-			'1' => [
-				['管理组','manage']
-			],
-			'2' => [
-			    ['组成员设置','member'],
-                ['任务分配规则','taskmode']
-			],
-		],
-		'task' => [
-			'label' => '任务',
-			'1' => [
-				['进行中','assign'],
-				['已完成','complete'],
-//				['任务池','pool']
-			],
-			'2' => [
-				['查看组任务','all']
-			]
-		]
-	];
+    public static $panels = [
+        'system' => [
+            'label' => '区域与事件',
+            'icon' => 'setting',
+            'panels' => [
+                '1' => [
+                    ['区域设置', 'zone'],
+                    ['事件设置', 'event']
+                ]
+            ]
+        ],
+        'statistic' => [
+            'label' => '统计',
+            'icon' => 'statistic',
+            'panels' => [
+                '1' => [
+                    ['事件发生频率', 'weekevent'],
+                ]
+            ]
+        ],
+        'account' => [
+            'label' => '账号',
+            'icon' => 'user',
+            'panels' => [
+                '1' => [
+                    ['修改密码', 'changepwd'],
+                    ['退出登录', 'loginout'],
+                ]
+            ]
+        ],
+        'group' => [
+            'label' => '部门',
+            'icon' => 'group',
+            'panels' => [
+                '1' => [
+                    ['所属部门','selfgroup'],
+                ],
+                '2' => [
+                    ['部门成员设置', 'member'],
+                    ['任务分配规则', 'taskmode']
+                ],
+                '8' => [
+                    ['部门管理','manage']
+                ]
+            ]
+        ]
+    ];
 
-	public static function getPanels($panel,$level)
-	{
-		$panels = static::$panels[$panel];
-		$panels_ = [];
+    public static function getPanelsByRole()
+    {
+        $role = \Yii::$app->getSession()->get('role');
+        $def = Role::$map[$role];
+        $panels = [];
 
-		for($i = 1 ; $i <= $level ; $i = $i << 1)
-		{
-			if($i & $level)
-			{
-				$panels_ = array_merge($panels_,$panels[$i]);
-			}
-		}
+        unset($def['indexController']);
 
-		return $panels_;
-	}
+        foreach ($def as $name => $level) {
+            $panels[$name] = static::$panels[$name];
 
-	public static function getLabel($name)
-	{
-		return static::$panels[$name]['label'];
-	}
+            if (key_exists('href', $panels[$name])) {
+                continue;
+            }
 
-	public static function getPanelsByRole()
-	{
-		$role = \Yii::$app->getSession()->get('role');
-		$def = Role::$map[$role];
+            $panelsCopy = $panels[$name]['panels'];
+            $panels[$name]['panels'] = [];
 
-		unset($def['indexController']);
+            foreach ($panelsCopy as $k => $v) {
+                if ($level & $k) {
+                    $panels[$name]['panels'] = array_merge($panels[$name]['panels'], $v);
+                }
+            }
+        }
 
-		$panels = [];
-
-		foreach($def as $item => $value)
-		{
-			$panels[$item] = [
-				'label' => static::getLabel($item),
-				'panels' => static::getPanels($item,$value)
-			];
-		}
-
-		return $panels;
-	}
+        return $panels;
+    }
 }

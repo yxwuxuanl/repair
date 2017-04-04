@@ -76,9 +76,9 @@
 
             $rs.ajax('report/post', $form.serialize()).done(function (response) {
                 $rs.alert().success('报修成功,你可以在 `报障记录` 页面追踪该任务', function () {
-                    $('[href="#my-report"]').tab('show');
-                    report.$panel.find('form')[0].reset();
-                    report.renderRow(stuNumber);
+                    // $('[href="#my-report"]').tab('show');
+                    // report.$panel.find('form')[0].reset();
+                    // report.renderRow(stuNumber);
                 });
             });
         },

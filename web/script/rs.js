@@ -3,9 +3,9 @@
  */
 
 (function (global) {
-    defines['validate'] = 'script/jquery.validate.min.js';
+    defines['validate'] = 'jquery.validate.min';
 
-    var    
+    var
         $rs = {
             'eventHandle': {},
 
@@ -27,33 +27,27 @@
                 }
             },
 
-            'bind': function (m, handle)
-            {
-                for(var i = 0 ; i < handle.length ; i++)
-                {
+            'bind': function (m, handle) {
+                for (var i = 0; i < handle.length; i++) {
                     var
-                        moduleName,events;
+                        moduleName, events;
 
-                    if(handle[i].length > 1)
-                    {
+                    if (handle[i].length > 1) {
                         moduleName = handle[i][0],
-                        events = handle[i][1];
-                    }else{
+                            events = handle[i][1];
+                    } else {
                         moduleName = m._module_name_;
                         events = handle[i][0]
                     }
 
-                    for(var eventName in events)
-                    {
+                    for (var eventName in events) {
                         var
                             chuck = events[eventName];
 
-                        if(typeof chuck == 'function')
-                        {
-                            $rs.on(moduleName,eventName,m,chuck);
-                        }else{
-                            for(var j = 0 ; j < chuck.length ; j++)
-                            {
+                        if (typeof chuck == 'function') {
+                            $rs.on(moduleName, eventName, m, chuck);
+                        } else {
+                            for (var j = 0; j < chuck.length; j++) {
                                 $rs.on(moduleName, eventName, m, chuck[j]);
                             }
                         }
@@ -71,7 +65,7 @@
                     var
                         define = defines[i],
                         m_, split, handle;
-                    
+
                     if (typeof define[0] == 'object') {
                         m_ = define[0];
                         handle = define[1];
@@ -87,11 +81,11 @@
 
                         m_ = $rs.$modules[m_];
                     }
-                    
+
                     if (!(m_['_module_name_'] in $rs.contain.$contains)) continue;
 
                     var
-                        params = [].slice.call(arguments,2);
+                        params = [].slice.call(arguments, 2);
 
                     if (typeof handle == 'string') {
                         m_[handle].apply(m_, params[0]);
@@ -133,7 +127,7 @@
                             this.$contains[name].destory();
                             this.$contains[name].init();
                         }
-                        
+
                     } else {
                         name = this.moduleName;
                         $rs.contain.reRun(name);
@@ -171,23 +165,24 @@
                 var
                     index = href.indexOf('-'),
                     rep = href[index + 1];
-                
+
                 return href.replace('-' + rep, rep.toUpperCase());
             },
 
-            'addModule': function (name, module_) {
-                this.$modules[name] = module_;
+            'addModule': function (name, $module) {
+                this.$modules[name] = $module;
             },
 
             'loader': function (url, success, fail) {
-                
                 if (url in defines) {
-                    url = defines[url];
+                    url = 'script/' + defines[url] + '.js';
+                } else {
+                    url = 'script/' + url.replace((new RegExp(/-/g)), '/') + '.js';
                 }
 
                 return $.get(url).then(success, fail || function () {
-                    alert('未知错误,请尝试刷新页面');
-                });
+                        alert('未知错误,请尝试刷新页面');
+                    });
             },
 
             'runModule': function (name, init) {
@@ -199,20 +194,18 @@
                     var
                         $module;
 
-                    if(this.contain.has(name))
-                    {
+                    if (this.contain.has(name)) {
                         $module = this.contain.get(name);
-                    }else{
+                    } else {
                         $module = this.$modules[name];
 
-                        for(var key in $rs.plugin)
-                        {
+                        for (var key in $rs.plugin) {
                             $module[key] = $rs.plugin[key];
                         }
 
                         $module._module_name_ = name;
 
-                        this.contain.set(name,$module);
+                        this.contain.set(name, $module);
                         init && init.call($module);
                         this.contain.init(name);
                     }
@@ -221,32 +214,31 @@
                 }
             }
         }
-    
+
     $rs.alert = function () {
         var
             classs = ['error-alert', 'success-alert'],
             args, modal, $modal;
-        
+
         if (!arguments.length) {
             return {
                 'success': function () {
-                    $rs.alert.apply(null, [1, '操作成功'].concat([].slice.call(arguments,0)));
+                    $rs.alert.apply(null, [1, '操作成功'].concat([].slice.call(arguments, 0)));
                 },
                 'error': function () {
-                    $rs.alert.apply(null, [0, '操作失败'].concat([].slice.call(arguments,0)));
+                    $rs.alert.apply(null, [0, '操作失败'].concat([].slice.call(arguments, 0)));
                 },
             }
         }
 
         if (!('_alert_' in $rs)) {
-            $rs['_alert_'] = modal = new $rs.modal('#alert',{
-                'close' : function()
-                {
+            $rs['_alert_'] = modal = new $rs.modal('#alert', {
+                'close': function () {
                     this.$modal.removeClass('error-alert success-alert');
                 }
             })
         }
-            
+
         modal = modal || $rs._alert_;
 
         $modal = modal.$modal;
@@ -401,7 +393,7 @@
         'reset': function () {
             return this.setTitle().setContent();
         },
-        
+
         'setTitle': function (content) {
             $rs.setContent(this.$title, content);
             return this;
@@ -464,7 +456,7 @@
                     {}
                 ]
             });
-        
+
 
         if (typeof value == 'object') {
             args = args.value;
@@ -472,7 +464,7 @@
             args = $.extend(args, args.otherParams);
             delete args.otherParams;
         }
-        
+
         return $.ajax(args).then(function (response) {
             if ([200, 304, 1, '1'].indexOf(response.status) > -1 || response.status == 'success') {
                 delete response.status;
@@ -513,12 +505,9 @@
         return $('meta[name="csrf-token"]').attr('content');
     };
 
-    $rs.setProp = function($object,key,value)
-    {
-        if(key in $object)
-        {
-            for(var i in value)
-            {
+    $rs.setProp = function ($object, key, value) {
+        if (key in $object) {
+            for (var i in value) {
                 $object[key][i] = value[i];
             }
         }
@@ -538,7 +527,7 @@
 
     $rs.validate = function ($form, config, callback) {
         if (!('validator' in $)) {
-            this.loader('script/jquery.validate.min.js', function () {
+            this.loader('validate', function () {
                 $rs.validate($form, config, callback);
             });
         } else {
@@ -550,29 +539,30 @@
     };
 
     $rs.$bootstraps.push(function () {
-        $('#tab').click(function (event) {
-            event.preventDefault();
-
-            var
-                $target = $(event.target),
-                href;
-            
-            if ($target[0].tagName == 'A' && (href = $target.attr('href')) != '#') {
+        $('#tab li').click(function (event) {
+            if (event.target.tagName == 'A') {
                 var
-                    moduleName = href.slice(1, -6);
-                
-                $rs.runModule(moduleName, function () {
-                    this.$panel = $(href);
-                });
+                    $a = $(event.target),
+                    href = $a.attr('href');
+
+                event.preventDefault();
+
+                if (href != '#') {
+                    var
+                        moduleName = href.slice(1, -6);
+
+                    $rs.runModule(moduleName, function () {
+                        this.$panel = $(href);
+                    });
+                }
             }
         })
     });
-    
+
     $rs.$bootstraps.push(function () {
         $('button.submit').click(function () {
             $(this).parent().parent().submit();
         });
-
     });
 
     $rs.$bootstraps.push(function () {
@@ -583,6 +573,10 @@
         $(document).ajaxComplete(function () {
             $('#spinner').hide();
         })
+    });
+
+    $rs.$bootstraps.push(function () {
+        $('#tab li:eq(0) a').click();
     });
 
     $rs.render = function (_config_) {
@@ -597,16 +591,14 @@
             'before': ('before' in _config_) ? _config_.before : null,
             'filter': ('filter' in _config_) ? _config_.filter : null,
             'data': ('data' in _config_) ? _config_.data : null,
-            'attrs' : ('attrs' in _config_) ? _config_.attrs : null
+            'attrs': ('attrs' in _config_) ? _config_.attrs : null
         };
-            
+
         config.temp = _config_.temp || config.$temp[0].innerHTML;
         config.$mount = _config_['$mount'] || config.$temp.parent();
-        
-        if(config.before)
-        {
-            if(config.before.call(config) === false)
-            {
+
+        if (config.before) {
+            if (config.before.call(config) === false) {
                 return null;
             }
         }
@@ -619,10 +611,9 @@
             return config.$mount.append($(config.temp));
         }
 
-        if (!$.isArray(config.data))
-        {
+        if (!$.isArray(config.data)) {
             config.data = [config.data];
-        }    
+        }
 
         for (var i = 0, len = config.data.length; i < len; i++) {
             var
@@ -631,13 +622,11 @@
 
             config.filter && config.filter.call(chuck);
 
-            if(config.attrs)
-            {
-                for (var index in config.attrs)
-                {
+            if (config.attrs) {
+                for (var index in config.attrs) {
                     el = el.replace(new RegExp('{' + config.attrs[index] + '}', 'g'), chuck[config.attrs[index]]);
                 }
-            }else{
+            } else {
                 for (var key in chuck) {
                     el = el.replace(new RegExp('{' + key + '}', 'g'), chuck[key]);
                 }
@@ -656,7 +645,7 @@
 
         config.$mount.append(frag);
     }
-    
+
     $rs.watcher = {
         'define': function (key, value, changeHandle) {
             if (typeof value == 'function') {
@@ -711,32 +700,27 @@
 
     // 初始化模块的时候以下内容会被注入到模块
     $rs.plugin = {
-        'watcher': function ()
-        {
+        'watcher': function () {
             $rs.watcher.data = this._data_;
             return $rs.watcher;
-        }   ,
-        '_data_' : {},
-        'on': function (m, event, func)
-        {
+        },
+        '_data_': {},
+        'on': function (m, event, func) {
             $rs.on(m, event, this, func);
         },
-        'trigger': function (event)
-        {
+        'trigger': function (event) {
             $rs.trigger(this._module_name_, event, [].slice.call(arguments, 1));
-        }   , 
-        'bind' : function(events)
-        {
-            $rs.bind(this,events);
+        },
+        'bind': function (events) {
+            $rs.bind(this, events);
         }
-    };    
-    
+    };
+
     $rs.bootstrap();
     global.$rs = $rs;
 
 })(window);
 
-function C()
-{
-    console.log.apply(null,arguments);
+function C() {
+    console.log.apply(null, arguments);
 }
